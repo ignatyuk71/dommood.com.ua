@@ -3,8 +3,8 @@
 ## Базовий стек
 
 - Laravel 13 для backend, routing, API, черг, jobs і адмін-логіки.
-- Vue 3 для інтерактивних компонентів: кошик, checkout, фільтри, quick view, admin UI.
-- Bootstrap 5 як основа UI без Tailwind.
+- Vue 3 + Inertia для frontend-сторінок, auth, dashboard і майбутнього кабінету.
+- Bootstrap 5 як основа UI для публічного сайту; Breeze auth scaffold використовує Tailwind-компоненти, які поступово адаптуємо під дизайн DomMood.
 - MySQL для local і production. Для локального старту використовуємо MAMP MySQL `127.0.0.1:8889`.
 - Vite для frontend build.
 
@@ -36,15 +36,13 @@ resources/
   css/app.css
   js/
     app.js
-    bootstrap/    # axios, bootstrap init, глобальні browser adapters
+    bootstrap.js  # axios, bootstrap init, глобальні browser adapters
     components/   # перевикористовувані Vue-компоненти
     composables/  # useCart, useTracking, useCatalogFilters
-    pages/        # page-level Vue entry components, якщо потрібні
+    pages/        # Inertia page-level Vue компоненти
     stores/       # frontend state для кошика/checkout/admin
   views/
-    layouts/      # Blade layouts
-    partials/     # header, footer, SEO/meta partials
-    pages/        # публічні сторінки
+    app.blade.php # Inertia root layout
 ```
 
 ## Правила реалізації

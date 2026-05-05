@@ -1,5 +1,9 @@
 @import "bootstrap/dist/css/bootstrap.min.css";
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
     --dm-color-text: #171717;
     --dm-color-muted: #6b7280;
@@ -7,21 +11,6 @@
     --dm-color-surface: #ffffff;
     --dm-color-soft: #f6f7f9;
     --dm-color-brand: #1f6f5b;
-}
-
-body {
-    background: var(--dm-color-soft);
-    color: var(--dm-color-text);
-    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-
-.site-shell {
-    min-height: 100vh;
-    background: var(--dm-color-surface);
-}
-
-.section-spacing {
-    padding-block: 56px;
 }
 
 .text-muted-soft {
