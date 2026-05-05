@@ -5,7 +5,7 @@
 - Laravel 13 для backend, routing, API, черг, jobs і адмін-логіки.
 - Vue 3 для інтерактивних компонентів: кошик, checkout, фільтри, quick view, admin UI.
 - Bootstrap 5 як основа UI без Tailwind.
-- MySQL для production, SQLite тільки для локального старту/швидких тестів.
+- MySQL для local і production. Для локального старту використовуємо MAMP MySQL `127.0.0.1:8889`.
 - Vite для frontend build.
 
 ## Backend
