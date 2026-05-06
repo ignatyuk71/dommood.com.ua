@@ -6,8 +6,6 @@ class FilterUrlBuilder
 {
     public const FILTER_PREFIX = 'filter';
 
-    public const PAIR_SEPARATOR = '--';
-
     public function build(string $categoryPath, array $filters): string
     {
         $basePath = $this->normalizeCategoryPath($categoryPath);
@@ -36,15 +34,16 @@ class FilterUrlBuilder
     public function parseSegments(array $segments): array
     {
         $filters = [];
+        $segments = array_values($segments);
 
-        foreach ($segments as $segment) {
-            $segment = trim((string) $segment, '/');
+        for ($index = 0; $index < count($segments); $index += 2) {
+            $attributeSlug = trim((string) ($segments[$index] ?? ''), '/');
+            $valueSlug = trim((string) ($segments[$index + 1] ?? ''), '/');
 
-            if (! str_contains($segment, self::PAIR_SEPARATOR)) {
+            if ($attributeSlug === '' || $valueSlug === '') {
                 continue;
             }
 
-            [$attributeSlug, $valueSlug] = explode(self::PAIR_SEPARATOR, $segment, 2);
             $attributeSlug = $this->normalizeSlug($attributeSlug);
             $valueSlug = $this->normalizeSlug($valueSlug);
 
@@ -64,7 +63,8 @@ class FilterUrlBuilder
 
         foreach ($this->normalizeFilters($filters) as $attributeSlug => $valueSlugs) {
             foreach ($valueSlugs as $valueSlug) {
-                $segments[] = $attributeSlug.self::PAIR_SEPARATOR.$valueSlug;
+                $segments[] = $attributeSlug;
+                $segments[] = $valueSlug;
             }
         }
 

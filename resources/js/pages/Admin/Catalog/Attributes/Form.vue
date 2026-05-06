@@ -103,7 +103,7 @@ const previewUrl = computed(() => {
     const firstValue = form.values.find((value) => value.value || value.slug);
     const valueSlug = firstValue?.slug || slugify(firstValue?.value ?? '') || 'shtuchne-hutro';
 
-    return `/catalog/kaptsi/filter/${attributeSlug}--${valueSlug}`;
+    return `/catalog/kaptsi/filter/${attributeSlug}/${valueSlug}`;
 });
 
 const submit = () => {
@@ -370,7 +370,7 @@ const submit = () => {
                     </code>
 
                     <p class="mt-3 text-xs font-semibold leading-5 text-slate-500">
-                        Розділювач `--` не конфліктує зі звичайними дефісами в slug і дає стабільний parse для SEO.
+                        Після `filter` кожні два сегменти читаються як `характеристика / значення`, тому URL лишається чистим і стабільним.
                     </p>
                 </section>
             </aside>

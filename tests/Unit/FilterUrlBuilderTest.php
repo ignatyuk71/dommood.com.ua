@@ -17,7 +17,7 @@ class FilterUrlBuilderTest extends TestCase
         ]);
 
         $this->assertSame(
-            '/catalog/kaptsi/filter/kolir--bezhevyi/kolir--bilyi/material--shtuchne-hutro',
+            '/catalog/kaptsi/filter/kolir/bezhevyi/kolir/bilyi/material/shtuchne-hutro',
             $url,
         );
     }
@@ -26,7 +26,7 @@ class FilterUrlBuilderTest extends TestCase
     {
         $builder = new FilterUrlBuilder;
 
-        $filters = $builder->parse('/catalog/kaptsi/filter/material--shtuchne-hutro/kolir--bilyi?page=2');
+        $filters = $builder->parse('/catalog/kaptsi/filter/material/shtuchne-hutro/kolir/bilyi?page=2');
 
         $this->assertSame([
             'kolir' => ['bilyi'],
@@ -46,7 +46,7 @@ class FilterUrlBuilderTest extends TestCase
         $builder = new FilterUrlBuilder;
 
         $this->assertSame(
-            '/catalog/kaptsi/filter/material--eko-shkira',
+            '/catalog/kaptsi/filter/material/eko-shkira',
             $builder->build('Капці', ['Матеріал' => ['Еко-шкіра']]),
         );
     }
