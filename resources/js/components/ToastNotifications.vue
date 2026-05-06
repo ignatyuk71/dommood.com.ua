@@ -1,5 +1,5 @@
 <script setup>
-import { router, usePage } from '@inertiajs/vue3';
+import { usePage } from '@inertiajs/vue3';
 import {
     AlertCircle,
     CheckCircle2,
@@ -7,7 +7,7 @@ import {
     TriangleAlert,
     X,
 } from 'lucide-vue-next';
-import { computed, onBeforeUnmount, ref } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
 const page = usePage();
 const toasts = ref([]);
@@ -42,6 +42,16 @@ const config = {
 };
 
 const visibleToasts = computed(() => toasts.value.slice(-4));
+const flashPayload = computed(() => ({
+    url: page.url,
+    success: page.props.flash?.success ?? null,
+    error: page.props.flash?.error ?? null,
+    warning: page.props.flash?.warning ?? null,
+    info: page.props.flash?.info ?? null,
+    categoryError: page.props.errors?.category ?? null,
+}));
+
+let lastPayloadKey = null;
 
 const dismissToast = (id) => {
     clearTimeout(timers.get(id));
@@ -81,22 +91,20 @@ const pushFromProps = (props) => {
     }
 };
 
-const pushValidationError = (event) => {
-    const categoryError = event.detail.errors?.category;
+const pushCurrentPageToasts = () => {
+    const payloadKey = JSON.stringify(flashPayload.value);
 
-    if (typeof categoryError === 'string') {
-        addToast('error', categoryError);
+    if (payloadKey === lastPayloadKey) {
+        return;
     }
+
+    lastPayloadKey = payloadKey;
+    pushFromProps(page.props);
 };
 
-pushFromProps(page.props);
-
-const removeSuccessListener = router.on('success', (event) => pushFromProps(event.detail.page.props));
-const removeErrorListener = router.on('error', pushValidationError);
+watch(flashPayload, pushCurrentPageToasts, { immediate: true });
 
 onBeforeUnmount(() => {
-    removeSuccessListener();
-    removeErrorListener();
     timers.forEach((timer) => clearTimeout(timer));
     timers.clear();
 });

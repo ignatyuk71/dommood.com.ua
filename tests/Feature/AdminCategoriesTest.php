@@ -108,11 +108,31 @@ class AdminCategoriesTest extends TestCase
         ]);
 
         $response->assertRedirect(route('admin.categories.index'));
+        $response->assertSessionHas('success', 'Категорію оновлено');
 
         $category->refresh();
         Storage::disk('public')->assertMissing($oldPath);
         Storage::disk('public')->assertExists($category->image_path);
         $this->assertStringEndsWith('.webp', $category->image_path);
+    }
+
+    public function test_updating_category_flashes_success_message_for_toast(): void
+    {
+        $user = User::factory()->create();
+        $category = Category::query()->create([
+            'name' => 'Капці',
+            'slug' => 'kaptsi',
+        ]);
+
+        $response = $this->actingAs($user)->put(route('admin.categories.update', $category), [
+            'name' => 'Капці для дому',
+            'slug' => 'kaptsi-dlia-domu',
+            'is_active' => true,
+        ]);
+
+        $response
+            ->assertRedirect(route('admin.categories.index'))
+            ->assertSessionHas('success', 'Категорію оновлено');
     }
 
     public function test_deleting_category_image_removes_file_from_storage(): void
