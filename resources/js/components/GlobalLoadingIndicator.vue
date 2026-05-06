@@ -1,6 +1,5 @@
 <script setup>
 import { router } from '@inertiajs/vue3';
-import { LoaderCircle } from 'lucide-vue-next';
 import { onBeforeUnmount, ref } from 'vue';
 
 const isLoading = ref(false);
@@ -69,23 +68,4 @@ onBeforeUnmount(() => {
             :style="{ width: `${progress}%` }"
         />
     </div>
-
-    <Transition
-        enter-active-class="transition duration-200 ease-out"
-        enter-from-class="translate-y-2 opacity-0"
-        enter-to-class="translate-y-0 opacity-100"
-        leave-active-class="transition duration-150 ease-in"
-        leave-from-class="translate-y-0 opacity-100"
-        leave-to-class="translate-y-2 opacity-0"
-    >
-        <div
-            v-if="isLoading"
-            class="fixed right-4 top-4 z-[60] inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-[#343241] shadow-[0_18px_45px_rgba(61,58,101,0.18)] md:right-6"
-            role="status"
-            aria-live="polite"
-        >
-            <LoaderCircle class="h-4 w-4 animate-spin text-[#7561f7]" />
-            Завантаження
-        </div>
-    </Transition>
 </template>
