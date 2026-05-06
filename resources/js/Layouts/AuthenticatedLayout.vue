@@ -1,196 +1,206 @@
 <script setup>
-import { ref } from 'vue';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
-import Dropdown from '@/Components/Dropdown.vue';
-import DropdownLink from '@/Components/DropdownLink.vue';
-import NavLink from '@/Components/NavLink.vue';
-import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link } from '@inertiajs/vue3';
+import ApplicationLogo from '@/components/ApplicationLogo.vue';
+import { Link, usePage } from '@inertiajs/vue3';
+import {
+    Bell,
+    Boxes,
+    ChevronRight,
+    FileSearch,
+    Home,
+    Layers3,
+    Map,
+    Menu,
+    Moon,
+    PackageSearch,
+    RefreshCw,
+    Search,
+    Settings,
+    ShieldCheck,
+    ShoppingCart,
+    Truck,
+    UsersRound,
+    X,
+} from 'lucide-vue-next';
+import { computed, ref } from 'vue';
 
-const showingNavigationDropdown = ref(false);
+const page = usePage();
+const sidebarOpen = ref(false);
+
+const user = computed(() => page.props.auth.user);
+
+const navItems = [
+    {
+        label: 'Дашборд',
+        routeName: 'dashboard',
+        icon: Home,
+    },
+    {
+        label: 'Каталог',
+        icon: PackageSearch,
+        children: ['Товари', 'Категорії', 'Варіанти', 'Атрибути', 'Бренди'],
+    },
+    {
+        label: 'Замовлення',
+        icon: ShoppingCart,
+        children: ['Нові', 'В роботі', 'Завершені', 'Повернення'],
+    },
+    {
+        label: 'Оплата та доставка',
+        icon: Truck,
+        children: ['Методи доставки', 'Методи оплати', 'Тарифи'],
+    },
+    {
+        label: 'Контент',
+        icon: Layers3,
+        children: ['Сторінки', 'Банери', 'Промокоди'],
+    },
+    {
+        label: 'Структура сайту',
+        icon: Boxes,
+        children: ['Меню', 'Footer', 'Mobile menu'],
+    },
+    {
+        label: 'SEO',
+        icon: FileSearch,
+        children: ['Meta', 'Schema', 'Redirects'],
+    },
+    {
+        label: 'Налаштування',
+        icon: Settings,
+        children: ['Магазин', 'Tracking', 'Інтеграції'],
+    },
+    {
+        label: 'Клієнти',
+        icon: UsersRound,
+    },
+    {
+        label: 'Ролі та доступи',
+        icon: ShieldCheck,
+    },
+    {
+        label: 'Sitemap.xml',
+        icon: Map,
+    },
+];
+
+const itemHref = (item) => (item.routeName ? route(item.routeName) : '#');
+const isActive = (item) => item.routeName && route().current(item.routeName);
 </script>
 
 <template>
-    <div>
-        <div class="min-h-screen bg-gray-100">
-            <nav
-                class="border-b border-gray-100 bg-white"
-            >
-                <!-- Primary Navigation Menu -->
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="flex h-16 justify-between">
-                        <div class="flex">
-                            <!-- Logo -->
-                            <div class="flex shrink-0 items-center">
-                                <Link :href="route('dashboard')">
-                                    <ApplicationLogo
-                                        class="block h-9 w-auto fill-current text-gray-800"
-                                    />
-                                </Link>
-                            </div>
+    <div class="min-h-screen bg-[#f4f5fb] text-[#343241]">
+        <div
+            v-if="sidebarOpen"
+            class="fixed inset-0 z-30 bg-slate-950/30 backdrop-blur-sm lg:hidden"
+            @click="sidebarOpen = false"
+        />
 
-                            <!-- Navigation Links -->
-                            <div
-                                class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
-                            >
-                                <NavLink
-                                    :href="route('dashboard')"
-                                    :active="route().current('dashboard')"
-                                >
-                                    Dashboard
-                                </NavLink>
-                            </div>
-                        </div>
-
-                        <div class="hidden sm:ms-6 sm:flex sm:items-center">
-                            <!-- Settings Dropdown -->
-                            <div class="relative ms-3">
-                                <Dropdown align="right" width="48">
-                                    <template #trigger>
-                                        <span class="inline-flex rounded-md">
-                                            <button
-                                                type="button"
-                                                class="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-gray-700 focus:outline-none"
-                                            >
-                                                {{ $page.props.auth.user.name }}
-
-                                                <svg
-                                                    class="-me-0.5 ms-2 h-4 w-4"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fill-rule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clip-rule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </template>
-
-                                    <template #content>
-                                        <DropdownLink
-                                            :href="route('profile.edit')"
-                                        >
-                                            Profile
-                                        </DropdownLink>
-                                        <DropdownLink
-                                            :href="route('logout')"
-                                            method="post"
-                                            as="button"
-                                        >
-                                            Log Out
-                                        </DropdownLink>
-                                    </template>
-                                </Dropdown>
-                            </div>
-                        </div>
-
-                        <!-- Hamburger -->
-                        <div class="-me-2 flex items-center sm:hidden">
-                            <button
-                                @click="
-                                    showingNavigationDropdown =
-                                        !showingNavigationDropdown
-                                "
-                                class="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-gray-100 hover:text-gray-500 focus:bg-gray-100 focus:text-gray-500 focus:outline-none"
-                            >
-                                <svg
-                                    class="h-6 w-6"
-                                    stroke="currentColor"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        :class="{
-                                            hidden: showingNavigationDropdown,
-                                            'inline-flex':
-                                                !showingNavigationDropdown,
-                                        }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                    />
-                                    <path
-                                        :class="{
-                                            hidden: !showingNavigationDropdown,
-                                            'inline-flex':
-                                                showingNavigationDropdown,
-                                        }"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Responsive Navigation Menu -->
-                <div
-                    :class="{
-                        block: showingNavigationDropdown,
-                        hidden: !showingNavigationDropdown,
-                    }"
-                    class="sm:hidden"
+        <aside
+            class="fixed inset-y-0 left-0 z-40 flex w-[292px] flex-col border-r border-slate-100 bg-white shadow-[20px_0_45px_rgba(61,58,101,0.08)] transition-transform duration-200 lg:translate-x-0"
+            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+        >
+            <div class="flex h-24 items-center justify-between px-6">
+                <Link :href="route('dashboard')" class="flex items-center gap-3">
+                    <ApplicationLogo class="h-12 w-12 object-contain" />
+                    <span class="text-2xl font-bold tracking-tight text-[#6d5df6]">
+                        DomMood
+                    </span>
+                </Link>
+                <button
+                    type="button"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 lg:hidden"
+                    @click="sidebarOpen = false"
+                    aria-label="Закрити меню"
                 >
-                    <div class="space-y-1 pb-3 pt-2">
-                        <ResponsiveNavLink
-                            :href="route('dashboard')"
-                            :active="route().current('dashboard')"
-                        >
-                            Dashboard
-                        </ResponsiveNavLink>
-                    </div>
+                    <X class="h-5 w-5" />
+                </button>
+            </div>
 
-                    <!-- Responsive Settings Options -->
-                    <div
-                        class="border-t border-gray-200 pb-1 pt-4"
+            <nav class="flex-1 space-y-1 overflow-y-auto px-4 pb-6">
+                <template v-for="item in navItems" :key="item.label">
+                    <Link
+                        v-if="item.routeName"
+                        :href="itemHref(item)"
+                        class="group flex min-h-12 items-center gap-4 rounded-lg px-4 text-[15px] font-semibold transition"
+                        :class="isActive(item)
+                            ? 'bg-[#7561f7] text-white shadow-[0_12px_28px_rgba(117,97,247,0.34)]'
+                            : 'text-[#615d72] hover:bg-slate-50 hover:text-[#29277f]'"
                     >
-                        <div class="px-4">
-                            <div
-                                class="text-base font-medium text-gray-800"
-                            >
-                                {{ $page.props.auth.user.name }}
-                            </div>
-                            <div class="text-sm font-medium text-gray-500">
-                                {{ $page.props.auth.user.email }}
-                            </div>
-                        </div>
+                        <component :is="item.icon" class="h-5 w-5 shrink-0" />
+                        <span class="flex-1">{{ item.label }}</span>
+                    </Link>
 
-                        <div class="mt-3 space-y-1">
-                            <ResponsiveNavLink :href="route('profile.edit')">
-                                Profile
-                            </ResponsiveNavLink>
-                            <ResponsiveNavLink
-                                :href="route('logout')"
-                                method="post"
-                                as="button"
-                            >
-                                Log Out
-                            </ResponsiveNavLink>
+                    <a
+                        v-else
+                        href="#"
+                        class="group flex min-h-12 items-center gap-4 rounded-lg px-4 text-[15px] font-semibold text-[#615d72] transition hover:bg-slate-50 hover:text-[#29277f]"
+                    >
+                        <component :is="item.icon" class="h-5 w-5 shrink-0" />
+                        <span class="flex-1">{{ item.label }}</span>
+                        <ChevronRight
+                            v-if="item.children"
+                            class="h-4 w-4 text-slate-400 transition group-hover:translate-x-0.5"
+                        />
+                    </a>
+                </template>
+            </nav>
+        </aside>
+
+        <div class="min-h-screen lg:pl-[292px]">
+            <header class="sticky top-0 z-20 bg-[#f4f5fb]/90 px-4 py-4 backdrop-blur md:px-7">
+                <div class="flex min-h-20 items-center justify-between rounded-lg bg-white px-4 shadow-[0_16px_45px_rgba(61,58,101,0.08)] md:px-6">
+                    <div class="flex items-center gap-3">
+                        <button
+                            type="button"
+                            class="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-600 lg:hidden"
+                            @click="sidebarOpen = true"
+                            aria-label="Відкрити меню"
+                        >
+                            <Menu class="h-5 w-5" />
+                        </button>
+                        <div class="hidden items-center gap-3 rounded-lg border border-slate-200 px-4 py-3 text-slate-500 xl:flex">
+                            <Search class="h-5 w-5" />
+                            <span class="text-sm font-medium">Пошук товарів, замовлень, клієнтів</span>
                         </div>
                     </div>
-                </div>
-            </nav>
 
-            <!-- Page Heading -->
-            <header
-                class="bg-white shadow"
-                v-if="$slots.header"
-            >
-                <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                    <slot name="header" />
+                    <div class="flex items-center gap-2 md:gap-4">
+                        <button class="relative inline-flex h-11 w-11 items-center justify-center rounded-lg text-[#6e6a7f] hover:bg-slate-50" type="button" aria-label="Кошик">
+                            <ShoppingCart class="h-6 w-6" />
+                            <span class="absolute -right-1 -top-1 rounded-full bg-[#7561f7] px-1.5 text-xs font-bold text-white">2</span>
+                        </button>
+                        <button class="hidden h-11 w-11 items-center justify-center rounded-lg text-[#6e6a7f] hover:bg-slate-50 sm:inline-flex" type="button" aria-label="Оновити">
+                            <RefreshCw class="h-5 w-5" />
+                        </button>
+                        <button class="relative inline-flex h-11 w-11 items-center justify-center rounded-lg text-[#6e6a7f] hover:bg-slate-50" type="button" aria-label="Сповіщення">
+                            <Bell class="h-5 w-5" />
+                            <span class="absolute -right-1 -top-1 rounded-full bg-[#ef5252] px-1.5 text-xs font-bold text-white">2</span>
+                        </button>
+                        <button class="hidden h-11 w-11 items-center justify-center rounded-lg text-[#6e6a7f] hover:bg-slate-50 sm:inline-flex" type="button" aria-label="Темний режим">
+                            <Moon class="h-5 w-5" />
+                        </button>
+
+                        <div class="hidden h-12 w-px bg-slate-200 md:block"></div>
+
+                        <Link :href="route('profile.edit')" class="flex items-center gap-3 rounded-lg px-2 py-2 transition hover:bg-slate-50">
+                            <div class="text-right leading-tight max-md:hidden">
+                                <div class="text-sm font-bold text-[#3a3748]">{{ user.name }}</div>
+                                <div class="text-xs font-medium text-slate-500">Адмін</div>
+                            </div>
+                            <div class="relative inline-flex h-12 w-12 items-center justify-center rounded-full bg-[#29277f] text-sm font-bold text-white shadow-lg shadow-indigo-900/10">
+                                {{ user.name?.slice(0, 1) }}
+                                <span class="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white bg-emerald-500"></span>
+                            </div>
+                        </Link>
+                    </div>
                 </div>
             </header>
 
-            <!-- Page Content -->
-            <main>
+            <main class="px-4 pb-10 md:px-7">
+                <section v-if="$slots.header" class="mb-6 rounded-lg bg-white px-5 py-6 shadow-[0_16px_45px_rgba(61,58,101,0.08)] md:px-7">
+                    <slot name="header" />
+                </section>
+
                 <slot />
             </main>
         </div>

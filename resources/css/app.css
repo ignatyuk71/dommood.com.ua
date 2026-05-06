@@ -10,7 +10,11 @@
     --dm-color-border: #e5e7eb;
     --dm-color-surface: #ffffff;
     --dm-color-soft: #f6f7f9;
-    --dm-color-brand: #1f6f5b;
+    --dm-color-brand: #29277f;
+}
+
+body {
+    background: var(--dm-color-soft);
 }
 
 .text-muted-soft {
