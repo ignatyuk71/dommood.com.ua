@@ -12,9 +12,11 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue';
 const page = usePage();
 const toasts = ref([]);
 const timers = new Map();
+const recentToastKeys = new Map();
 let nextId = 1;
 let lastRouterPayloadKey = null;
 let lastRouterPayloadAt = 0;
+const duplicateWindowMs = 1500;
 
 const config = {
     success: {
@@ -78,10 +80,21 @@ const dismissToast = (id) => {
     toasts.value = toasts.value.filter((toast) => toast.id !== id);
 };
 
+const toastKey = (type, message) => `${type}:${message}`;
+
 const addToast = (type, message) => {
     if (!message) {
         return;
     }
+
+    const key = toastKey(type, message);
+    const lastShownAt = recentToastKeys.get(key) ?? 0;
+
+    if (Date.now() - lastShownAt < duplicateWindowMs) {
+        return;
+    }
+
+    recentToastKeys.set(key, Date.now());
 
     const id = nextId++;
     toasts.value = [
@@ -158,6 +171,7 @@ onBeforeUnmount(() => {
     removeErrorListener();
     timers.forEach((timer) => clearTimeout(timer));
     timers.clear();
+    recentToastKeys.clear();
 });
 </script>
 
