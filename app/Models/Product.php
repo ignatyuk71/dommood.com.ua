@@ -18,6 +18,8 @@ class Product extends Model
     protected $fillable = [
         'primary_category_id',
         'brand_id',
+        'color_group_id',
+        'size_chart_id',
         'name',
         'slug',
         'sku',
@@ -32,6 +34,7 @@ class Product extends Model
         'is_featured',
         'is_new',
         'is_bestseller',
+        'color_sort_order',
         'sort_order',
         'meta_title',
         'meta_description',
@@ -49,6 +52,7 @@ class Product extends Model
             'is_featured' => 'boolean',
             'is_new' => 'boolean',
             'is_bestseller' => 'boolean',
+            'color_sort_order' => 'integer',
             'sort_order' => 'integer',
             'published_at' => 'datetime',
         ];
@@ -67,6 +71,16 @@ class Product extends Model
     public function brand(): BelongsTo
     {
         return $this->belongsTo(Brand::class);
+    }
+
+    public function colorGroup(): BelongsTo
+    {
+        return $this->belongsTo(ProductColorGroup::class, 'color_group_id');
+    }
+
+    public function sizeChart(): BelongsTo
+    {
+        return $this->belongsTo(SizeChart::class);
     }
 
     public function categories(): BelongsToMany

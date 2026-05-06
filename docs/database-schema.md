@@ -20,6 +20,8 @@ products
 category_product
 product_variants
 product_images
+product_color_groups
+size_charts
 attributes
 attribute_values
 product_attribute_values
@@ -32,6 +34,8 @@ product_relations
 - кілька категорій на товар через `category_product`;
 - основна категорія товару через `products.primary_category_id`;
 - варіанти товару з окремими SKU, цінами й залишками;
+- `product_color_groups` обʼєднує різні кольори одного дизайну, а `products.color_sort_order` керує порядком кольорів у групі;
+- `size_charts` зберігає українську таблицю розмірів і привʼязується до товару через `products.size_chart_id`;
 - фільтри через `attributes` / `attribute_values`;
 - фото товару та фото конкретного варіанту;
 - повʼязані товари для upsell/cross-sell.
@@ -91,8 +95,8 @@ menu_items
 ## Наступний технічний шар
 
 1. Admin CRUD для `categories`.
-2. Admin CRUD для `menus` і `menu_items`.
-3. Admin CRUD для `products` без варіантів.
+2. Admin CRUD для `products` з привʼязкою груп кольорів і розмірних сіток.
+3. Admin CRUD для `menus` і `menu_items`.
 4. Варіанти, фото й атрибути товарів.
 5. Публічний каталог і картка товару.
 6. Кошик, checkout, order creation.

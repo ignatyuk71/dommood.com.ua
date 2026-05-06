@@ -3,13 +3,19 @@ import ApplicationLogo from '@/components/ApplicationLogo.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import {
     Bell,
+    Box,
     Boxes,
+    ChevronDown,
     ChevronRight,
+    Droplet,
     FileSearch,
+    Grid2X2,
     Home,
     Layers3,
+    ListTree,
     Map,
     Menu,
+    MessageSquare,
     Moon,
     PackageSearch,
     RefreshCw,
@@ -17,6 +23,7 @@ import {
     Settings,
     ShieldCheck,
     ShoppingCart,
+    SlidersHorizontal,
     Truck,
     UsersRound,
     X,
@@ -25,6 +32,7 @@ import { computed, ref } from 'vue';
 
 const page = usePage();
 const sidebarOpen = ref(false);
+const openGroups = ref(['Каталог']);
 
 const user = computed(() => page.props.auth.user);
 
@@ -37,7 +45,14 @@ const navItems = [
     {
         label: 'Каталог',
         icon: PackageSearch,
-        children: ['Товари', 'Категорії', 'Варіанти', 'Атрибути', 'Бренди'],
+        children: [
+            { label: 'Товари', icon: Box },
+            { label: 'Категорії', icon: ListTree },
+            { label: 'Характеристики', icon: SlidersHorizontal },
+            { label: 'Групи кольорів', routeName: 'admin.color-groups.index', icon: Droplet },
+            { label: 'Розмірні сітки', routeName: 'admin.size-charts.index', icon: Grid2X2 },
+            { label: 'Відгуки', icon: MessageSquare },
+        ],
     },
     {
         label: 'Замовлення',
@@ -83,8 +98,21 @@ const navItems = [
     },
 ];
 
-const itemHref = (item) => (item.routeName ? route(item.routeName) : '#');
-const isActive = (item) => item.routeName && route().current(item.routeName);
+const hasRoute = (name) => Boolean(name && route().has?.(name));
+const itemHref = (item) => (hasRoute(item.routeName) ? route(item.routeName) : '#');
+const routePattern = (name) => name?.replace(/\.index$/, '.*');
+const isActive = (item) => item.routeName && (
+    route().current(item.routeName) || route().current(routePattern(item.routeName))
+);
+const hasActiveChild = (item) => item.children?.some((child) => isActive(child));
+const isOpen = (item) => openGroups.value.includes(item.label) || hasActiveChild(item);
+const childLabel = (child) => (typeof child === 'string' ? child : child.label);
+const childIcon = (child) => (typeof child === 'string' ? ChevronRight : child.icon);
+const toggleGroup = (label) => {
+    openGroups.value = openGroups.value.includes(label)
+        ? openGroups.value.filter((item) => item !== label)
+        : [...openGroups.value, label];
+};
 </script>
 
 <template>
@@ -125,22 +153,66 @@ const isActive = (item) => item.routeName && route().current(item.routeName);
                         :class="isActive(item)
                             ? 'bg-[#7561f7] text-white shadow-[0_12px_28px_rgba(117,97,247,0.34)]'
                             : 'text-[#615d72] hover:bg-slate-50 hover:text-[#29277f]'"
+                        @click="sidebarOpen = false"
                     >
                         <component :is="item.icon" class="h-5 w-5 shrink-0" />
                         <span class="flex-1">{{ item.label }}</span>
                     </Link>
 
+                    <div v-else-if="item.children">
+                        <button
+                            type="button"
+                            class="group flex min-h-12 w-full items-center gap-4 rounded-lg px-4 text-left text-[15px] font-semibold transition"
+                            :class="hasActiveChild(item)
+                                ? 'bg-[#7561f7] text-white shadow-[0_12px_28px_rgba(117,97,247,0.34)]'
+                                : 'text-[#615d72] hover:bg-slate-50 hover:text-[#29277f]'"
+                            @click="toggleGroup(item.label)"
+                        >
+                            <component :is="item.icon" class="h-5 w-5 shrink-0" />
+                            <span class="flex-1">{{ item.label }}</span>
+                            <ChevronDown
+                                class="h-4 w-4 transition"
+                                :class="isOpen(item) ? 'rotate-180' : ''"
+                            />
+                        </button>
+
+                        <div v-show="isOpen(item)" class="space-y-1 py-2 pl-7">
+                            <template v-for="child in item.children" :key="childLabel(child)">
+                                <Link
+                                    v-if="hasRoute(child.routeName)"
+                                    :href="itemHref(child)"
+                                    class="group flex min-h-11 items-center gap-4 rounded-lg px-4 text-[15px] font-semibold transition"
+                                    :class="isActive(child)
+                                        ? 'bg-slate-100 text-[#29277f]'
+                                        : 'text-[#615d72] hover:bg-slate-50 hover:text-[#29277f]'"
+                                    @click="sidebarOpen = false"
+                                >
+                                    <component :is="childIcon(child)" class="h-4 w-4 shrink-0" />
+                                    <span class="flex-1">{{ childLabel(child) }}</span>
+                                </Link>
+
+                                <a
+                                    v-else
+                                    href="#"
+                                    class="group flex min-h-11 items-center gap-4 rounded-lg px-4 text-[15px] font-semibold text-[#615d72] transition hover:bg-slate-50 hover:text-[#29277f]"
+                                    @click.prevent
+                                >
+                                    <component :is="childIcon(child)" class="h-4 w-4 shrink-0" />
+                                    <span class="flex-1">{{ childLabel(child) }}</span>
+                                </a>
+                            </template>
+                        </div>
+                    </div>
+
                     <a
                         v-else
                         href="#"
                         class="group flex min-h-12 items-center gap-4 rounded-lg px-4 text-[15px] font-semibold text-[#615d72] transition hover:bg-slate-50 hover:text-[#29277f]"
+                        @click.prevent
                     >
                         <component :is="item.icon" class="h-5 w-5 shrink-0" />
                         <span class="flex-1">{{ item.label }}</span>
-                        <ChevronRight
-                            v-if="item.children"
-                            class="h-4 w-4 text-slate-400 transition group-hover:translate-x-0.5"
-                        />
+                        <ChevronRight class="h-4 w-4 text-slate-400 transition group-hover:translate-x-0.5" />
                     </a>
                 </template>
             </nav>

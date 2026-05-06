@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ProductColorGroupController;
+use App\Http\Controllers\Admin\SizeChartController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -17,6 +19,18 @@ Route::get('/', function () {
 
 Route::redirect('/dashboard', '/admin');
 Route::get('/admin', DashboardController::class)->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::middleware(['auth', 'verified'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function (): void {
+        Route::resource('color-groups', ProductColorGroupController::class)
+            ->parameters(['color-groups' => 'color_group'])
+            ->except(['show']);
+        Route::resource('size-charts', SizeChartController::class)
+            ->parameters(['size-charts' => 'size_chart'])
+            ->except(['show']);
+    });
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

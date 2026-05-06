@@ -25,6 +25,8 @@ class EcommerceSchemaTest extends TestCase
         $this->assertTrue(Schema::hasColumns('products', [
             'primary_category_id',
             'brand_id',
+            'color_group_id',
+            'size_chart_id',
             'name',
             'slug',
             'sku',
@@ -32,6 +34,7 @@ class EcommerceSchemaTest extends TestCase
             'price_cents',
             'old_price_cents',
             'stock_status',
+            'color_sort_order',
             'published_at',
         ]));
 
@@ -42,6 +45,28 @@ class EcommerceSchemaTest extends TestCase
             'stock_quantity',
             'reserved_quantity',
             'is_active',
+        ]));
+    }
+
+    public function test_catalog_schema_contains_color_groups_and_size_charts(): void
+    {
+        $this->assertTrue(Schema::hasColumns('product_color_groups', [
+            'name',
+            'code',
+            'description',
+            'is_active',
+            'sort_order',
+        ]));
+
+        $this->assertTrue(Schema::hasColumns('size_charts', [
+            'title',
+            'code',
+            'description',
+            'content_json',
+            'content_html',
+            'image_path',
+            'is_active',
+            'sort_order',
         ]));
     }
 
