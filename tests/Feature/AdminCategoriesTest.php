@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class AdminCategoriesTest extends TestCase
@@ -83,6 +84,27 @@ class AdminCategoriesTest extends TestCase
         $this->assertStringStartsWith("categories/{$category->id}/zhinochi-kaptsi-dommood-", $category->image_path);
         $this->assertStringEndsWith('.jpg', $category->image_path);
         Storage::disk('public')->assertExists($category->image_path);
+    }
+
+    public function test_categories_index_exposes_image_url_for_thumbnail(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $category = Category::query()->create([
+            'name' => 'Кольорові капці',
+            'slug' => 'kolorovi-kaptsi',
+            'image_path' => 'categories/1/kolorovi-kaptsi-dommood-20260506-120000.jpg',
+        ]);
+        Storage::disk('public')->put($category->image_path, 'image');
+
+        $this->actingAs($user)
+            ->get(route('admin.categories.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Catalog/Categories/Index', false)
+                ->where('categories.data.0.image_url', Storage::disk('public')->url($category->image_path))
+            );
     }
 
     public function test_replacing_category_image_deletes_old_file(): void

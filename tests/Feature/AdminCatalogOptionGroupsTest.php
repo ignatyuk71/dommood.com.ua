@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class AdminCatalogOptionGroupsTest extends TestCase
@@ -89,6 +90,27 @@ class AdminCatalogOptionGroupsTest extends TestCase
         $this->assertStringStartsWith("size-charts/{$chart->id}/slippers-women-dommood-", $chart->image_path);
         $this->assertStringEndsWith('.png', $chart->image_path);
         Storage::disk('public')->assertExists($chart->image_path);
+    }
+
+    public function test_size_charts_index_exposes_image_url_for_thumbnail(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $chart = SizeChart::query()->create([
+            'title' => 'Капці жіночі',
+            'code' => 'slippers_women',
+            'image_path' => 'size-charts/1/slippers-women-dommood-20260506-120000.png',
+        ]);
+        Storage::disk('public')->put($chart->image_path, 'image');
+
+        $this->actingAs($user)
+            ->get(route('admin.size-charts.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Catalog/SizeCharts/Index', false)
+                ->where('charts.data.0.image_url', Storage::disk('public')->url($chart->image_path))
+            );
     }
 
     public function test_replacing_size_chart_image_deletes_old_file(): void

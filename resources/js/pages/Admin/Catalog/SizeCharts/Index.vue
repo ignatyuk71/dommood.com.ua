@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Grid2X2, Pencil, Plus, Trash2 } from 'lucide-vue-next';
+import { Grid2X2, Image, Pencil, Plus, Trash2 } from 'lucide-vue-next';
 
 defineProps({
     charts: {
@@ -69,8 +69,23 @@ const destroyChart = (chart) => {
                     <tbody class="divide-y divide-slate-100">
                         <tr v-for="chart in charts.data" :key="chart.id" class="transition hover:bg-slate-50/80">
                             <td class="px-5 py-4">
-                                <div class="font-bold text-[#343241]">{{ chart.title }}</div>
-                                <div v-if="chart.description" class="mt-1 max-w-xl text-sm text-slate-500">{{ chart.description }}</div>
+                                <div class="flex items-start gap-3">
+                                    <div class="mt-1 inline-flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#f5f4ff] text-[#7561f7] ring-1 ring-slate-100">
+                                        <img
+                                            v-if="chart.image_url"
+                                            :src="chart.image_url"
+                                            :alt="chart.title"
+                                            class="h-full w-full object-cover"
+                                            loading="lazy"
+                                        />
+                                        <Image v-else-if="chart.image_path" class="h-5 w-5" />
+                                        <Grid2X2 v-else class="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-[#343241]">{{ chart.title }}</div>
+                                        <div v-if="chart.description" class="mt-1 max-w-xl text-sm text-slate-500">{{ chart.description }}</div>
+                                    </div>
+                                </div>
                             </td>
                             <td class="px-5 py-4">
                                 <code class="rounded bg-slate-100 px-2 py-1 text-sm font-semibold text-slate-700">{{ chart.code }}</code>
