@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AdminCategoriesTest extends TestCase
@@ -58,6 +60,87 @@ class AdminCategoriesTest extends TestCase
             'name' => 'Теплі моделі',
             'slug' => 'tepli-modeli',
         ]);
+    }
+
+    public function test_admin_can_upload_category_image_to_category_directory(): void
+    {
+        Storage::fake('public');
+        config(['app.name' => 'DomMood']);
+
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('admin.categories.store'), [
+            'name' => 'Жіночі капці',
+            'slug' => 'zhinochi-kaptsi',
+            'is_active' => true,
+            'image' => UploadedFile::fake()->image('original.jpg', 900, 700),
+        ]);
+
+        $response->assertRedirect(route('admin.categories.index'));
+
+        $category = Category::query()->where('slug', 'zhinochi-kaptsi')->firstOrFail();
+
+        $this->assertStringStartsWith("categories/{$category->id}/zhinochi-kaptsi-dommood-", $category->image_path);
+        $this->assertStringEndsWith('.jpg', $category->image_path);
+        Storage::disk('public')->assertExists($category->image_path);
+    }
+
+    public function test_replacing_category_image_deletes_old_file(): void
+    {
+        Storage::fake('public');
+        config(['app.name' => 'DomMood']);
+
+        $user = User::factory()->create();
+        $category = Category::query()->create([
+            'name' => 'Капці',
+            'slug' => 'kaptsi',
+        ]);
+        $oldPath = "categories/{$category->id}/old.jpg";
+        Storage::disk('public')->put($oldPath, 'old-image');
+        $category->update(['image_path' => $oldPath]);
+
+        $response = $this->actingAs($user)->post(route('admin.categories.update', $category), [
+            '_method' => 'put',
+            'name' => 'Капці',
+            'slug' => 'kaptsi',
+            'is_active' => true,
+            'image' => UploadedFile::fake()->image('new.webp', 900, 700),
+        ]);
+
+        $response->assertRedirect(route('admin.categories.index'));
+
+        $category->refresh();
+        Storage::disk('public')->assertMissing($oldPath);
+        Storage::disk('public')->assertExists($category->image_path);
+        $this->assertStringEndsWith('.webp', $category->image_path);
+    }
+
+    public function test_deleting_category_image_removes_file_from_storage(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $category = Category::query()->create([
+            'name' => 'Піжами',
+            'slug' => 'pizhamy',
+        ]);
+        $oldPath = "categories/{$category->id}/old.jpg";
+        Storage::disk('public')->put($oldPath, 'old-image');
+        $category->update(['image_path' => $oldPath]);
+
+        $response = $this->actingAs($user)->post(route('admin.categories.update', $category), [
+            '_method' => 'put',
+            'name' => 'Піжами',
+            'slug' => 'pizhamy',
+            'is_active' => true,
+            'delete_image' => true,
+        ]);
+
+        $response->assertRedirect(route('admin.categories.index'));
+
+        $category->refresh();
+        $this->assertNull($category->image_path);
+        Storage::disk('public')->assertMissing($oldPath);
     }
 
     public function test_admin_cannot_create_category_parent_cycle(): void

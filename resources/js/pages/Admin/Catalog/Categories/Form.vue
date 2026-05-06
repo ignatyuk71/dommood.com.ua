@@ -2,8 +2,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/components/InputError.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, Save } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { ArrowLeft, ImagePlus, Save, Trash2 } from 'lucide-vue-next';
+import { computed, onBeforeUnmount, ref } from 'vue';
 
 const props = defineProps({
     mode: {
@@ -21,19 +21,26 @@ const props = defineProps({
 });
 
 const isEdit = computed(() => props.mode === 'edit');
+const fileInput = ref(null);
+const imagePreview = ref(props.category.image_url ?? null);
+const selectedImageName = ref('');
+let objectUrl = null;
 
 const form = useForm({
     parent_id: props.category.parent_id ?? '',
     name: props.category.name ?? '',
     slug: props.category.slug ?? '',
     description: props.category.description ?? '',
-    image_path: props.category.image_path ?? '',
+    image: null,
+    delete_image: false,
     is_active: props.category.is_active ?? true,
     sort_order: props.category.sort_order ?? 0,
     meta_title: props.category.meta_title ?? '',
     meta_description: props.category.meta_description ?? '',
     seo_text: props.category.seo_text ?? '',
 });
+
+const hasImage = computed(() => Boolean(imagePreview.value));
 
 const transliterate = (value) => value
     .toLowerCase()
@@ -55,14 +62,74 @@ const generateSlug = () => {
         .replace(/-{2,}/g, '-');
 };
 
-const submit = () => {
-    if (isEdit.value) {
-        form.put(route('admin.categories.update', props.category.id));
+const openImageDialog = () => {
+    fileInput.value?.click();
+};
+
+const revokeObjectUrl = () => {
+    if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+        objectUrl = null;
+    }
+};
+
+const setImageFile = (file) => {
+    if (!file) {
         return;
     }
 
-    form.post(route('admin.categories.store'));
+    revokeObjectUrl();
+    form.image = file;
+    form.delete_image = false;
+    selectedImageName.value = file.name;
+    objectUrl = URL.createObjectURL(file);
+    imagePreview.value = objectUrl;
 };
+
+const onImageSelected = (event) => {
+    setImageFile(event.target.files?.[0]);
+    event.target.value = '';
+};
+
+const onImageDrop = (event) => {
+    setImageFile(event.dataTransfer.files?.[0]);
+};
+
+const clearImage = () => {
+    revokeObjectUrl();
+    form.image = null;
+    form.delete_image = Boolean(props.category.image_path || props.category.image_url);
+    imagePreview.value = null;
+    selectedImageName.value = '';
+};
+
+const submit = () => {
+    if (isEdit.value) {
+        form
+            .transform((data) => ({
+                ...data,
+                _method: 'put',
+                delete_image: data.delete_image ? 1 : 0,
+            }))
+            .post(route('admin.categories.update', props.category.id), {
+                forceFormData: true,
+            });
+        return;
+    }
+
+    form
+        .transform((data) => ({
+            ...data,
+            delete_image: data.delete_image ? 1 : 0,
+        }))
+        .post(route('admin.categories.store'), {
+            forceFormData: true,
+        });
+};
+
+onBeforeUnmount(() => {
+    revokeObjectUrl();
+});
 </script>
 
 <template>
@@ -108,7 +175,7 @@ const submit = () => {
                             <InputError class="mt-2" :message="form.errors.name" />
                         </div>
 
-                        <div>
+                        <div class="relative">
                             <label class="text-sm font-bold text-slate-700" for="slug">Slug</label>
                             <div class="mt-2 flex gap-2">
                                 <input
@@ -146,15 +213,52 @@ const submit = () => {
                         </div>
 
                         <div>
-                            <label class="text-sm font-bold text-slate-700" for="image_path">Зображення</label>
+                            <label class="text-sm font-bold text-slate-700" for="category_image">Зображення</label>
                             <input
-                                id="image_path"
-                                v-model="form.image_path"
-                                type="text"
-                                class="mt-2 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
-                                placeholder="categories/slippers.jpg"
+                                id="category_image"
+                                ref="fileInput"
+                                type="file"
+                                accept="image/jpeg,image/png,image/webp"
+                                class="sr-only"
+                                @change="onImageSelected"
                             />
-                            <InputError class="mt-2" :message="form.errors.image_path" />
+
+                            <button
+                                type="button"
+                                class="relative mt-2 flex min-h-44 w-full items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-slate-50 text-left transition hover:border-[#7561f7] hover:bg-[#f5f4ff] focus:outline-none focus:ring-2 focus:ring-[#7561f7] focus:ring-offset-2"
+                                @click="openImageDialog"
+                                @dragover.prevent
+                                @drop.prevent="onImageDrop"
+                            >
+                                <img
+                                    v-if="hasImage"
+                                    :src="imagePreview"
+                                    alt=""
+                                    class="h-full max-h-72 w-full object-cover"
+                                />
+                                <div v-else class="flex flex-col items-center gap-3 px-6 py-8 text-center">
+                                    <span class="inline-flex h-14 w-14 items-center justify-center rounded-lg bg-white text-[#7561f7] shadow-sm">
+                                        <ImagePlus class="h-7 w-7" />
+                                    </span>
+                                    <span class="text-sm font-bold text-[#343241]">Натисни, щоб завантажити зображення</span>
+                                    <span class="text-xs font-semibold text-slate-500">JPG, PNG або WebP до 4 MB</span>
+                                </div>
+                            </button>
+
+                            <button
+                                v-if="hasImage"
+                                type="button"
+                                class="absolute right-3 top-8 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white text-red-600 shadow-[0_12px_28px_rgba(15,23,42,0.14)] transition hover:bg-red-50"
+                                aria-label="Видалити зображення"
+                                @click="clearImage"
+                            >
+                                <Trash2 class="h-4 w-4" />
+                            </button>
+
+                            <div v-if="selectedImageName || category.image_path" class="mt-2 text-xs font-semibold text-slate-500">
+                                {{ selectedImageName || category.image_path }}
+                            </div>
+                            <InputError class="mt-2" :message="form.errors.image" />
                         </div>
 
                         <div class="md:col-span-2">

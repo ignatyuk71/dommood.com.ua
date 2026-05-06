@@ -27,7 +27,8 @@ class UpdateCategoryRequest extends FormRequest
                 Rule::unique('categories', 'slug')->ignore($category?->id),
             ],
             'description' => ['nullable', 'string', 'max:5000'],
-            'image_path' => ['nullable', 'string', 'max:255'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'delete_image' => ['boolean'],
             'is_active' => ['boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'meta_title' => ['nullable', 'string', 'max:255'],
@@ -40,6 +41,7 @@ class UpdateCategoryRequest extends FormRequest
     {
         $this->merge([
             'is_active' => $this->boolean('is_active'),
+            'delete_image' => $this->boolean('delete_image'),
             'parent_id' => $this->input('parent_id') ?: null,
         ]);
     }

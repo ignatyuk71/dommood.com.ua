@@ -8,6 +8,8 @@ use App\Http\Requests\Admin\UpdateCategoryRequest;
 use App\Models\Category;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -58,7 +60,13 @@ class CategoryController extends Controller
     {
         $data = $request->validated();
 
-        Category::query()->create($this->payload($data));
+        $category = Category::query()->create($this->payload($data));
+
+        if ($request->hasFile('image')) {
+            $category->update([
+                'image_path' => $this->storeImage($category, $request->file('image')),
+            ]);
+        }
 
         return redirect()
             ->route('admin.categories.index')
@@ -87,7 +95,24 @@ class CategoryController extends Controller
             ]);
         }
 
-        $category->update($this->payload($data, $category->id));
+        $oldImagePath = $category->image_path;
+        $payload = $this->payload($data, $category->id);
+
+        if ($request->boolean('delete_image')) {
+            $this->deleteImage($oldImagePath);
+            $payload['image_path'] = null;
+        } else {
+            unset($payload['image_path']);
+        }
+
+        $category->update($payload);
+
+        if ($request->hasFile('image')) {
+            $this->deleteImage($oldImagePath);
+            $category->update([
+                'image_path' => $this->storeImage($category->refresh(), $request->file('image')),
+            ]);
+        }
 
         return redirect()
             ->route('admin.categories.index')
@@ -102,7 +127,11 @@ class CategoryController extends Controller
             ]);
         }
 
+        $imagePath = $category->image_path;
+
         $category->delete();
+        $this->deleteImage($imagePath);
+        $this->deleteCategoryDirectory($category);
 
         return redirect()
             ->route('admin.categories.index')
@@ -214,6 +243,7 @@ class CategoryController extends Controller
             'slug' => $category->slug,
             'description' => $category->description,
             'image_path' => $category->image_path,
+            'image_url' => $this->imageUrl($category->image_path),
             'is_active' => $category->is_active,
             'sort_order' => $category->sort_order,
             'meta_title' => $category->meta_title,
@@ -234,6 +264,7 @@ class CategoryController extends Controller
             'slug' => '',
             'description' => '',
             'image_path' => '',
+            'image_url' => null,
             'is_active' => true,
             'sort_order' => 0,
             'meta_title' => '',
@@ -247,5 +278,63 @@ class CategoryController extends Controller
         $value = trim((string) $value);
 
         return $value === '' ? null : $value;
+    }
+
+    private function storeImage(Category $category, UploadedFile $image): string
+    {
+        $extension = strtolower($image->getClientOriginalExtension() ?: $image->extension() ?: 'jpg');
+        $siteSlug = Str::slug(config('app.name', 'dommood')) ?: 'dommood';
+        $filename = "{$category->slug}-{$siteSlug}-".now()->format('Ymd-His').".{$extension}";
+
+        return $image->storeAs("categories/{$category->id}", $filename, 'public');
+    }
+
+    private function deleteImage(?string $path): void
+    {
+        $path = $this->normalizeStoragePath($path);
+
+        if (! $path) {
+            return;
+        }
+
+        Storage::disk('public')->delete($path);
+        $this->deleteEmptyDirectory(dirname($path));
+    }
+
+    private function deleteCategoryDirectory(Category $category): void
+    {
+        $this->deleteEmptyDirectory("categories/{$category->id}");
+    }
+
+    private function deleteEmptyDirectory(string $directory): void
+    {
+        $directory = trim($directory, './');
+
+        if ($directory !== '' && Storage::disk('public')->exists($directory) && count(Storage::disk('public')->files($directory)) === 0) {
+            Storage::disk('public')->deleteDirectory($directory);
+        }
+    }
+
+    private function imageUrl(?string $path): ?string
+    {
+        $path = $this->normalizeStoragePath($path);
+
+        return $path ? Storage::disk('public')->url($path) : null;
+    }
+
+    private function normalizeStoragePath(?string $path): ?string
+    {
+        $path = trim((string) $path);
+
+        if ($path === '') {
+            return null;
+        }
+
+        return Str::of($path)
+            ->replace('\\', '/')
+            ->replaceStart('/storage/', '')
+            ->replaceStart('storage/', '')
+            ->ltrim('/')
+            ->toString();
     }
 }
