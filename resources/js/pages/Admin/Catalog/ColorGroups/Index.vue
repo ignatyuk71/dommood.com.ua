@@ -1,8 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { Droplet, Plus, Pencil, Trash2 } from 'lucide-vue-next';
-import { computed } from 'vue';
 
 defineProps({
     groups: {
@@ -10,9 +9,6 @@ defineProps({
         required: true,
     },
 });
-
-const page = usePage();
-const success = computed(() => page.props.flash?.success);
 
 const destroyGroup = (group) => {
     if (!window.confirm(`Видалити групу кольорів "${group.name}"?`)) {
@@ -45,10 +41,6 @@ const destroyGroup = (group) => {
                 </Link>
             </div>
         </template>
-
-        <div v-if="success" class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
-            {{ success }}
-        </div>
 
         <section class="rounded-lg bg-white shadow-[0_16px_45px_rgba(61,58,101,0.08)]">
             <div class="flex flex-col gap-2 border-b border-slate-100 px-5 py-5 md:flex-row md:items-center md:justify-between">
