@@ -83,4 +83,27 @@ class EcommerceSchemaTest extends TestCase
         $this->assertTrue(Schema::hasTable('promocodes'));
         $this->assertTrue(Schema::hasTable('tracking_settings'));
     }
+
+    public function test_menu_schema_supports_nested_and_dynamic_links(): void
+    {
+        $this->assertTrue(Schema::hasColumns('menus', [
+            'name',
+            'slug',
+            'is_active',
+            'settings',
+        ]));
+
+        $this->assertTrue(Schema::hasColumns('menu_items', [
+            'menu_id',
+            'parent_id',
+            'title',
+            'type',
+            'linkable_type',
+            'linkable_id',
+            'url',
+            'target',
+            'is_active',
+            'sort_order',
+        ]));
+    }
 }

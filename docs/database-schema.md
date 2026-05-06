@@ -61,6 +61,8 @@ content_pages
 banners
 promocodes
 tracking_settings
+menus
+menu_items
 ```
 
 Важливі можливості:
@@ -68,12 +70,30 @@ tracking_settings
 - банери для головної, категорій і промо;
 - промокоди з fixed/percent знижками;
 - tracking settings для GA4, GTM, Meta Pixel/CAPI, TikTok Pixel, Google Ads.
+- меню для header/footer/mobile з вкладеністю, кастомними URL і привʼязкою до категорій, товарів або content pages.
+
+## Меню
+
+```text
+menus
+menu_items
+```
+
+`menus.slug` визначає місце використання: `main`, `footer`, `mobile`, `account`.
+
+`menu_items` підтримує:
+- вкладеність через `parent_id`;
+- типи `category`, `product`, `content_page`, `custom_url`, `route`;
+- polymorphic-звʼязок `linkable_type` / `linkable_id` для категорій, товарів і сторінок;
+- кастомний `url` для зовнішніх або ручних посилань;
+- `badge`, `icon`, `css_class`, `settings` для майбутнього mega menu.
 
 ## Наступний технічний шар
 
 1. Admin CRUD для `categories`.
-2. Admin CRUD для `products` без варіантів.
-3. Варіанти, фото й атрибути товарів.
-4. Публічний каталог і картка товару.
-5. Кошик, checkout, order creation.
-6. GA4/GTM/Meta events: `view_item`, `add_to_cart`, `begin_checkout`, `purchase`.
+2. Admin CRUD для `menus` і `menu_items`.
+3. Admin CRUD для `products` без варіантів.
+4. Варіанти, фото й атрибути товарів.
+5. Публічний каталог і картка товару.
+6. Кошик, checkout, order creation.
+7. GA4/GTM/Meta events: `view_item`, `add_to_cart`, `begin_checkout`, `purchase`.

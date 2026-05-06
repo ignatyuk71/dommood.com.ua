@@ -59,6 +59,6 @@ resources/
 1. Налаштувати `.env` під MySQL, cache, queue і mail. Готово для local через MAMP MySQL.
 2. Створити e-commerce schema: каталог, замовлення, клієнти, контент, tracking. Готово, деталі в `docs/database-schema.md`.
 3. Побудувати admin layout для роботи менеджера.
-4. Реалізувати Admin CRUD: categories, products, product variants, images, attributes.
+4. Реалізувати Admin CRUD: categories, menus, products, product variants, images, attributes.
 5. Побудувати storefront: header, footer, home, category, product page.
 6. Додати checkout і tracking foundation: GTM container, dataLayer events, server-side order events.
