@@ -41,6 +41,7 @@ const form = useForm({
 });
 
 const hasImage = computed(() => Boolean(imagePreview.value));
+const canClearImage = computed(() => Boolean(imagePreview.value || form.image || props.category.image_path));
 
 const transliterate = (value) => value
     .toLowerCase()
@@ -212,55 +213,6 @@ onBeforeUnmount(() => {
                             <InputError class="mt-2" :message="form.errors.parent_id" />
                         </div>
 
-                        <div>
-                            <label class="text-sm font-bold text-slate-700" for="category_image">Зображення</label>
-                            <input
-                                id="category_image"
-                                ref="fileInput"
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp"
-                                class="sr-only"
-                                @change="onImageSelected"
-                            />
-
-                            <button
-                                type="button"
-                                class="relative mt-2 flex min-h-44 w-full items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-slate-50 text-left transition hover:border-[#7561f7] hover:bg-[#f5f4ff] focus:outline-none focus:ring-2 focus:ring-[#7561f7] focus:ring-offset-2"
-                                @click="openImageDialog"
-                                @dragover.prevent
-                                @drop.prevent="onImageDrop"
-                            >
-                                <img
-                                    v-if="hasImage"
-                                    :src="imagePreview"
-                                    alt=""
-                                    class="h-full max-h-72 w-full object-cover"
-                                />
-                                <div v-else class="flex flex-col items-center gap-3 px-6 py-8 text-center">
-                                    <span class="inline-flex h-14 w-14 items-center justify-center rounded-lg bg-white text-[#7561f7] shadow-sm">
-                                        <ImagePlus class="h-7 w-7" />
-                                    </span>
-                                    <span class="text-sm font-bold text-[#343241]">Натисни, щоб завантажити зображення</span>
-                                    <span class="text-xs font-semibold text-slate-500">JPG, PNG або WebP до 4 MB</span>
-                                </div>
-                            </button>
-
-                            <button
-                                v-if="hasImage"
-                                type="button"
-                                class="absolute right-3 top-8 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white text-red-600 shadow-[0_12px_28px_rgba(15,23,42,0.14)] transition hover:bg-red-50"
-                                aria-label="Видалити зображення"
-                                @click="clearImage"
-                            >
-                                <Trash2 class="h-4 w-4" />
-                            </button>
-
-                            <div v-if="selectedImageName || category.image_path" class="mt-2 text-xs font-semibold text-slate-500">
-                                {{ selectedImageName || category.image_path }}
-                            </div>
-                            <InputError class="mt-2" :message="form.errors.image" />
-                        </div>
-
                         <div class="md:col-span-2">
                             <label class="text-sm font-bold text-slate-700" for="description">Опис</label>
                             <textarea
@@ -358,6 +310,60 @@ onBeforeUnmount(() => {
                         <Save class="h-4 w-4" />
                         Зберегти
                     </button>
+                </section>
+
+                <section class="rounded-lg bg-white p-5 shadow-[0_16px_45px_rgba(61,58,101,0.08)]">
+                    <h2 class="text-lg font-bold text-[#343241]">Зображення</h2>
+                    <p class="mt-1 text-sm text-slate-500">Головне фото категорії для каталогу, меню й SEO-превʼю.</p>
+
+                    <input
+                        id="category_image"
+                        ref="fileInput"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        class="sr-only"
+                        @change="onImageSelected"
+                    />
+
+                    <div class="relative mt-5">
+                        <button
+                            type="button"
+                            class="flex min-h-52 w-full items-center justify-center overflow-hidden rounded-lg border border-dashed border-slate-300 bg-slate-50 text-left transition hover:border-[#7561f7] hover:bg-[#f5f4ff] focus:outline-none focus:ring-2 focus:ring-[#7561f7] focus:ring-offset-2"
+                            @click="openImageDialog"
+                            @dragover.prevent
+                            @drop.prevent="onImageDrop"
+                        >
+                            <img
+                                v-if="hasImage"
+                                :src="imagePreview"
+                                alt=""
+                                class="h-full max-h-72 w-full object-cover"
+                            />
+                            <div v-else class="flex flex-col items-center gap-3 px-6 py-8 text-center">
+                                <span class="inline-flex h-14 w-14 items-center justify-center rounded-lg bg-white text-[#7561f7] shadow-sm">
+                                    <ImagePlus class="h-7 w-7" />
+                                </span>
+                                <span class="text-sm font-bold text-[#343241]">Натисни, щоб завантажити</span>
+                                <span class="text-xs font-semibold text-slate-500">JPG, PNG або WebP до 4 MB</span>
+                            </div>
+                        </button>
+
+                        <button
+                            v-if="canClearImage"
+                            type="button"
+                            class="absolute right-3 top-3 z-10 inline-flex h-10 w-10 items-center justify-center rounded-lg border border-red-100 bg-white text-red-600 shadow-[0_12px_28px_rgba(15,23,42,0.18)] transition hover:bg-red-50"
+                            aria-label="Видалити зображення"
+                            title="Видалити зображення"
+                            @click.stop="clearImage"
+                        >
+                            <Trash2 class="h-4 w-4" />
+                        </button>
+                    </div>
+
+                    <div v-if="selectedImageName || category.image_path" class="mt-3 break-words text-xs font-semibold text-slate-500">
+                        {{ selectedImageName || category.image_path }}
+                    </div>
+                    <InputError class="mt-2" :message="form.errors.image" />
                 </section>
             </aside>
         </form>
