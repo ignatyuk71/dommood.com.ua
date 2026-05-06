@@ -110,7 +110,7 @@ const destroyCategory = (category) => {
                         <tr v-for="category in categories.data" :key="category.id" class="transition hover:bg-slate-50/80">
                             <td class="px-5 py-4">
                                 <div class="flex items-start gap-3">
-                                    <div class="mt-1 inline-flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#f5f4ff] text-[#7561f7] ring-1 ring-slate-100">
+                                    <div class="mt-1 inline-flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#f5f4ff] text-[#7561f7] ring-1 ring-slate-100">
                                         <img
                                             v-if="category.image_url"
                                             :src="category.image_url"
