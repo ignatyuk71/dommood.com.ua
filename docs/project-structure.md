@@ -56,8 +56,9 @@ resources/
 
 ## Перший рекомендований roadmap
 
-1. Налаштувати `.env` під MySQL, cache, queue і mail.
-2. Створити Catalog schema: categories, products, product_variants, product_images.
-3. Додати Content/SEO основу: сторінки, meta tags, schema partials.
-4. Побудувати перший frontend layout: header, footer, home, category, product page.
-5. Додати tracking foundation: GTM container, dataLayer events, server-side order events.
+1. Налаштувати `.env` під MySQL, cache, queue і mail. Готово для local через MAMP MySQL.
+2. Створити e-commerce schema: каталог, замовлення, клієнти, контент, tracking. Готово, деталі в `docs/database-schema.md`.
+3. Побудувати admin layout для роботи менеджера.
+4. Реалізувати Admin CRUD: categories, products, product variants, images, attributes.
+5. Побудувати storefront: header, footer, home, category, product page.
+6. Додати checkout і tracking foundation: GTM container, dataLayer events, server-side order events.
