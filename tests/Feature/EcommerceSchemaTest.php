@@ -70,6 +70,27 @@ class EcommerceSchemaTest extends TestCase
         ]));
     }
 
+    public function test_catalog_schema_contains_reviews_with_moderation_fields(): void
+    {
+        $this->assertTrue(Schema::hasColumns('reviews', [
+            'product_id',
+            'customer_id',
+            'moderated_by',
+            'author_name',
+            'author_email',
+            'rating',
+            'title',
+            'body',
+            'status',
+            'is_verified_buyer',
+            'source',
+            'moderation_note',
+            'admin_reply',
+            'published_at',
+            'moderated_at',
+        ]));
+    }
+
     public function test_order_schema_keeps_customer_and_product_snapshots(): void
     {
         $this->assertTrue(Schema::hasColumns('orders', [

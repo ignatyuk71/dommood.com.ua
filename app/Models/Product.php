@@ -98,6 +98,11 @@ class Product extends Model
         return $this->hasMany(ProductImage::class);
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
     public function attributeValues(): BelongsToMany
     {
         return $this->belongsToMany(AttributeValue::class, 'product_attribute_values')

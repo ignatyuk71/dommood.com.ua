@@ -27,6 +27,7 @@ attribute_values
 product_attribute_values
 product_variant_attribute_values
 product_relations
+reviews
 ```
 
 Важливі можливості:
@@ -39,6 +40,7 @@ product_relations
 - фільтри через `attributes` / `attribute_values`;
 - фото товару та фото конкретного варіанту;
 - повʼязані товари для upsell/cross-sell.
+- `reviews` зберігає відгуки з модерацією: `pending`, `approved`, `rejected`; на публічному сайті показуємо тільки `approved` із `published_at`.
 
 ## Продажі й CRM
 

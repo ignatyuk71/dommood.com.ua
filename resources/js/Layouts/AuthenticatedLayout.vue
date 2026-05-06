@@ -51,7 +51,7 @@ const navItems = [
             { label: 'Характеристики', icon: SlidersHorizontal },
             { label: 'Групи кольорів', routeName: 'admin.color-groups.index', icon: Droplet },
             { label: 'Розмірні сітки', routeName: 'admin.size-charts.index', icon: Grid2X2 },
-            { label: 'Відгуки', icon: MessageSquare },
+            { label: 'Відгуки', routeName: 'admin.reviews.index', icon: MessageSquare },
         ],
     },
     {

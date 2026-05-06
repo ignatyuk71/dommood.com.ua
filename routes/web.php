@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductColorGroupController;
+use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\SizeChartController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
@@ -29,6 +30,12 @@ Route::middleware(['auth', 'verified'])
             ->except(['show']);
         Route::resource('size-charts', SizeChartController::class)
             ->parameters(['size-charts' => 'size_chart'])
+            ->except(['show']);
+        Route::patch('reviews/{review}/approve', [ReviewController::class, 'approve'])
+            ->name('reviews.approve');
+        Route::patch('reviews/{review}/reject', [ReviewController::class, 'reject'])
+            ->name('reviews.reject');
+        Route::resource('reviews', ReviewController::class)
             ->except(['show']);
     });
 
