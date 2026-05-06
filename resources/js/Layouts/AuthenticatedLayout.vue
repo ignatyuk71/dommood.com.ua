@@ -1,5 +1,7 @@
 <script setup>
 import ApplicationLogo from '@/components/ApplicationLogo.vue';
+import GlobalLoadingIndicator from '@/components/GlobalLoadingIndicator.vue';
+import ToastNotifications from '@/components/ToastNotifications.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import {
     Bell,
@@ -117,6 +119,9 @@ const toggleGroup = (label) => {
 
 <template>
     <div class="min-h-screen bg-[#f4f5fb] text-[#343241]">
+        <GlobalLoadingIndicator />
+        <ToastNotifications />
+
         <div
             v-if="sidebarOpen"
             class="fixed inset-0 z-30 bg-slate-950/30 backdrop-blur-sm lg:hidden"

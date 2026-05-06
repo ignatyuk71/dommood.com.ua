@@ -1,5 +1,5 @@
 <script setup>
-import { usePage } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import {
     AlertCircle,
     CheckCircle2,
@@ -13,6 +13,8 @@ const page = usePage();
 const toasts = ref([]);
 const timers = new Map();
 let nextId = 1;
+let lastRouterPayloadKey = null;
+let lastRouterPayloadAt = 0;
 
 const config = {
     success: {
@@ -53,6 +55,23 @@ const flashPayload = computed(() => ({
 
 let lastPayloadKey = null;
 
+const payloadKey = (props, url) => JSON.stringify({
+    url,
+    success: props.flash?.success ?? null,
+    error: props.flash?.error ?? null,
+    warning: props.flash?.warning ?? null,
+    info: props.flash?.info ?? null,
+    categoryError: props.errors?.category ?? null,
+});
+
+const hasToastPayload = (props) => Boolean(
+    props.flash?.success
+    || props.flash?.error
+    || props.flash?.warning
+    || props.flash?.info
+    || typeof props.errors?.category === 'string',
+);
+
 const dismissToast = (id) => {
     clearTimeout(timers.get(id));
     timers.delete(id);
@@ -92,19 +111,51 @@ const pushFromProps = (props) => {
 };
 
 const pushCurrentPageToasts = () => {
-    const payloadKey = JSON.stringify(flashPayload.value);
-
-    if (payloadKey === lastPayloadKey) {
+    if (!hasToastPayload(page.props)) {
         return;
     }
 
-    lastPayloadKey = payloadKey;
+    const currentPayloadKey = JSON.stringify(flashPayload.value);
+
+    if (currentPayloadKey === lastPayloadKey) {
+        return;
+    }
+
+    if (
+        currentPayloadKey === lastRouterPayloadKey
+        && Date.now() - lastRouterPayloadAt < 500
+    ) {
+        lastPayloadKey = currentPayloadKey;
+        return;
+    }
+
+    lastPayloadKey = currentPayloadKey;
     pushFromProps(page.props);
 };
 
 watch(flashPayload, pushCurrentPageToasts, { immediate: true });
 
+const removeSuccessListener = router.on('success', (event) => {
+    const props = event.detail.page.props ?? {};
+
+    if (!hasToastPayload(props)) {
+        return;
+    }
+
+    lastRouterPayloadKey = payloadKey(props, event.detail.page.url);
+    lastRouterPayloadAt = Date.now();
+    pushFromProps(props);
+});
+
+const removeErrorListener = router.on('error', (errors) => {
+    if (typeof errors.detail.errors?.category === 'string') {
+        addToast('error', errors.detail.errors.category);
+    }
+});
+
 onBeforeUnmount(() => {
+    removeSuccessListener();
+    removeErrorListener();
     timers.forEach((timer) => clearTimeout(timer));
     timers.clear();
 });

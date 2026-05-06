@@ -2,7 +2,6 @@ import '../css/app.css';
 import './bootstrap';
 
 import { createInertiaApp } from '@inertiajs/vue3';
-import AppShell from '@/components/AppShell.vue';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
@@ -17,11 +16,7 @@ createInertiaApp({
             import.meta.glob('./pages/**/*.vue'),
         ),
     setup({ el, App, props, plugin }) {
-        return createApp({
-            render: () => h(AppShell, null, {
-                default: () => h(App, props),
-            }),
-        })
+        return createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(ZiggyVue)
             .mount(el);

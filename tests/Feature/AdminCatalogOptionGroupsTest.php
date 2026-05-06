@@ -62,6 +62,25 @@ class AdminCatalogOptionGroupsTest extends TestCase
         $this->assertSame('36-37', $chart->content_json['rows'][0][0]);
     }
 
+    public function test_deleting_product_color_group_flashes_success_message_for_toast(): void
+    {
+        $user = User::factory()->create();
+        $group = ProductColorGroup::query()->create([
+            'name' => 'Base colors',
+            'code' => 'base_colors',
+        ]);
+
+        $response = $this->actingAs($user)->delete(route('admin.color-groups.destroy', $group));
+
+        $response
+            ->assertRedirect(route('admin.color-groups.index'))
+            ->assertSessionHas('success', 'Групу кольорів видалено');
+
+        $this->assertSoftDeleted('product_color_groups', [
+            'id' => $group->id,
+        ]);
+    }
+
     public function test_color_group_and_size_chart_index_pages_are_available(): void
     {
         $user = User::factory()->create();

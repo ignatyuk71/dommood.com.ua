@@ -1,5 +1,7 @@
 <script setup>
 import ApplicationLogo from '@/components/ApplicationLogo.vue';
+import GlobalLoadingIndicator from '@/components/GlobalLoadingIndicator.vue';
+import ToastNotifications from '@/components/ToastNotifications.vue';
 import { Link } from '@inertiajs/vue3';
 </script>
 
@@ -7,6 +9,9 @@ import { Link } from '@inertiajs/vue3';
     <div
         class="flex min-h-screen flex-col items-center bg-gray-100 pt-6 sm:justify-center sm:pt-0"
     >
+        <GlobalLoadingIndicator />
+        <ToastNotifications />
+
         <div>
             <Link href="/">
                 <ApplicationLogo class="h-20 w-20 fill-current text-gray-500" />
