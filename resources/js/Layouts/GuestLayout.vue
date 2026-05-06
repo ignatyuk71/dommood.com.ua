@@ -2,6 +2,7 @@
 import ApplicationLogo from '@/components/ApplicationLogo.vue';
 import GlobalLoadingIndicator from '@/components/GlobalLoadingIndicator.vue';
 import ToastNotifications from '@/components/ToastNotifications.vue';
+import WorkspaceLoadingOverlay from '@/components/WorkspaceLoadingOverlay.vue';
 import { Link } from '@inertiajs/vue3';
 </script>
 
@@ -19,8 +20,9 @@ import { Link } from '@inertiajs/vue3';
         </div>
 
         <div
-            class="mt-6 w-full overflow-hidden bg-white px-6 py-4 shadow-md sm:max-w-md sm:rounded-lg"
+            class="relative mt-6 w-full overflow-hidden bg-white px-6 py-4 shadow-md sm:max-w-md sm:rounded-lg"
         >
+            <WorkspaceLoadingOverlay />
             <slot />
         </div>
     </div>

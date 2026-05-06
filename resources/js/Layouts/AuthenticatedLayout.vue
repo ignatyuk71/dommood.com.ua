@@ -2,6 +2,7 @@
 import ApplicationLogo from '@/components/ApplicationLogo.vue';
 import GlobalLoadingIndicator from '@/components/GlobalLoadingIndicator.vue';
 import ToastNotifications from '@/components/ToastNotifications.vue';
+import WorkspaceLoadingOverlay from '@/components/WorkspaceLoadingOverlay.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import {
     Bell,
@@ -273,7 +274,9 @@ const toggleGroup = (label) => {
                 </div>
             </header>
 
-            <main class="px-4 pb-10 md:px-7">
+            <main class="relative min-h-[calc(100vh-112px)] px-4 pb-10 md:px-7">
+                <WorkspaceLoadingOverlay />
+
                 <section v-if="$slots.header" class="mb-6 rounded-lg bg-white px-5 py-6 shadow-[0_16px_45px_rgba(61,58,101,0.08)] md:px-7">
                     <slot name="header" />
                 </section>
