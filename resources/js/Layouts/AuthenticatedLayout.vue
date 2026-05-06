@@ -21,6 +21,8 @@ import {
     MessageSquare,
     Moon,
     PackageSearch,
+    PanelLeftClose,
+    PanelLeftOpen,
     RefreshCw,
     Search,
     Settings,
@@ -35,7 +37,10 @@ import { computed, ref } from 'vue';
 
 const page = usePage();
 const sidebarOpen = ref(false);
-const openGroups = ref(['Каталог']);
+const sidebarPinned = ref(typeof window === 'undefined'
+    ? true
+    : window.localStorage.getItem('adminSidebarPinned') !== 'false');
+const sidebarHovered = ref(false);
 
 const user = computed(() => page.props.auth.user);
 
@@ -108,13 +113,25 @@ const isActive = (item) => item.routeName && (
     route().current(item.routeName) || route().current(routePattern(item.routeName))
 );
 const hasActiveChild = (item) => item.children?.some((child) => isActive(child));
-const isOpen = (item) => openGroups.value.includes(item.label) || hasActiveChild(item);
+const activeGroupLabel = computed(() => navItems.find((item) => hasActiveChild(item))?.label ?? 'Каталог');
+const openGroup = ref(activeGroupLabel.value);
+const sidebarExpanded = computed(() => sidebarPinned.value || sidebarHovered.value || sidebarOpen.value);
+const mainOffsetClass = computed(() => (sidebarPinned.value ? 'lg:pl-[292px]' : 'lg:pl-[88px]'));
+const isOpen = (item) => openGroup.value === item.label;
 const childLabel = (child) => (typeof child === 'string' ? child : child.label);
 const childIcon = (child) => (typeof child === 'string' ? ChevronRight : child.icon);
 const toggleGroup = (label) => {
-    openGroups.value = openGroups.value.includes(label)
-        ? openGroups.value.filter((item) => item !== label)
-        : [...openGroups.value, label];
+    openGroup.value = openGroup.value === label ? null : label;
+};
+const toggleSidebarPin = () => {
+    sidebarPinned.value = !sidebarPinned.value;
+
+    window.localStorage.setItem('adminSidebarPinned', sidebarPinned.value ? 'true' : 'false');
+
+    if (sidebarPinned.value) {
+        sidebarHovered.value = false;
+        openGroup.value = openGroup.value ?? activeGroupLabel.value;
+    }
 };
 </script>
 
@@ -130,16 +147,42 @@ const toggleGroup = (label) => {
         />
 
         <aside
-            class="fixed inset-y-0 left-0 z-40 flex w-[292px] flex-col border-r border-slate-100 bg-white shadow-[20px_0_45px_rgba(61,58,101,0.08)] transition-transform duration-200 lg:translate-x-0"
-            :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+            class="fixed inset-y-0 left-0 z-40 flex w-[292px] flex-col border-r border-slate-100 bg-white shadow-[20px_0_45px_rgba(61,58,101,0.08)] transition-[transform,width] duration-200 lg:translate-x-0"
+            :class="[
+                sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+                sidebarExpanded ? 'lg:w-[292px]' : 'lg:w-[88px]',
+            ]"
+            @mouseenter="sidebarHovered = true"
+            @mouseleave="sidebarHovered = false"
         >
-            <div class="flex h-24 items-center justify-between px-6">
-                <Link :href="route('dashboard')" class="flex items-center gap-3">
+            <div
+                class="flex h-24 items-center gap-3 px-6 transition-all"
+                :class="sidebarExpanded ? 'justify-between' : 'justify-center lg:px-4'"
+            >
+                <Link
+                    :href="route('dashboard')"
+                    class="flex min-w-0 items-center gap-3"
+                    :class="sidebarExpanded ? '' : 'justify-center'"
+                >
                     <ApplicationLogo class="h-12 w-12 object-contain" />
-                    <span class="text-2xl font-bold tracking-tight text-[#6d5df6]">
+                    <span
+                        v-show="sidebarExpanded"
+                        class="whitespace-nowrap text-2xl font-bold tracking-tight text-[#6d5df6]"
+                    >
                         DomMood
                     </span>
                 </Link>
+                <button
+                    v-show="sidebarExpanded"
+                    type="button"
+                    class="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-[#29277f] lg:inline-flex"
+                    :aria-label="sidebarPinned ? 'Відкріпити меню' : 'Закріпити меню'"
+                    :title="sidebarPinned ? 'Відкріпити меню' : 'Закріпити меню'"
+                    @click="toggleSidebarPin"
+                >
+                    <PanelLeftClose v-if="sidebarPinned" class="h-5 w-5" />
+                    <PanelLeftOpen v-else class="h-5 w-5" />
+                </button>
                 <button
                     type="button"
                     class="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 lg:hidden"
@@ -159,10 +202,16 @@ const toggleGroup = (label) => {
                         :class="isActive(item)
                             ? 'bg-[#7561f7] text-white shadow-[0_12px_28px_rgba(117,97,247,0.34)]'
                             : 'text-[#615d72] hover:bg-slate-50 hover:text-[#29277f]'"
+                        :title="sidebarExpanded ? null : item.label"
                         @click="sidebarOpen = false"
                     >
                         <component :is="item.icon" class="h-5 w-5 shrink-0" />
-                        <span class="flex-1">{{ item.label }}</span>
+                        <span
+                            v-show="sidebarExpanded"
+                            class="min-w-0 flex-1 whitespace-nowrap"
+                        >
+                            {{ item.label }}
+                        </span>
                     </Link>
 
                     <div v-else-if="item.children">
@@ -172,17 +221,24 @@ const toggleGroup = (label) => {
                             :class="hasActiveChild(item)
                                 ? 'bg-[#7561f7] text-white shadow-[0_12px_28px_rgba(117,97,247,0.34)]'
                                 : 'text-[#615d72] hover:bg-slate-50 hover:text-[#29277f]'"
+                            :title="sidebarExpanded ? null : item.label"
                             @click="toggleGroup(item.label)"
                         >
                             <component :is="item.icon" class="h-5 w-5 shrink-0" />
-                            <span class="flex-1">{{ item.label }}</span>
+                            <span
+                                v-show="sidebarExpanded"
+                                class="min-w-0 flex-1 whitespace-nowrap"
+                            >
+                                {{ item.label }}
+                            </span>
                             <ChevronDown
+                                v-show="sidebarExpanded"
                                 class="h-4 w-4 transition"
                                 :class="isOpen(item) ? 'rotate-180' : ''"
                             />
                         </button>
 
-                        <div v-show="isOpen(item)" class="space-y-1 py-2 pl-7">
+                        <div v-show="sidebarExpanded && isOpen(item)" class="space-y-1 py-2 pl-7">
                             <template v-for="child in item.children" :key="childLabel(child)">
                                 <Link
                                     v-if="hasRoute(child.routeName)"
@@ -214,17 +270,26 @@ const toggleGroup = (label) => {
                         v-else
                         href="#"
                         class="group flex min-h-12 items-center gap-4 rounded-lg px-4 text-[15px] font-semibold text-[#615d72] transition hover:bg-slate-50 hover:text-[#29277f]"
+                        :title="sidebarExpanded ? null : item.label"
                         @click.prevent
                     >
                         <component :is="item.icon" class="h-5 w-5 shrink-0" />
-                        <span class="flex-1">{{ item.label }}</span>
-                        <ChevronRight class="h-4 w-4 text-slate-400 transition group-hover:translate-x-0.5" />
+                        <span
+                            v-show="sidebarExpanded"
+                            class="min-w-0 flex-1 whitespace-nowrap"
+                        >
+                            {{ item.label }}
+                        </span>
+                        <ChevronRight
+                            v-show="sidebarExpanded"
+                            class="h-4 w-4 text-slate-400 transition group-hover:translate-x-0.5"
+                        />
                     </a>
                 </template>
             </nav>
         </aside>
 
-        <div class="min-h-screen lg:pl-[292px]">
+        <div class="min-h-screen transition-[padding] duration-200" :class="mainOffsetClass">
             <header class="sticky top-0 z-20 bg-[#f4f5fb]/90 px-4 py-4 backdrop-blur md:px-7">
                 <div class="flex min-h-20 items-center justify-between rounded-lg bg-white px-4 shadow-[0_16px_45px_rgba(61,58,101,0.08)] md:px-6">
                     <div class="flex items-center gap-3">
