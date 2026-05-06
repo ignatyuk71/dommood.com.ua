@@ -47,7 +47,7 @@ const navItems = [
         icon: PackageSearch,
         children: [
             { label: 'Товари', icon: Box },
-            { label: 'Категорії', icon: ListTree },
+            { label: 'Категорії', routeName: 'admin.categories.index', icon: ListTree },
             { label: 'Характеристики', icon: SlidersHorizontal },
             { label: 'Групи кольорів', routeName: 'admin.color-groups.index', icon: Droplet },
             { label: 'Розмірні сітки', routeName: 'admin.size-charts.index', icon: Grid2X2 },

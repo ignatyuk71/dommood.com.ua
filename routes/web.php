@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductColorGroupController;
 use App\Http\Controllers\Admin\ReviewController;
@@ -25,6 +26,8 @@ Route::middleware(['auth', 'verified'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function (): void {
+        Route::resource('categories', CategoryController::class)
+            ->except(['show']);
         Route::resource('color-groups', ProductColorGroupController::class)
             ->parameters(['color-groups' => 'color_group'])
             ->except(['show']);

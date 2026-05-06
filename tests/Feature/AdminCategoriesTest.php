@@ -1,0 +1,123 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Category;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class AdminCategoriesTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_admin_can_create_root_category(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('admin.categories.store'), [
+            'name' => 'Жіночі капці',
+            'slug' => 'zhinochi-kaptsi',
+            'description' => 'Мʼякі домашні капці для жінок.',
+            'is_active' => true,
+            'sort_order' => 10,
+            'meta_title' => 'Жіночі капці купити в Україні',
+            'meta_description' => 'Жіночі домашні капці DomMood з доставкою по Україні.',
+            'seo_text' => 'SEO текст категорії.',
+        ]);
+
+        $response->assertRedirect(route('admin.categories.index'));
+
+        $this->assertDatabaseHas('categories', [
+            'name' => 'Жіночі капці',
+            'slug' => 'zhinochi-kaptsi',
+            'is_active' => true,
+            'sort_order' => 10,
+        ]);
+    }
+
+    public function test_admin_can_create_child_category_with_generated_slug(): void
+    {
+        $user = User::factory()->create();
+        $parent = Category::query()->create([
+            'name' => 'Капці',
+            'slug' => 'kaptsi',
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.categories.store'), [
+            'parent_id' => $parent->id,
+            'name' => 'Теплі моделі',
+            'slug' => '',
+            'is_active' => true,
+        ]);
+
+        $response->assertRedirect(route('admin.categories.index'));
+
+        $this->assertDatabaseHas('categories', [
+            'parent_id' => $parent->id,
+            'name' => 'Теплі моделі',
+            'slug' => 'tepli-modeli',
+        ]);
+    }
+
+    public function test_admin_cannot_create_category_parent_cycle(): void
+    {
+        $user = User::factory()->create();
+        $parent = Category::query()->create([
+            'name' => 'Одяг',
+            'slug' => 'odyag',
+        ]);
+        $child = Category::query()->create([
+            'parent_id' => $parent->id,
+            'name' => 'Піжами',
+            'slug' => 'pizhamy',
+        ]);
+
+        $response = $this->actingAs($user)->put(route('admin.categories.update', $parent), [
+            'parent_id' => $child->id,
+            'name' => 'Одяг',
+            'slug' => 'odyag',
+            'is_active' => true,
+        ]);
+
+        $response->assertSessionHasErrors('parent_id');
+
+        $this->assertDatabaseHas('categories', [
+            'id' => $parent->id,
+            'parent_id' => null,
+        ]);
+    }
+
+    public function test_admin_cannot_delete_category_with_children(): void
+    {
+        $user = User::factory()->create();
+        $parent = Category::query()->create([
+            'name' => 'Домашній одяг',
+            'slug' => 'domashnii-odyag',
+        ]);
+        Category::query()->create([
+            'parent_id' => $parent->id,
+            'name' => 'Халати',
+            'slug' => 'halaty',
+        ]);
+
+        $response = $this->actingAs($user)->delete(route('admin.categories.destroy', $parent));
+
+        $response->assertSessionHasErrors('category');
+        $this->assertDatabaseHas('categories', ['id' => $parent->id]);
+    }
+
+    public function test_categories_index_is_available_for_admin(): void
+    {
+        $user = User::factory()->create();
+
+        Category::query()->create([
+            'name' => 'Піжами',
+            'slug' => 'pizhamy',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('admin.categories.index'))
+            ->assertOk();
+    }
+}
