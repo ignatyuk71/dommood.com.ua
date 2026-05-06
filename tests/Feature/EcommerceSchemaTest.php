@@ -46,6 +46,23 @@ class EcommerceSchemaTest extends TestCase
             'reserved_quantity',
             'is_active',
         ]));
+
+        $this->assertTrue(Schema::hasColumns('attributes', [
+            'name',
+            'slug',
+            'type',
+            'is_filterable',
+            'is_variant_option',
+            'sort_order',
+        ]));
+
+        $this->assertTrue(Schema::hasColumns('attribute_values', [
+            'attribute_id',
+            'value',
+            'slug',
+            'color_hex',
+            'sort_order',
+        ]));
     }
 
     public function test_catalog_schema_contains_color_groups_and_size_charts(): void
