@@ -31,7 +31,7 @@ class StoreSizeChartRequest extends FormRequest
             'content_json.rows.*' => ['array', 'max:20'],
             'content_json.rows.*.*' => ['nullable', 'string', 'max:80'],
             'content_html' => ['nullable', 'string'],
-            'image_path' => ['nullable', 'string', 'max:255'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'is_active' => ['boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ];

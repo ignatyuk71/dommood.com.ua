@@ -33,7 +33,8 @@ class UpdateSizeChartRequest extends FormRequest
             'content_json.rows.*' => ['array', 'max:20'],
             'content_json.rows.*.*' => ['nullable', 'string', 'max:80'],
             'content_html' => ['nullable', 'string'],
-            'image_path' => ['nullable', 'string', 'max:255'],
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'delete_image' => ['boolean'],
             'is_active' => ['boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ];
@@ -42,6 +43,7 @@ class UpdateSizeChartRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
+            'delete_image' => $this->boolean('delete_image'),
             'is_active' => $this->boolean('is_active'),
         ]);
     }
