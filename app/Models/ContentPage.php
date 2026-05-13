@@ -32,7 +32,11 @@ class ContentPage extends Model
 
     public function scopePublished(Builder $query): Builder
     {
-        return $query->where('status', 'published');
+        return $query
+            ->where('status', 'published')
+            ->where(fn (Builder $inner): Builder => $inner
+                ->whereNull('published_at')
+                ->orWhere('published_at', '<=', now()));
     }
 
     public function menuItems(): MorphMany

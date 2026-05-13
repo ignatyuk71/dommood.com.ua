@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Order;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Throwable;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -29,10 +31,17 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
+                'roles' => fn () => $user?->getRoleNames()->values()->all() ?? [],
+                'permissions' => fn () => $user?->getAllPermissions()->pluck('name')->values()->all() ?? [],
+            ],
+            'adminStats' => fn () => [
+                'active_orders_count' => $this->activeOrdersCount($request),
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
@@ -41,5 +50,26 @@ class HandleInertiaRequests extends Middleware
                 'info' => fn () => $request->session()->get('info'),
             ],
         ];
+    }
+
+    private function activeOrdersCount(Request $request): int
+    {
+        $user = $request->user();
+
+        if (! $user || ! $request->is('admin*')) {
+            return 0;
+        }
+
+        try {
+            if (! $user->can('admin.orders.view')) {
+                return 0;
+            }
+
+            return Order::query()
+                ->whereNotIn('status', ['completed', 'cancelled', 'returned'])
+                ->count();
+        } catch (Throwable) {
+            return 0;
+        }
     }
 }

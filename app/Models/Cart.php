@@ -19,6 +19,7 @@ class Cart extends Model
         'currency',
         'subtotal_cents',
         'discount_total_cents',
+        'promocode_code',
         'total_cents',
         'utm_source',
         'utm_medium',

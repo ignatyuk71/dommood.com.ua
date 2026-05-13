@@ -26,15 +26,15 @@ const destroyGroup = (group) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <p class="text-sm font-semibold text-slate-500">Каталог</p>
-                    <h1 class="mt-1 text-3xl font-bold tracking-tight text-[#343241]">Групи кольорів</h1>
+                    <h1 class="text-2xl font-bold tracking-tight text-[#343241]">Групи кольорів</h1>
+                    <p class="mt-0.5 text-xs font-semibold text-slate-500">Каталог</p>
                 </div>
 
                 <Link
                     :href="route('admin.color-groups.create')"
-                    class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#7561f7] px-4 text-sm font-bold text-white shadow-[0_12px_28px_rgba(117,97,247,0.28)] transition hover:bg-[#6552e8]"
+                    class="inline-flex min-h-9 items-center justify-center gap-2 rounded-md bg-[#7561f7] px-4 text-sm font-bold text-white shadow-[0_10px_22px_rgba(117,97,247,0.24)] transition hover:bg-[#6552e8]"
                 >
                     <Plus class="h-4 w-4" />
                     Додати групу
@@ -42,80 +42,88 @@ const destroyGroup = (group) => {
             </div>
         </template>
 
-        <section class="rounded-lg bg-white shadow-[0_16px_45px_rgba(61,58,101,0.08)]">
-            <div class="flex flex-col gap-2 border-b border-slate-100 px-5 py-5 md:flex-row md:items-center md:justify-between">
+        <section class="space-y-2">
+            <div class="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white px-3 py-3 shadow-[0_8px_22px_rgba(15,23,42,0.045)] md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h2 class="text-lg font-bold text-[#343241]">Список груп</h2>
-                    <p class="text-sm text-slate-500">Групи обʼєднують товари одного дизайну в різних кольорах.</p>
+                    <h2 class="text-sm font-bold text-[#343241]">Список груп</h2>
+                    <p class="text-xs font-semibold text-slate-500">Групи обʼєднують товари одного дизайну в різних кольорах.</p>
                 </div>
-                <div class="inline-flex items-center gap-2 rounded-lg bg-[#f5f4ff] px-3 py-2 text-sm font-bold text-[#7561f7]">
+                <div class="inline-flex items-center gap-2 rounded-md bg-[#f5f4ff] px-2.5 py-1.5 text-xs font-bold text-[#7561f7]">
                     <Droplet class="h-4 w-4" />
                     {{ groups.total }} записів
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-100">
-                    <thead class="bg-slate-50/70">
-                        <tr>
-                            <th class="px-5 py-4 text-left text-xs font-bold uppercase text-slate-500">Назва</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold uppercase text-slate-500">Код</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold uppercase text-slate-500">Товарів</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold uppercase text-slate-500">Статус</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold uppercase text-slate-500">Порядок</th>
-                            <th class="px-5 py-4 text-right text-xs font-bold uppercase text-slate-500">Дії</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        <tr v-for="group in groups.data" :key="group.id" class="transition hover:bg-slate-50/80">
-                            <td class="px-5 py-4">
-                                <div class="font-bold text-[#343241]">{{ group.name }}</div>
-                                <div v-if="group.description" class="mt-1 max-w-xl text-sm text-slate-500">{{ group.description }}</div>
-                            </td>
-                            <td class="px-5 py-4">
-                                <code class="rounded bg-slate-100 px-2 py-1 text-sm font-semibold text-slate-700">{{ group.code }}</code>
-                            </td>
-                            <td class="px-5 py-4 text-sm font-bold text-[#343241]">{{ group.products_count }}</td>
-                            <td class="px-5 py-4">
-                                <span
-                                    class="rounded-full px-3 py-1 text-xs font-bold"
-                                    :class="group.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'"
-                                >
-                                    {{ group.is_active ? 'Активна' : 'Вимкнена' }}
-                                </span>
-                            </td>
-                            <td class="px-5 py-4 text-sm font-semibold text-slate-600">{{ group.sort_order }}</td>
-                            <td class="px-5 py-4">
-                                <div class="flex justify-end gap-2">
-                                    <Link
-                                        :href="route('admin.color-groups.edit', group.id)"
-                                        class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-[#7561f7] hover:text-[#7561f7]"
-                                        aria-label="Редагувати"
-                                    >
-                                        <Pencil class="h-4 w-4" />
-                                    </Link>
-                                    <button
-                                        type="button"
-                                        class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-red-300 hover:text-red-600"
-                                        aria-label="Видалити"
-                                        @click="destroyGroup(group)"
-                                    >
-                                        <Trash2 class="h-4 w-4" />
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <tr v-if="groups.data.length === 0">
-                            <td colspan="6" class="px-5 py-10 text-center text-sm font-semibold text-slate-500">
-                                Груп кольорів ще немає.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="hidden rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-500 xl:grid xl:grid-cols-[minmax(360px,1fr)_150px_120px_130px_90px] xl:gap-4">
+                <div>Група</div>
+                <div>Код</div>
+                <div>Товари</div>
+                <div>Статус</div>
+                <div class="text-right">Дії</div>
             </div>
 
-            <div v-if="groups.links?.length > 3" class="flex flex-wrap gap-2 border-t border-slate-100 px-5 py-4">
+            <div v-if="groups.data.length" class="space-y-2">
+                <article
+                    v-for="group in groups.data"
+                    :key="group.id"
+                    class="grid items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 shadow-[0_8px_22px_rgba(15,23,42,0.045)] transition hover:border-slate-300 hover:shadow-[0_12px_28px_rgba(15,23,42,0.07)] xl:grid-cols-[minmax(360px,1fr)_150px_120px_130px_90px] xl:gap-4"
+                >
+                    <div class="flex min-w-0 items-center gap-3">
+                        <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-[#f5f4ff] text-[#7561f7] ring-1 ring-slate-200">
+                            <Droplet class="h-5 w-5" />
+                        </div>
+                        <div class="min-w-0">
+                            <Link
+                                :href="route('admin.color-groups.edit', group.id)"
+                                class="block truncate text-sm font-bold text-[#242231] transition hover:text-[#7561f7] hover:underline"
+                            >
+                                {{ group.name }}
+                            </Link>
+                            <p v-if="group.description" class="mt-0.5 max-h-8 overflow-hidden text-xs font-semibold leading-4 text-slate-500">
+                                {{ group.description }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <code class="w-fit rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-600">{{ group.code }}</code>
+
+                    <div class="text-sm font-bold text-[#343241]">{{ group.products_count }}</div>
+
+                    <div class="flex flex-wrap gap-1">
+                        <span
+                            class="rounded px-2 py-0.5 text-[11px] font-bold"
+                            :class="group.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'"
+                        >
+                            {{ group.is_active ? 'Активна' : 'Вимкнена' }}
+                        </span>
+                        <span class="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-500">№{{ group.sort_order }}</span>
+                    </div>
+
+                    <div class="flex justify-end gap-1.5">
+                        <Link
+                            :href="route('admin.color-groups.edit', group.id)"
+                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 shadow-sm transition hover:border-[#7561f7] hover:text-[#7561f7]"
+                            aria-label="Редагувати"
+                        >
+                            <Pencil class="h-4 w-4" />
+                        </Link>
+                        <button
+                            type="button"
+                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 shadow-sm transition hover:border-red-300 hover:text-red-600"
+                            aria-label="Видалити"
+                            @click="destroyGroup(group)"
+                        >
+                            <Trash2 class="h-4 w-4" />
+                        </button>
+                    </div>
+                </article>
+            </div>
+
+            <div v-else class="rounded-lg border border-dashed border-slate-300 bg-white px-5 py-10 text-center text-sm font-semibold text-slate-500">
+                Груп кольорів ще немає.
+            </div>
+
+            <div v-if="groups.links?.length > 3" class="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3">
                 <template v-for="link in groups.links" :key="link.label">
                     <Link
                         v-if="link.url"

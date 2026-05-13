@@ -31,6 +31,8 @@ class UpdateCategoryRequest extends FormRequest
             'delete_image' => ['boolean'],
             'is_active' => ['boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'filter_attribute_ids' => ['nullable', 'array'],
+            'filter_attribute_ids.*' => ['integer', 'distinct', 'exists:attributes,id'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:320'],
             'seo_text' => ['nullable', 'string'],
@@ -43,6 +45,7 @@ class UpdateCategoryRequest extends FormRequest
             'is_active' => $this->boolean('is_active'),
             'delete_image' => $this->boolean('delete_image'),
             'parent_id' => $this->input('parent_id') ?: null,
+            'filter_attribute_ids' => $this->input('filter_attribute_ids', []),
         ]);
     }
 }

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use App\Models\User;
+use App\Actions\Admin\SyncAdminRolesAndPermissions;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -41,12 +43,22 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => 'customer',
+        ]);
+
+        app(SyncAdminRolesAndPermissions::class)();
+        $user->assignRole('customer');
+
+        Customer::query()->create([
+            'user_id' => $user->id,
+            'first_name' => $user->name,
+            'email' => $user->email,
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect(route('account.dashboard', absolute: false));
     }
 }

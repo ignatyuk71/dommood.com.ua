@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreCategoryRequest;
 use App\Http\Requests\Admin\UpdateCategoryRequest;
 use App\Models\Category;
+use App\Models\ProductAttribute;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -23,7 +24,7 @@ class CategoryController extends Controller
 
         $categories = Category::query()
             ->with(['parent:id,name'])
-            ->withCount(['children', 'products', 'primaryProducts'])
+            ->withCount(['children', 'products', 'primaryProducts', 'filterAttributes'])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($inner) use ($search): void {
                     $inner->where('name', 'like', "%{$search}%")
@@ -53,6 +54,7 @@ class CategoryController extends Controller
             'mode' => 'create',
             'category' => $this->emptyCategory(),
             'parentOptions' => $this->categoryOptions(),
+            'filterAttributeOptions' => $this->filterAttributeOptions(),
         ]);
     }
 
@@ -61,6 +63,7 @@ class CategoryController extends Controller
         $data = $request->validated();
 
         $category = Category::query()->create($this->payload($data));
+        $this->syncFilterAttributes($category, $data['filter_attribute_ids'] ?? []);
 
         if ($request->hasFile('image')) {
             $category->update([
@@ -75,12 +78,13 @@ class CategoryController extends Controller
 
     public function edit(Category $category): Response
     {
-        $category->load(['parent:id,name']);
+        $category->load(['parent:id,name', 'filterAttributes:id']);
 
         return Inertia::render('Admin/Catalog/Categories/Form', [
             'mode' => 'edit',
             'category' => $this->serializeCategory($category, full: true),
             'parentOptions' => $this->categoryOptions($category->id),
+            'filterAttributeOptions' => $this->filterAttributeOptions(),
         ]);
     }
 
@@ -106,6 +110,7 @@ class CategoryController extends Controller
         }
 
         $category->update($payload);
+        $this->syncFilterAttributes($category, $data['filter_attribute_ids'] ?? []);
 
         if ($request->hasFile('image')) {
             $this->deleteImage($oldImagePath);
@@ -193,6 +198,46 @@ class CategoryController extends Controller
             ->all();
     }
 
+    private function filterAttributeOptions(): array
+    {
+        return ProductAttribute::query()
+            ->filterable()
+            ->with('values:id,attribute_id,value,slug,sort_order')
+            ->ordered()
+            ->get(['id', 'name', 'slug', 'type', 'sort_order'])
+            ->map(fn (ProductAttribute $attribute): array => [
+                'id' => $attribute->id,
+                'name' => $attribute->name,
+                'slug' => $attribute->slug,
+                'type' => $attribute->type,
+                'values_count' => $attribute->values->count(),
+            ])
+            ->values()
+            ->all();
+    }
+
+    private function syncFilterAttributes(Category $category, array $attributeIds): void
+    {
+        $attributes = ProductAttribute::query()
+            ->filterable()
+            ->whereIn('id', collect($attributeIds)->map(fn ($id) => (int) $id)->unique()->all())
+            ->ordered()
+            ->get(['id', 'type']);
+
+        $syncPayload = $attributes
+            ->values()
+            ->mapWithKeys(fn (ProductAttribute $attribute, int $index): array => [
+                $attribute->id => [
+                    'is_active' => true,
+                    'display_type' => $attribute->type === ProductAttribute::TYPE_COLOR ? 'color' : 'checkbox',
+                    'sort_order' => $index * 10,
+                ],
+            ])
+            ->all();
+
+        $category->filterAttributes()->sync($syncPayload);
+    }
+
     private function optionLabel(Category $category, $categories): string
     {
         $depth = 0;
@@ -249,9 +294,13 @@ class CategoryController extends Controller
             'meta_title' => $category->meta_title,
             'meta_description' => $category->meta_description,
             'seo_text' => $full ? $category->seo_text : null,
+            'filter_attribute_ids' => $full && $category->relationLoaded('filterAttributes')
+                ? $category->filterAttributes->pluck('id')->values()->all()
+                : [],
             'children_count' => $category->children_count ?? 0,
             'products_count' => $category->products_count ?? 0,
             'primary_products_count' => $category->primary_products_count ?? 0,
+            'filter_attributes_count' => $category->filter_attributes_count ?? 0,
             'created_at' => $category->created_at?->toDateTimeString(),
         ];
     }
@@ -270,6 +319,7 @@ class CategoryController extends Controller
             'meta_title' => '',
             'meta_description' => '',
             'seo_text' => '',
+            'filter_attribute_ids' => [],
         ];
     }
 

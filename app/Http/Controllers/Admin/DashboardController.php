@@ -46,7 +46,7 @@ class DashboardController extends Controller
             ->unique()
             ->count();
 
-        return Inertia::render('Dashboard', [
+        return Inertia::render('Admin/Dashboard', [
             'dashboard' => [
                 'period' => [
                     'label' => $this->periodLabel($startDate, $endDate),

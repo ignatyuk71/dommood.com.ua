@@ -16,7 +16,19 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        //
+        $middleware->validateCsrfTokens(except: [
+            'payments/liqpay/callback',
+            'payments/liqpay/result',
+        ]);
+
+        $middleware->alias([
+            'admin.access' => \App\Http\Middleware\EnsureAdminAccess::class,
+            'admin.activity.visit' => \App\Http\Middleware\LogAdminModuleVisit::class,
+            'admin.permission' => \App\Http\Middleware\EnsureAdminPermission::class,
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

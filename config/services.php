@@ -22,6 +22,14 @@ return [
         'key' => env('RESEND_API_KEY'),
     ],
 
+    'nova_poshta' => [
+        'api_key' => env('NOVA_POSHTA_API_KEY'),
+        'api_url' => env('NOVA_POSHTA_API_URL', 'https://api.novaposhta.ua/v2.0/json/'),
+        'sender_city_ref' => env('NOVA_POSHTA_SENDER_CITY_REF'),
+        'sender_warehouse_ref' => env('NOVA_POSHTA_SENDER_WAREHOUSE_REF'),
+        'default_weight' => env('NOVA_POSHTA_DEFAULT_WEIGHT', 1),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

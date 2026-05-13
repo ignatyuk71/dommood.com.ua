@@ -50,15 +50,15 @@ const destroyCategory = (category) => {
 
     <AuthenticatedLayout>
         <template #header>
-            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <p class="text-sm font-semibold text-slate-500">Каталог</p>
-                    <h1 class="mt-1 text-3xl font-bold tracking-tight text-[#343241]">Категорії</h1>
+                    <h1 class="text-2xl font-bold tracking-tight text-[#343241]">Категорії</h1>
+                    <p class="mt-0.5 text-xs font-semibold text-slate-500">Каталог</p>
                 </div>
 
                 <Link
                     :href="route('admin.categories.create')"
-                    class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#7561f7] px-4 text-sm font-bold text-white shadow-[0_12px_28px_rgba(117,97,247,0.28)] transition hover:bg-[#6552e8]"
+                    class="inline-flex min-h-9 items-center justify-center gap-2 rounded-md bg-[#7561f7] px-4 text-sm font-bold text-white shadow-[0_10px_22px_rgba(117,97,247,0.24)] transition hover:bg-[#6552e8]"
                 >
                     <Plus class="h-4 w-4" />
                     Додати категорію
@@ -66,12 +66,12 @@ const destroyCategory = (category) => {
             </div>
         </template>
 
-        <section class="rounded-lg bg-white shadow-[0_16px_45px_rgba(61,58,101,0.08)]">
-            <div class="border-b border-slate-100 px-5 py-5">
-                <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <section class="space-y-2">
+            <div class="rounded-lg border border-slate-200 bg-white px-3 py-3 shadow-[0_8px_22px_rgba(15,23,42,0.045)]">
+                <div class="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                     <div>
-                        <h2 class="text-lg font-bold text-[#343241]">Структура каталогу</h2>
-                        <p class="text-sm text-slate-500">Категорії формують SEO-сторінки, меню і фільтрацію товарів.</p>
+                        <h2 class="text-sm font-bold text-[#343241]">Структура каталогу</h2>
+                        <p class="text-xs font-semibold text-slate-500">SEO-сторінки, меню і фільтрація товарів.</p>
                     </div>
 
                     <form class="flex w-full max-w-xl gap-2" @submit.prevent="applySearch">
@@ -80,13 +80,13 @@ const destroyCategory = (category) => {
                             <input
                                 v-model="search"
                                 type="search"
-                                class="w-full rounded-lg border-slate-200 pl-9 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
+                                class="h-9 w-full rounded-md border-slate-200 pl-9 text-sm font-semibold shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
                                 placeholder="Пошук за назвою, slug або SEO title"
                             />
                         </div>
                         <button
                             type="submit"
-                            class="rounded-lg bg-[#343241] px-4 text-sm font-bold text-white transition hover:bg-[#292736]"
+                            class="rounded-md bg-[#343241] px-4 text-sm font-bold text-white transition hover:bg-[#292736]"
                         >
                             Знайти
                         </button>
@@ -94,101 +94,109 @@ const destroyCategory = (category) => {
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-100">
-                    <thead class="bg-slate-50/70">
-                        <tr>
-                            <th class="px-5 py-4 text-left text-xs font-bold uppercase text-slate-500">Категорія</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold uppercase text-slate-500">Батьківська</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold uppercase text-slate-500">Товари</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold uppercase text-slate-500">Статус</th>
-                            <th class="px-5 py-4 text-left text-xs font-bold uppercase text-slate-500">SEO</th>
-                            <th class="px-5 py-4 text-right text-xs font-bold uppercase text-slate-500">Дії</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        <tr v-for="category in categories.data" :key="category.id" class="transition hover:bg-slate-50/80">
-                            <td class="px-5 py-4">
-                                <div class="flex items-start gap-3">
-                                    <div class="mt-1 inline-flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#f5f4ff] text-[#7561f7] ring-1 ring-slate-100">
-                                        <img
-                                            v-if="category.image_url"
-                                            :src="category.image_url"
-                                            :alt="category.name"
-                                            class="h-full w-full object-cover"
-                                            loading="lazy"
-                                        />
-                                        <Image v-else-if="category.image_path" class="h-5 w-5" />
-                                        <FolderTree v-else class="h-5 w-5" />
-                                    </div>
-                                    <div>
-                                        <div class="font-bold text-[#343241]">{{ category.name }}</div>
-                                        <code class="mt-1 inline-block rounded bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">
-                                            /{{ category.slug }}
-                                        </code>
-                                        <div v-if="category.description" class="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-                                            {{ category.description }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-5 py-4">
-                                <div v-if="category.parent" class="text-sm font-bold text-[#343241]">{{ category.parent.name }}</div>
-                                <span v-else class="text-sm font-semibold text-slate-400">Коренева</span>
-                                <div v-if="category.children_count" class="mt-1 text-xs font-semibold text-slate-500">
-                                    Дочірніх: {{ category.children_count }}
-                                </div>
-                            </td>
-                            <td class="px-5 py-4 text-sm font-semibold text-slate-600">
-                                <div>У категорії: {{ category.products_count }}</div>
-                                <div class="mt-1 text-xs text-slate-500">Основна: {{ category.primary_products_count }}</div>
-                            </td>
-                            <td class="px-5 py-4">
-                                <span
-                                    class="rounded-full px-3 py-1 text-xs font-bold"
-                                    :class="category.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'"
-                                >
-                                    {{ category.is_active ? 'Активна' : 'Вимкнена' }}
-                                </span>
-                                <div class="mt-2 text-xs font-semibold text-slate-500">Порядок: {{ category.sort_order }}</div>
-                            </td>
-                            <td class="px-5 py-4">
-                                <div class="max-w-xs text-sm font-semibold text-[#343241]">{{ category.meta_title || '—' }}</div>
-                                <div v-if="category.meta_description" class="mt-1 max-w-xs text-xs leading-5 text-slate-500">
-                                    {{ category.meta_description }}
-                                </div>
-                            </td>
-                            <td class="px-5 py-4">
-                                <div class="flex justify-end gap-2">
-                                    <Link
-                                        :href="route('admin.categories.edit', category.id)"
-                                        class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-[#7561f7] hover:text-[#7561f7]"
-                                        aria-label="Редагувати"
-                                    >
-                                        <Pencil class="h-4 w-4" />
-                                    </Link>
-                                    <button
-                                        type="button"
-                                        class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-red-300 hover:text-red-600"
-                                        aria-label="Видалити"
-                                        @click="destroyCategory(category)"
-                                    >
-                                        <Trash2 class="h-4 w-4" />
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <tr v-if="categories.data.length === 0">
-                            <td colspan="6" class="px-5 py-10 text-center text-sm font-semibold text-slate-500">
-                                Категорій ще немає.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="hidden rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-500 xl:grid xl:grid-cols-[minmax(360px,1fr)_180px_150px_130px_minmax(220px,300px)_88px] xl:gap-4">
+                <div>Категорія</div>
+                <div>Батьківська</div>
+                <div>Товари</div>
+                <div>Статус</div>
+                <div>SEO</div>
+                <div class="text-right">Дії</div>
             </div>
 
-            <div v-if="categories.links?.length > 3" class="flex flex-wrap gap-2 border-t border-slate-100 px-5 py-4">
+            <div v-if="categories.data.length" class="space-y-2">
+                <article
+                    v-for="category in categories.data"
+                    :key="category.id"
+                    class="grid items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5 shadow-[0_8px_22px_rgba(15,23,42,0.045)] transition hover:border-slate-300 hover:shadow-[0_12px_28px_rgba(15,23,42,0.07)] xl:grid-cols-[minmax(360px,1fr)_180px_150px_130px_minmax(220px,300px)_88px] xl:gap-4"
+                >
+                    <div class="flex min-w-0 items-center gap-3">
+                        <div class="relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-[#f5f4ff] text-[#7561f7] ring-1 ring-slate-200">
+                            <img
+                                v-if="category.image_url"
+                                :src="category.image_url"
+                                :alt="category.name"
+                                class="h-full w-full object-cover"
+                                loading="lazy"
+                            />
+                            <div v-else class="flex h-full w-full items-center justify-center">
+                                <Image v-if="category.image_path" class="h-5 w-5" />
+                                <FolderTree v-else class="h-5 w-5" />
+                            </div>
+                            <span class="absolute left-1 top-1 rounded bg-white/90 px-1.5 py-0.5 font-mono text-[10px] font-bold text-slate-600 shadow-sm">
+                                #{{ category.id }}
+                            </span>
+                        </div>
+                        <div class="min-w-0">
+                            <Link
+                                :href="route('admin.categories.edit', category.id)"
+                                class="block truncate text-sm font-bold text-[#242231] transition hover:text-[#7561f7] hover:underline"
+                            >
+                                {{ category.name }}
+                            </Link>
+                            <div class="mt-1 flex flex-wrap items-center gap-2">
+                                <code class="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-600">/{{ category.slug }}</code>
+                                <span v-if="category.children_count" class="rounded bg-[#eef2ff] px-1.5 py-0.5 text-[11px] font-bold text-[#4451b8]">
+                                    {{ category.children_count }} доч.
+                                </span>
+                            </div>
+                            <p v-if="category.description" class="mt-1 max-h-8 overflow-hidden text-xs font-semibold leading-4 text-slate-500">
+                                {{ category.description }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div v-if="category.parent" class="truncate text-sm font-bold text-[#343241]">{{ category.parent.name }}</div>
+                        <span v-else class="rounded bg-slate-100 px-2 py-1 text-xs font-bold text-slate-500">Коренева</span>
+                    </div>
+
+                    <div class="text-xs font-semibold text-slate-600">
+                        <div class="font-bold text-[#343241]">{{ category.products_count }} у категорії</div>
+                        <div class="mt-0.5 text-slate-500">Основна: {{ category.primary_products_count }}</div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span
+                            class="rounded px-2 py-0.5 text-[11px] font-bold"
+                            :class="category.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'"
+                        >
+                            {{ category.is_active ? 'Активна' : 'Вимкнена' }}
+                        </span>
+                        <span class="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-500">№{{ category.sort_order }}</span>
+                    </div>
+
+                    <div class="min-w-0">
+                        <div class="truncate text-xs font-bold text-[#343241]">{{ category.meta_title || '—' }}</div>
+                        <div v-if="category.meta_description" class="mt-0.5 max-h-8 overflow-hidden text-[11px] font-semibold leading-4 text-slate-500">
+                            {{ category.meta_description }}
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-1.5">
+                        <Link
+                            :href="route('admin.categories.edit', category.id)"
+                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 shadow-sm transition hover:border-[#7561f7] hover:text-[#7561f7]"
+                            aria-label="Редагувати"
+                        >
+                            <Pencil class="h-4 w-4" />
+                        </Link>
+                        <button
+                            type="button"
+                            class="inline-flex h-8 w-8 items-center justify-center rounded-md border border-slate-300 bg-white text-slate-600 shadow-sm transition hover:border-red-300 hover:text-red-600"
+                            aria-label="Видалити"
+                            @click="destroyCategory(category)"
+                        >
+                            <Trash2 class="h-4 w-4" />
+                        </button>
+                    </div>
+                </article>
+            </div>
+
+            <div v-else class="rounded-lg border border-dashed border-slate-300 bg-white px-5 py-10 text-center text-sm font-semibold text-slate-500">
+                Категорій ще немає.
+            </div>
+
+            <div v-if="categories.links?.length > 3" class="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3">
                 <template v-for="link in categories.links" :key="link.label">
                     <Link
                         v-if="link.url"

@@ -18,12 +18,20 @@ class Order extends Model
         'status',
         'payment_status',
         'payment_method',
+        'payment_provider',
+        'payment_reference',
+        'paid_at',
         'delivery_method',
+        'delivery_provider',
+        'delivery_type',
         'delivery_city',
+        'delivery_city_ref',
         'delivery_address',
         'delivery_branch',
+        'delivery_branch_ref',
         'delivery_recipient_name',
         'delivery_recipient_phone',
+        'delivery_snapshot',
         'customer_name',
         'customer_phone',
         'customer_email',
@@ -57,6 +65,8 @@ class Order extends Model
             'discount_total_cents' => 'integer',
             'delivery_price_cents' => 'integer',
             'total_cents' => 'integer',
+            'delivery_snapshot' => 'array',
+            'paid_at' => 'datetime',
             'confirmed_at' => 'datetime',
             'completed_at' => 'datetime',
             'cancelled_at' => 'datetime',
@@ -76,5 +86,10 @@ class Order extends Model
     public function statusHistories(): HasMany
     {
         return $this->hasMany(OrderStatusHistory::class);
+    }
+
+    public function paymentTransactions(): HasMany
+    {
+        return $this->hasMany(PaymentTransaction::class);
     }
 }

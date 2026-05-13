@@ -55,6 +55,13 @@ class Category extends Model
         return $this->belongsToMany(Product::class)->withPivot(['is_primary', 'sort_order'])->withTimestamps();
     }
 
+    public function filterAttributes(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductAttribute::class, 'category_filter_attributes', 'category_id', 'attribute_id')
+            ->withPivot(['is_active', 'display_type', 'sort_order'])
+            ->withTimestamps();
+    }
+
     public function menuItems(): MorphMany
     {
         return $this->morphMany(MenuItem::class, 'linkable');

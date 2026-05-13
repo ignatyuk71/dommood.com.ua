@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\ProductAttribute;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -60,6 +61,45 @@ class AdminCategoriesTest extends TestCase
             'parent_id' => $parent->id,
             'name' => 'Теплі моделі',
             'slug' => 'tepli-modeli',
+        ]);
+    }
+
+    public function test_admin_can_attach_filter_attributes_to_category(): void
+    {
+        $user = User::factory()->create();
+        $color = ProductAttribute::query()->create([
+            'name' => 'Колір',
+            'slug' => 'kolir',
+            'type' => ProductAttribute::TYPE_COLOR,
+            'is_filterable' => true,
+        ]);
+        $size = ProductAttribute::query()->create([
+            'name' => 'Розмір',
+            'slug' => 'rozmir',
+            'type' => ProductAttribute::TYPE_SELECT,
+            'is_filterable' => true,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.categories.store'), [
+            'name' => 'Жіночі капці',
+            'slug' => 'zhinochi-kaptsi',
+            'is_active' => true,
+            'filter_attribute_ids' => [$color->id, $size->id],
+        ]);
+
+        $response->assertRedirect(route('admin.categories.index'));
+
+        $category = Category::query()->where('slug', 'zhinochi-kaptsi')->firstOrFail();
+
+        $this->assertDatabaseHas('category_filter_attributes', [
+            'category_id' => $category->id,
+            'attribute_id' => $color->id,
+            'display_type' => 'color',
+        ]);
+        $this->assertDatabaseHas('category_filter_attributes', [
+            'category_id' => $category->id,
+            'attribute_id' => $size->id,
+            'display_type' => 'checkbox',
         ]);
     }
 

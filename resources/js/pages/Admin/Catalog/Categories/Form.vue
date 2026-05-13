@@ -1,6 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import InputError from '@/components/InputError.vue';
+import SeoSnippetEditor from '@/components/Admin/SeoSnippetEditor.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft, ImagePlus, Save, Trash2 } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, ref } from 'vue';
@@ -17,6 +18,10 @@ const props = defineProps({
     parentOptions: {
         type: Array,
         required: true,
+    },
+    filterAttributeOptions: {
+        type: Array,
+        default: () => [],
     },
 });
 
@@ -35,6 +40,7 @@ const form = useForm({
     delete_image: false,
     is_active: props.category.is_active ?? true,
     sort_order: props.category.sort_order ?? 0,
+    filter_attribute_ids: props.category.filter_attribute_ids ?? [],
     meta_title: props.category.meta_title ?? '',
     meta_description: props.category.meta_description ?? '',
     seo_text: props.category.seo_text ?? '',
@@ -55,6 +61,17 @@ const transliterate = (value) => value
         р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'kh', ц: 'ts', ч: 'ch',
         ш: 'sh', щ: 'shch', ь: '', ю: 'iu', я: 'ia', ё: 'e',
     }[char] ?? ''));
+
+const categorySlugPreview = computed(() => form.slug || transliterate(form.name)
+    .replace(/[^a-z0-9-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-{2,}/g, '-')
+    || 'category-slug');
+const categoryUrlPreview = computed(() => `/catalog/${categorySlugPreview.value}`);
+const categoryTitleFallback = computed(() => form.name ? `${form.name} купити в Україні | DomMood` : 'Категорія купити в Україні | DomMood');
+const categoryDescriptionFallback = computed(() => form.description || `${form.name || 'Категорія'} в інтернет-магазині DomMood. Актуальні ціни, наявність і доставка по Україні.`);
+const selectedFilterAttributes = computed(() => props.filterAttributeOptions
+    .filter((attribute) => form.filter_attribute_ids.map(Number).includes(Number(attribute.id))));
 
 const generateSlug = () => {
     form.slug = transliterate(form.name)
@@ -227,51 +244,22 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
 
-                <div class="rounded-lg bg-white p-5 shadow-[0_16px_45px_rgba(61,58,101,0.08)]">
-                    <h2 class="text-lg font-bold text-[#343241]">SEO</h2>
-                    <p class="mt-1 text-sm text-slate-500">Ці поля будуть основою для title, description і текстового SEO-блоку категорії.</p>
-
-                    <div class="mt-5 space-y-5">
-                        <div>
-                            <label class="text-sm font-bold text-slate-700" for="meta_title">Meta title</label>
-                            <input
-                                id="meta_title"
-                                v-model="form.meta_title"
-                                type="text"
-                                class="mt-2 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
-                                placeholder="Жіночі капці купити в Україні | DomMood"
-                            />
-                            <InputError class="mt-2" :message="form.errors.meta_title" />
-                        </div>
-
-                        <div>
-                            <label class="flex items-center justify-between gap-3 text-sm font-bold text-slate-700" for="meta_description">
-                                <span>Meta description</span>
-                                <span class="text-xs font-semibold text-slate-400">{{ form.meta_description.length }}/320</span>
-                            </label>
-                            <textarea
-                                id="meta_description"
-                                v-model="form.meta_description"
-                                rows="3"
-                                maxlength="320"
-                                class="mt-2 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
-                            />
-                            <InputError class="mt-2" :message="form.errors.meta_description" />
-                        </div>
-
-                        <div>
-                            <label class="text-sm font-bold text-slate-700" for="seo_text">SEO текст</label>
-                            <textarea
-                                id="seo_text"
-                                v-model="form.seo_text"
-                                rows="8"
-                                class="mt-2 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
-                                placeholder="Текст для нижнього SEO-блоку категорії"
-                            />
-                            <InputError class="mt-2" :message="form.errors.seo_text" />
-                        </div>
-                    </div>
-                </div>
+                <SeoSnippetEditor
+                    v-model:title="form.meta_title"
+                    v-model:description="form.meta_description"
+                    v-model:seo-text="form.seo_text"
+                    :canonical-url="categoryUrlPreview"
+                    :show-canonical="false"
+                    :title-fallback="categoryTitleFallback"
+                    :description-fallback="categoryDescriptionFallback"
+                    :url-fallback="categoryUrlPreview"
+                    field-id-prefix="category_seo"
+                    title-placeholder="Жіночі капці купити в Україні | DomMood"
+                    description-placeholder="Короткий опис категорії для Google"
+                    seo-text-placeholder="Текст для нижнього SEO-блоку категорії"
+                    intro="SEO для категорії впливає на органічний трафік, Merchant/Ads посадкові сторінки й CTR у Google."
+                    :errors="form.errors"
+                />
             </section>
 
             <aside class="space-y-5">
@@ -364,6 +352,46 @@ onBeforeUnmount(() => {
                         {{ selectedImageName || category.image_path }}
                     </div>
                     <InputError class="mt-2" :message="form.errors.image" />
+                </section>
+
+                <section class="rounded-lg bg-white p-5 shadow-[0_16px_45px_rgba(61,58,101,0.08)]">
+                    <h2 class="text-lg font-bold text-[#343241]">Фільтри категорії</h2>
+                    <p class="mt-1 text-sm text-slate-500">Показуємо тільки вибрані характеристики, і тільки якщо в товарах є відповідні значення.</p>
+
+                    <div v-if="filterAttributeOptions.length" class="mt-5 max-h-72 space-y-2 overflow-y-auto rounded-lg border border-slate-100 p-3">
+                        <label
+                            v-for="attribute in filterAttributeOptions"
+                            :key="attribute.id"
+                            class="flex items-start gap-2 rounded-lg px-2 py-1.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                        >
+                            <input
+                                v-model="form.filter_attribute_ids"
+                                type="checkbox"
+                                :value="attribute.id"
+                                class="mt-0.5 rounded border-slate-300 text-[#7561f7] focus:ring-[#7561f7]"
+                            />
+                            <span class="min-w-0">
+                                <span class="block text-[#343241]">{{ attribute.name }}</span>
+                                <span class="block text-xs font-medium text-slate-500">{{ attribute.values_count }} значень · {{ attribute.slug }}</span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div v-else class="mt-5 rounded-lg border border-dashed border-slate-200 px-4 py-6 text-center text-sm font-semibold text-slate-500">
+                        Спочатку додайте характеристики з увімкненим фільтром.
+                    </div>
+
+                    <div v-if="selectedFilterAttributes.length" class="mt-3 flex flex-wrap gap-2">
+                        <span
+                            v-for="attribute in selectedFilterAttributes"
+                            :key="`selected-filter-${attribute.id}`"
+                            class="rounded-full bg-[#eef2ff] px-3 py-1 text-xs font-bold text-[#4c51bf]"
+                        >
+                            {{ attribute.name }}
+                        </span>
+                    </div>
+
+                    <InputError class="mt-2" :message="form.errors.filter_attribute_ids" />
                 </section>
             </aside>
         </form>

@@ -166,9 +166,19 @@ const removeErrorListener = router.on('error', (errors) => {
     }
 });
 
+const pushCustomToast = (event) => {
+    const type = event.detail?.type ?? 'info';
+    const message = event.detail?.message ?? null;
+
+    addToast(config[type] ? type : 'info', message);
+};
+
+window.addEventListener('admin-toast', pushCustomToast);
+
 onBeforeUnmount(() => {
     removeSuccessListener();
     removeErrorListener();
+    window.removeEventListener('admin-toast', pushCustomToast);
     timers.forEach((timer) => clearTimeout(timer));
     timers.clear();
     recentToastKeys.clear();

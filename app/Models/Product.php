@@ -15,6 +15,30 @@ class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
+    public const STATUS_DRAFT = 'draft';
+
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_ARCHIVED = 'archived';
+
+    public const STATUSES = [
+        self::STATUS_DRAFT,
+        self::STATUS_ACTIVE,
+        self::STATUS_ARCHIVED,
+    ];
+
+    public const STOCK_IN_STOCK = 'in_stock';
+
+    public const STOCK_OUT_OF_STOCK = 'out_of_stock';
+
+    public const STOCK_PREORDER = 'preorder';
+
+    public const STOCK_STATUSES = [
+        self::STOCK_IN_STOCK,
+        self::STOCK_OUT_OF_STOCK,
+        self::STOCK_PREORDER,
+    ];
+
     protected $fillable = [
         'primary_category_id',
         'brand_id',
@@ -63,6 +87,11 @@ class Product extends Model
         return $query->where('status', 'active');
     }
 
+    public function scopeOrdered(Builder $query): Builder
+    {
+        return $query->orderBy('sort_order')->orderByDesc('created_at');
+    }
+
     public function primaryCategory(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'primary_category_id');
@@ -96,6 +125,11 @@ class Product extends Model
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class);
+    }
+
+    public function feedConfigs(): HasMany
+    {
+        return $this->hasMany(ProductFeedConfig::class);
     }
 
     public function reviews(): HasMany

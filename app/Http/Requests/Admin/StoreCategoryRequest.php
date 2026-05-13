@@ -22,6 +22,8 @@ class StoreCategoryRequest extends FormRequest
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'is_active' => ['boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
+            'filter_attribute_ids' => ['nullable', 'array'],
+            'filter_attribute_ids.*' => ['integer', 'distinct', 'exists:attributes,id'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:320'],
             'seo_text' => ['nullable', 'string'],
@@ -33,6 +35,7 @@ class StoreCategoryRequest extends FormRequest
         $this->merge([
             'is_active' => $this->boolean('is_active'),
             'parent_id' => $this->input('parent_id') ?: null,
+            'filter_attribute_ids' => $this->input('filter_attribute_ids', []),
         ]);
     }
 }
