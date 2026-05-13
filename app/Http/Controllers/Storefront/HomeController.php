@@ -446,11 +446,19 @@ class HomeController extends Controller
             ->ltrim('/')
             ->toString();
 
-        if ($product && in_array($variant, ['card', 'thumb'], true)) {
+        if ($product && in_array($variant, ['card', 'thumb', 'swatch'], true)) {
             $variantPath = $this->productImageVersionPath($product, $variant);
 
             if (Storage::disk($image?->disk ?: 'public')->exists($variantPath)) {
                 return Storage::disk($image?->disk ?: 'public')->url($variantPath);
+            }
+
+            if ($variant === 'swatch') {
+                $thumbPath = $this->productImageVersionPath($product, 'thumb');
+
+                if (Storage::disk($image?->disk ?: 'public')->exists($thumbPath)) {
+                    return Storage::disk($image?->disk ?: 'public')->url($thumbPath);
+                }
             }
         }
 

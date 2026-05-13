@@ -207,7 +207,7 @@ class CatalogController extends Controller
                 'mobileMenuItems' => $this->menuItems('mobile'),
                 'footerMenuItems' => $this->menuItems('footer'),
                 'category' => $fallbackCategory,
-                'product' => $fallbackProduct,
+                'product' => array_merge($fallbackProduct, ['color_options' => []]),
                 'faqItems' => $this->productFaq($fallbackProduct, 'Вуличні тапочки'),
                 'relatedProducts' => [],
                 'freeShippingThresholdCents' => 120000,
@@ -221,6 +221,7 @@ class CatalogController extends Controller
         }
 
         $serializedProduct = $this->serializeProduct($product);
+        $serializedProduct['color_options'] = $this->colorOptions($product, $category);
         $seo = $this->seo->metaForProduct($product);
         $canonicalUrl = $seo['canonical_url'] ?? url('/catalog/'.$category->slug.'/'.$product->slug);
 
@@ -1106,6 +1107,79 @@ class CatalogController extends Controller
             ->all();
     }
 
+    private function colorOptions(Product $product, Category $category): array
+    {
+        if (! $product->color_group_id) {
+            return [];
+        }
+
+        return Product::query()
+            ->select([
+                'id',
+                'primary_category_id',
+                'name',
+                'slug',
+                'sku',
+                'short_description',
+                'price_cents',
+                'old_price_cents',
+                'currency',
+                'stock_status',
+                'color_group_id',
+                'color_sort_order',
+                'status',
+                'published_at',
+                'created_at',
+            ])
+            ->with([
+                'primaryCategory:id,name,slug',
+                'categories:id,name,slug',
+                'images' => fn ($query) => $query
+                    ->select(['id', 'product_id', 'disk', 'path', 'alt', 'is_main', 'sort_order'])
+                    ->orderByDesc('is_main')
+                    ->orderBy('sort_order')
+                    ->orderBy('id'),
+                'variants' => fn ($query) => $query
+                    ->where('is_active', true)
+                    ->orderBy('sort_order')
+                    ->orderBy('id'),
+                'variants.images' => fn ($query) => $query
+                    ->select(['id', 'product_id', 'product_variant_id', 'disk', 'path', 'alt', 'title', 'is_main', 'sort_order'])
+                    ->orderByDesc('is_main')
+                    ->orderBy('sort_order')
+                    ->orderBy('id'),
+            ])
+            ->active()
+            ->where(fn (Builder $query) => $this->published($query))
+            ->where('color_group_id', $product->color_group_id)
+            ->orderBy('color_sort_order')
+            ->orderBy('id')
+            ->get()
+            ->map(function (Product $option) use ($product, $category): array {
+                $mainImage = $option->images->firstWhere('is_main', true) ?? $option->images->first();
+                $variant = $option->variants->first();
+                $variantImage = $variant?->relationLoaded('images')
+                    ? ($variant->images->firstWhere('is_main', true) ?? $variant->images->first())
+                    : null;
+                $optionCategory = $option->primaryCategory
+                    ?: $option->categories->firstWhere('id', $category->id)
+                    ?: $option->categories->first();
+                $categorySlug = $optionCategory?->slug ?: $category->slug;
+
+                return [
+                    'id' => $option->id,
+                    'name' => $option->name,
+                    'color_name' => $variant?->color_name ?: $option->name,
+                    'url' => url('/catalog/'.$categorySlug.'/'.$option->slug),
+                    'image_url' => $this->imageUrl($variantImage ?: $mainImage, $option, 'swatch'),
+                    'image_alt' => ($variantImage ?: $mainImage)?->alt ?: $option->name,
+                    'is_active' => $option->id === $product->id,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
     private function stockStatusLabel(?string $status): string
     {
         return match ($status) {
@@ -1150,11 +1224,19 @@ class CatalogController extends Controller
             ->ltrim('/')
             ->toString();
 
-        if ($product && in_array($variant, ['card', 'thumb'], true)) {
+        if ($product && in_array($variant, ['card', 'thumb', 'swatch'], true)) {
             $variantPath = "products/{$product->id}/{$product->slug}-{$variant}.webp";
 
             if (Storage::disk($image?->disk ?: 'public')->exists($variantPath)) {
                 return Storage::disk($image?->disk ?: 'public')->url($variantPath);
+            }
+
+            if ($variant === 'swatch') {
+                $thumbPath = "products/{$product->id}/{$product->slug}-thumb.webp";
+
+                if (Storage::disk($image?->disk ?: 'public')->exists($thumbPath)) {
+                    return Storage::disk($image?->disk ?: 'public')->url($thumbPath);
+                }
             }
         }
 

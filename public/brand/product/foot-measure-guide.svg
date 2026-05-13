@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 400" role="img" aria-label="Схема вимірювання стопи">
+  <defs>
+    <style>
+      .skin{fill:#f5cdbd}.line{stroke:#58c985;stroke-width:2;stroke-dasharray:4 4}.base{stroke:#d2d2d2;stroke-width:4}.ruler{fill:#3fc477}.rmark{stroke:#fff;stroke-width:1.6}.pencil{fill:#58c985}.pencil-tip{fill:#f6c06e}.pencil-top{fill:#f35a85}.ok{fill:#00a957}.bad{fill:#ff404b}.white{stroke:#fff;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;fill:none}
+    </style>
+  </defs>
+
+  <g transform="translate(0 0)">
+    <circle class="ok" cx="12" cy="12" r="11"/>
+    <path class="white" d="M6 12.5 10 16.5 18.5 7"/>
+    <path class="base" d="M5 145 H148"/>
+    <path class="line" d="M16 48 V146 M143 48 V146"/>
+    <path class="skin" d="M34 126c24 0 50-20 84-38 14-8 20-19 23-54h36c-5 28-8 62-8 91-45 17-90 19-135 1Z" transform="translate(-15 0)"/>
+    <path class="pencil" d="M12 54h12v68H12z"/>
+    <path class="pencil-top" d="M12 44h12v10H12z"/>
+    <path class="pencil-tip" d="M12 122h12l-6 14z"/>
+    <path class="pencil" d="M136 54h12v68h-12z"/>
+    <path class="pencil-top" d="M136 44h12v10h-12z"/>
+    <path class="pencil-tip" d="M136 122h12l-6 14z"/>
+  </g>
+
+  <g transform="translate(160 0)">
+    <circle class="ok" cx="16" cy="12" r="11"/>
+    <path class="white" d="M10 12.5 14 16.5 22.5 7"/>
+    <path class="line" d="M20 48 V146 M145 48 V146"/>
+    <path class="skin" d="M15 102c36 1 53 7 81 1 21-4 39 0 53 8 0 16-13 24-37 24-44 0-75 18-97-3-7-7-5-21 0-30Z"/>
+    <rect class="ruler" x="20" y="86" width="142" height="28" rx="2"/>
+    <g class="rmark">
+      <path d="M29 86v13M39 86v8M49 86v8M59 86v13M69 86v8M79 86v8M89 86v13M99 86v8M109 86v8M119 86v13M129 86v8M139 86v8M149 86v13"/>
+    </g>
+  </g>
+
+  <g transform="translate(0 135)">
+    <circle class="bad" cx="12" cy="22" r="11"/>
+    <path class="white" d="M7 17 17 27M17 17 7 27"/>
+    <path class="base" d="M5 111 H148"/>
+    <path class="line" d="M16 39 V112 M143 39 V112"/>
+    <path class="skin" d="M34 96c24 0 50-20 84-38 14-8 20-19 23-54h36c-5 28-8 62-8 91-45 17-90 19-135 1Z" transform="translate(-15 0)"/>
+    <g transform="translate(4 40) rotate(-12)">
+      <path class="pencil" d="M0 0h12v66H0z"/>
+      <path class="pencil-top" d="M0-10h12V0H0z"/>
+      <path class="pencil-tip" d="M0 66h12L6 80z"/>
+    </g>
+    <g transform="translate(136 40) rotate(12)">
+      <path class="pencil" d="M0 0h12v66H0z"/>
+      <path class="pencil-top" d="M0-10h12V0H0z"/>
+      <path class="pencil-tip" d="M0 66h12L6 80z"/>
+    </g>
+  </g>
+
+  <g transform="translate(160 135)">
+    <circle class="bad" cx="16" cy="22" r="11"/>
+    <path class="white" d="M11 17 21 27M21 17 11 27"/>
+    <path class="base" d="M5 111 H148"/>
+    <path class="line" d="M20 39 V112 M145 39 V112"/>
+    <path class="skin" d="M34 96c24 0 50-20 84-38 14-8 20-19 23-54h36c-5 28-8 62-8 91-45 17-90 19-135 1Z" transform="translate(-15 0)"/>
+    <g transform="translate(8 42) rotate(10)">
+      <path class="pencil" d="M0 0h12v66H0z"/>
+      <path class="pencil-top" d="M0-10h12V0H0z"/>
+      <path class="pencil-tip" d="M0 66h12L6 80z"/>
+    </g>
+    <g transform="translate(139 42) rotate(-10)">
+      <path class="pencil" d="M0 0h12v66H0z"/>
+      <path class="pencil-top" d="M0-10h12V0H0z"/>
+      <path class="pencil-tip" d="M0 66h12L6 80z"/>
+    </g>
+  </g>
+
+  <g transform="translate(0 274)">
+    <circle class="bad" cx="12" cy="14" r="11"/>
+    <path class="white" d="M7 9 17 19M17 9 7 19"/>
+    <path class="line" d="M16 62 V137 M143 62 V137"/>
+    <path class="skin" d="M20 88c36 1 53 7 81 1 21-4 39 0 53 8 0 16-13 24-37 24-44 0-75 18-97-3-7-7-5-21 0-30Z"/>
+    <rect class="ruler" x="18" y="92" width="142" height="28" rx="2" transform="rotate(-11 89 106)"/>
+    <g class="rmark" transform="rotate(-11 89 106)">
+      <path d="M28 92v13M38 92v8M48 92v8M58 92v13M68 92v8M78 92v8M88 92v13M98 92v8M108 92v8M118 92v13M128 92v8M138 92v8M148 92v13"/>
+    </g>
+  </g>
+
+  <g transform="translate(160 274)">
+    <circle class="bad" cx="16" cy="14" r="11"/>
+    <path class="white" d="M11 9 21 19M21 9 11 19"/>
+    <path class="line" d="M20 62 V137 M145 62 V137"/>
+    <path class="skin" d="M15 88c36 1 53 7 81 1 21-4 39 0 53 8 0 16-13 24-37 24-44 0-75 18-97-3-7-7-5-21 0-30Z"/>
+    <rect class="ruler" x="20" y="92" width="142" height="28" rx="2" transform="rotate(12 91 106)"/>
+    <g class="rmark" transform="rotate(12 91 106)">
+      <path d="M30 92v13M40 92v8M50 92v8M60 92v13M70 92v8M80 92v8M90 92v13M100 92v8M110 92v8M120 92v13M130 92v8M140 92v8M150 92v13"/>
+    </g>
+  </g>
+</svg>

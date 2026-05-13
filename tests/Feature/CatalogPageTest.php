@@ -51,9 +51,9 @@ class CatalogPageTest extends TestCase
             ->assertViewIs('storefront.catalog.show')
             ->assertSee('Жіночі тапочки для вулиці, сіро-блакитний')
             ->assertSee('450 грн')
-            ->assertSee('Що нас питають найчастіше?')
-            ->assertSee('Чи підходять ці тапочки для вулиці?')
-            ->assertSee('"@type":"FAQPage"', false);
+            ->assertDontSee('product-detail-accordion', false)
+            ->assertDontSee('Чи підходять ці тапочки для вулиці?')
+            ->assertDontSee('"@type":"FAQPage"', false);
     }
 
     public function test_catalog_category_accepts_products_attached_as_secondary_category(): void
@@ -287,7 +287,7 @@ class CatalogPageTest extends TestCase
             ->assertSee('<link rel="canonical" href="'.url('/catalog/domashni-kaptsi/molochni-pukhnasti-kaptsi').'">', false);
     }
 
-    public function test_product_page_outputs_server_rendered_faq_with_schema(): void
+    public function test_product_page_does_not_output_bottom_faq_accordion(): void
     {
         $category = Category::query()->create([
             'name' => 'Домашні капці',
@@ -306,10 +306,10 @@ class CatalogPageTest extends TestCase
 
         $this->get('/catalog/domashni-kaptsi/molochni-pukhnasti-kaptsi')
             ->assertOk()
-            ->assertSee('Що нас питають найчастіше?')
-            ->assertSee('Чи є товар у наявності?')
-            ->assertSee('Як підібрати правильний розмір?')
-            ->assertSee('"@type":"FAQPage"', false)
-            ->assertSee('"@type":"Question"', false);
+            ->assertDontSee('product-detail-accordion', false)
+            ->assertDontSee('Чи є товар у наявності?')
+            ->assertDontSee('Як підібрати правильний розмір?')
+            ->assertDontSee('"@type":"FAQPage"', false)
+            ->assertDontSee('"@type":"Question"', false);
     }
 }

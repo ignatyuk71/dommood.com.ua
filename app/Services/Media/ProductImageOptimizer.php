@@ -12,8 +12,9 @@ class ProductImageOptimizer
     private const MAX_HEIGHT = 2400;
 
     private const RESPONSIVE_VARIANTS = [
-        'card' => [900, 900],
-        'thumb' => [420, 420],
+        'card' => [600, 600],
+        'thumb' => [320, 320],
+        'swatch' => [180, 180],
     ];
 
     private const WEBP_QUALITY = 92;

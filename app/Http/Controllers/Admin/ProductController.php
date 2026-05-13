@@ -781,7 +781,8 @@ class ProductController extends Controller
     {
         $paths = Storage::disk('public')->files("products/{$product->id}");
         $paths = array_values(array_filter($paths, fn (string $path): bool => str_ends_with($path, '-card.webp')
-            || str_ends_with($path, '-thumb.webp')));
+            || str_ends_with($path, '-thumb.webp')
+            || str_ends_with($path, '-swatch.webp')));
 
         if ($paths !== []) {
             Storage::disk('public')->delete($paths);

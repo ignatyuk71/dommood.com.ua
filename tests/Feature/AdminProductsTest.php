@@ -110,17 +110,22 @@ class AdminProductsTest extends TestCase
 
         $cardPath = "products/{$product->id}/domashni-kaptsi-halluci-card.webp";
         $thumbPath = "products/{$product->id}/domashni-kaptsi-halluci-thumb.webp";
+        $swatchPath = "products/{$product->id}/domashni-kaptsi-halluci-swatch.webp";
 
         Storage::disk('public')->assertExists($cardPath);
         Storage::disk('public')->assertExists($thumbPath);
+        Storage::disk('public')->assertExists($swatchPath);
 
         [$cardWidth, $cardHeight] = getimagesize(Storage::disk('public')->path($cardPath));
         [$thumbWidth, $thumbHeight] = getimagesize(Storage::disk('public')->path($thumbPath));
+        [$swatchWidth, $swatchHeight] = getimagesize(Storage::disk('public')->path($swatchPath));
 
         $this->assertLessThanOrEqual(600, $cardWidth);
         $this->assertLessThanOrEqual(600, $cardHeight);
         $this->assertLessThanOrEqual(320, $thumbWidth);
         $this->assertLessThanOrEqual(320, $thumbHeight);
+        $this->assertLessThanOrEqual(180, $swatchWidth);
+        $this->assertLessThanOrEqual(180, $swatchHeight);
     }
 
     public function test_admin_can_update_product_and_delete_existing_image(): void
@@ -151,9 +156,11 @@ class AdminProductsTest extends TestCase
         $oldPath = "products/{$product->id}/old.jpg";
         $oldCardPath = "products/{$product->id}/staryi-tovar-card.webp";
         $oldThumbPath = "products/{$product->id}/staryi-tovar-thumb.webp";
+        $oldSwatchPath = "products/{$product->id}/staryi-tovar-swatch.webp";
         Storage::disk('public')->put($oldPath, 'image');
         Storage::disk('public')->put($oldCardPath, 'old card');
         Storage::disk('public')->put($oldThumbPath, 'old thumb');
+        Storage::disk('public')->put($oldSwatchPath, 'old swatch');
         $image = $product->images()->create([
             'disk' => 'public',
             'path' => $oldPath,
@@ -202,6 +209,7 @@ class AdminProductsTest extends TestCase
         Storage::disk('public')->assertMissing($oldPath);
         Storage::disk('public')->assertMissing($oldCardPath);
         Storage::disk('public')->assertMissing($oldThumbPath);
+        Storage::disk('public')->assertMissing($oldSwatchPath);
 
         $newImage = $product->images()->firstOrFail();
 
@@ -211,6 +219,7 @@ class AdminProductsTest extends TestCase
         Storage::disk('public')->assertExists($newImage->path);
         Storage::disk('public')->assertExists("products/{$product->id}/novyi-tovar-card.webp");
         Storage::disk('public')->assertExists("products/{$product->id}/novyi-tovar-thumb.webp");
+        Storage::disk('public')->assertExists("products/{$product->id}/novyi-tovar-swatch.webp");
     }
 
     public function test_products_index_exposes_main_image_url(): void
