@@ -96,6 +96,163 @@
         item.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
     };
 
+    const initGalleryLightbox = () => {
+        const photos = galleryItems
+            .map((item) => ({
+                index: Number(item.dataset.mediaIndex || 0),
+                src: item.dataset.imageUrl || item.querySelector('img')?.currentSrc || item.querySelector('img')?.src || '',
+                alt: item.dataset.imageAlt || item.querySelector('img')?.alt || product.name || 'Фото товару',
+            }))
+            .filter((photo) => photo.src);
+
+        if (!photos.length) {
+            return;
+        }
+
+        const icon = (path) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg>`;
+        const lightbox = document.createElement('div');
+        lightbox.className = 'product-gallery-lightbox';
+        lightbox.setAttribute('role', 'dialog');
+        lightbox.setAttribute('aria-modal', 'true');
+        lightbox.setAttribute('aria-label', 'Перегляд фото товару');
+        lightbox.innerHTML = `
+            <span class="product-gallery-lightbox__counter" data-gallery-lightbox-counter></span>
+            <button type="button" class="product-gallery-lightbox__button product-gallery-lightbox__button--zoom" data-gallery-lightbox-zoom aria-label="Збільшити фото">
+                ${icon('m21 21-4.35-4.35M11 6v10M6 11h10M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z')}
+            </button>
+            <button type="button" class="product-gallery-lightbox__button product-gallery-lightbox__button--close" data-gallery-lightbox-close aria-label="Закрити перегляд">
+                ${icon('M18 6 6 18M6 6l12 12')}
+            </button>
+            <button type="button" class="product-gallery-lightbox__button product-gallery-lightbox__button--prev" data-gallery-lightbox-prev aria-label="Попереднє фото">
+                ${icon('m15 18-6-6 6-6')}
+            </button>
+            <img class="product-gallery-lightbox__image" data-gallery-lightbox-image alt="">
+            <button type="button" class="product-gallery-lightbox__button product-gallery-lightbox__button--next" data-gallery-lightbox-next aria-label="Наступне фото">
+                ${icon('m9 6 6 6-6 6')}
+            </button>
+        `;
+        document.body.appendChild(lightbox);
+
+        const image = lightbox.querySelector('[data-gallery-lightbox-image]');
+        const counter = lightbox.querySelector('[data-gallery-lightbox-counter]');
+        const closeButton = lightbox.querySelector('[data-gallery-lightbox-close]');
+        const zoomButton = lightbox.querySelector('[data-gallery-lightbox-zoom]');
+        const previousButton = lightbox.querySelector('[data-gallery-lightbox-prev]');
+        const nextButton = lightbox.querySelector('[data-gallery-lightbox-next]');
+        let activePhotoIndex = 0;
+        let restoreBodyOverflow = '';
+        let touchStartX = null;
+
+        const setZoom = (isZoomed) => {
+            lightbox.classList.toggle('is-zoomed', isZoomed);
+            zoomButton?.setAttribute('aria-label', isZoomed ? 'Зменшити фото' : 'Збільшити фото');
+        };
+
+        const renderPhoto = () => {
+            const photo = photos[activePhotoIndex];
+
+            if (!photo || !image || !counter) {
+                return;
+            }
+
+            image.src = photo.src;
+            image.alt = photo.alt;
+            counter.textContent = `${activePhotoIndex + 1} / ${photos.length}`;
+            setZoom(false);
+            setActiveGallery(photo.index);
+        };
+
+        const movePhoto = (step) => {
+            activePhotoIndex = (activePhotoIndex + step + photos.length) % photos.length;
+            renderPhoto();
+        };
+
+        const openLightbox = (mediaIndex) => {
+            const requestedIndex = photos.findIndex((photo) => photo.index === mediaIndex);
+            activePhotoIndex = requestedIndex >= 0 ? requestedIndex : 0;
+            restoreBodyOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            renderPhoto();
+            lightbox.classList.add('is-open');
+            closeButton?.focus({ preventScroll: true });
+        };
+
+        const closeLightbox = () => {
+            if (!lightbox.classList.contains('is-open')) {
+                return;
+            }
+
+            lightbox.classList.remove('is-open');
+            document.body.style.overflow = restoreBodyOverflow;
+            setZoom(false);
+        };
+
+        galleryItems.forEach((item) => {
+            if (!item.dataset.imageUrl && !item.querySelector('img')) {
+                return;
+            }
+
+            item.tabIndex = 0;
+            item.setAttribute('role', 'button');
+            item.setAttribute('aria-label', 'Відкрити фото товару');
+            item.addEventListener('click', () => openLightbox(Number(item.dataset.mediaIndex || 0)));
+            item.addEventListener('keydown', (event) => {
+                if (event.key !== 'Enter' && event.key !== ' ') {
+                    return;
+                }
+
+                event.preventDefault();
+                openLightbox(Number(item.dataset.mediaIndex || 0));
+            });
+        });
+
+        closeButton?.addEventListener('click', closeLightbox);
+        zoomButton?.addEventListener('click', () => setZoom(!lightbox.classList.contains('is-zoomed')));
+        previousButton?.addEventListener('click', () => movePhoto(-1));
+        nextButton?.addEventListener('click', () => movePhoto(1));
+        image?.addEventListener('click', () => setZoom(!lightbox.classList.contains('is-zoomed')));
+
+        lightbox.addEventListener('click', (event) => {
+            if (event.target === lightbox) {
+                closeLightbox();
+            }
+        });
+
+        lightbox.addEventListener('touchstart', (event) => {
+            touchStartX = event.touches[0]?.clientX ?? null;
+        }, { passive: true });
+
+        lightbox.addEventListener('touchend', (event) => {
+            if (touchStartX === null) {
+                return;
+            }
+
+            const touchEndX = event.changedTouches[0]?.clientX ?? touchStartX;
+            const diff = touchEndX - touchStartX;
+            touchStartX = null;
+
+            if (Math.abs(diff) < 45) {
+                return;
+            }
+
+            movePhoto(diff > 0 ? -1 : 1);
+        }, { passive: true });
+
+        document.addEventListener('keydown', (event) => {
+            if (!lightbox.classList.contains('is-open')) {
+                return;
+            }
+
+            if (event.key === 'Escape') {
+                closeLightbox();
+            } else if (event.key === 'ArrowLeft') {
+                movePhoto(-1);
+            } else if (event.key === 'ArrowRight') {
+                movePhoto(1);
+            }
+        });
+    };
+
     const syncVariant = () => {
         if (variants.length === 0) {
             return;
@@ -180,6 +337,7 @@
         }, { passive: true });
     }
 
+    initGalleryLightbox();
     form?.querySelectorAll('input[name="product_color"], input[name="product_size"], input[name="product_variant_choice"]').forEach((input) => {
         input.addEventListener('change', () => {
             setActiveLabel(input);
