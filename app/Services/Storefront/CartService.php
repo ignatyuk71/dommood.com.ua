@@ -489,10 +489,7 @@ class CartService
     private function snapshot(Product $product, ?ProductVariant $variant = null): array
     {
         $mainImage = $product->images->firstWhere('is_main', true) ?? $product->images->first();
-        $variantName = collect([$variant?->name, $variant?->size, $variant?->color_name])
-            ->filter()
-            ->unique()
-            ->implode(' / ');
+        $variantName = $this->variantLabel($variant);
 
         return [
             'name' => $product->name,
@@ -518,7 +515,7 @@ class CartService
             'product_id' => $item->product_id,
             'product_variant_id' => $item->product_variant_id,
             'name' => $snapshot['name'] ?? $item->product?->name ?? 'Товар',
-            'variant_name' => $snapshot['variant_name'] ?? null,
+            'variant_name' => ($item->variant ? $this->variantLabel($item->variant) : null) ?: ($snapshot['variant_name'] ?? null),
             'sku' => $snapshot['sku'] ?? $item->variant?->sku ?? $item->product?->sku,
             'quantity' => (int) $item->quantity,
             'price_cents' => (int) $item->price_cents,
@@ -558,14 +555,62 @@ class CartService
             ->all();
     }
 
-    private function variantLabel(ProductVariant $variant): string
+    private function variantLabel(?ProductVariant $variant): string
     {
-        $label = collect([$variant->name, $variant->size, $variant->color_name])
+        if (! $variant) {
+            return '';
+        }
+
+        $name = trim((string) $variant->name);
+        $size = trim((string) $variant->size);
+        $color = trim((string) $variant->color_name);
+        $parts = [];
+
+        $this->pushVariantLabelPart($parts, $name);
+        $this->pushVariantLabelPart($parts, $size);
+        $this->pushVariantLabelPart($parts, $color);
+
+        $label = collect($parts)
             ->filter()
-            ->unique()
+            ->unique(fn (string $part): string => $this->normalizeVariantLabelPart($part))
             ->implode(' / ');
 
         return $label !== '' ? $label : 'Варіант #'.$variant->id;
+    }
+
+    private function pushVariantLabelPart(array &$parts, string $candidate): void
+    {
+        $candidateText = trim($candidate);
+        $candidate = $this->normalizeVariantLabelPart($candidateText);
+
+        if ($candidate === '') {
+            return;
+        }
+
+        foreach ($parts as $index => $part) {
+            $partKey = $this->normalizeVariantLabelPart($part);
+
+            if (Str::contains($partKey, $candidate)) {
+                return;
+            }
+
+            if (Str::contains($candidate, $partKey)) {
+                $parts[$index] = $candidate === $partKey ? $part : $candidateText;
+
+                return;
+            }
+        }
+
+        $parts[] = $candidateText;
+    }
+
+    private function normalizeVariantLabelPart(string $value): string
+    {
+        return Str::of($value)
+            ->lower()
+            ->replaceMatches('/[^\pL\pN]+/u', '')
+            ->trim()
+            ->toString();
     }
 
     private function serializeProduct(Product $product): array
