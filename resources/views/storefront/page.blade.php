@@ -38,6 +38,10 @@
             $cleanFooterPhone = preg_replace('/[^0-9+]/', '', $footerPhone);
             $messengerFooterPhone = ltrim($cleanFooterPhone, '+');
             $footerEmail = $supportEmail ?: 'dommood.com.ua@gmail.com';
+            $breadcrumbs = [
+                ['label' => 'Головна', 'url' => route('home')],
+                ['label' => $page->title],
+            ];
             $footerAddress = 'м.Костопіль, вул. Рівненська, 107, Рівненська область, Україна, 35000';
             $footerSocialLinks = [
                 ['title' => 'Instagram', 'url' => 'https://www.instagram.com/dommood.com.ua/', 'icon' => 'instagram'],
@@ -221,11 +225,7 @@
                     'container',
                     'storefront-content-page__container--wide' => in_array($page->slug, $widePageSlugs, true),
                 ])>
-                    <nav class="storefront-content-page__breadcrumbs" aria-label="Хлібні крихти">
-                        <a href="{{ route('home') }}">Головна</a>
-                        <span>/</span>
-                        <span>{{ $page->title }}</span>
-                    </nav>
+                    @include('storefront.partials.breadcrumbs', ['items' => $breadcrumbs])
 
                     <h1>{{ $page->title }}</h1>
 

@@ -22,31 +22,18 @@
 
 .product-pdp {
     background: var(--product-bg);
-    padding: clamp(1rem, 2vw, 1.7rem) 0 clamp(2.8rem, 5vw, 4.8rem);
+    padding: var(--dm-breadcrumb-top-space) 0 clamp(2.8rem, 5vw, 4.8rem);
 }
 
-.product-breadcrumbs {
-    align-items: center;
-    color: #888;
-    display: flex;
-    flex-wrap: wrap;
-    font-size: 13px;
-    gap: 0.45rem;
-    line-height: 1.4;
-    margin-bottom: clamp(1.1rem, 2vw, 1.6rem);
+.storefront-product-page .storefront-breadcrumbs {
+    font-family: "Avenir Next", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    font-size: clamp(13px, 1vw, 15px);
+    line-height: 1.45;
+    margin-bottom: clamp(0.85rem, 1.6vw, 1.35rem);
 }
 
-.product-breadcrumbs a {
-    color: #888;
-    text-decoration: none;
-}
-
-.product-breadcrumbs a:hover {
-    color: var(--product-accent);
-}
-
-.product-breadcrumbs span:last-child {
-    color: #555;
+.storefront-product-page .storefront-breadcrumbs__list > li.is-current {
+    flex-basis: min(100%, 36rem);
 }
 
 .product-pdp__layout {

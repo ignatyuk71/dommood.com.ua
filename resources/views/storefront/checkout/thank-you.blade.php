@@ -18,6 +18,11 @@
 
                 return $currency === 'UAH' ? $value.' грн' : $value.' '.$currency;
             };
+            $breadcrumbs = [
+                ['label' => 'Головна', 'url' => route('home')],
+                ['label' => 'Оформлення замовлення', 'url' => route('checkout.index')],
+                ['label' => 'Дякуємо за замовлення'],
+            ];
         @endphp
 
         <div class="storefront-page storefront-checkout-page">
@@ -33,6 +38,8 @@
             </header>
 
             <main class="storefront-thankyou">
+                @include('storefront.partials.breadcrumbs', ['items' => $breadcrumbs])
+
                 <section class="storefront-thankyou-card" aria-labelledby="thankyou-title">
                     <span class="storefront-thankyou-icon" aria-hidden="true">
                         <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>

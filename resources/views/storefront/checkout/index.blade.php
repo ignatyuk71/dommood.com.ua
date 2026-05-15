@@ -22,6 +22,11 @@
             $selectedPayment = old('payment_method', $paymentMethods[0]['code'] ?? null);
             $activeDelivery = collect($deliveryMethods)->firstWhere('code', $selectedDelivery) ?? ($deliveryMethods[0] ?? ['price_cents' => 0]);
             $checkoutTotalCents = (int) $cart['total_cents'] + (int) ($activeDelivery['price_cents'] ?? 0);
+            $breadcrumbs = [
+                ['label' => 'Головна', 'url' => route('home')],
+                ['label' => 'Кошик', 'url' => route('cart.show')],
+                ['label' => 'Оформлення замовлення'],
+            ];
         @endphp
 
         <div class="storefront-page storefront-checkout-page">
@@ -38,6 +43,8 @@
 
             <main class="storefront-checkout-shell">
                 <section class="storefront-checkout-main" aria-labelledby="checkout-title">
+                    @include('storefront.partials.breadcrumbs', ['items' => $breadcrumbs])
+
                     <a href="{{ route('cart.show') }}" class="storefront-checkout-back">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
                         До кошика

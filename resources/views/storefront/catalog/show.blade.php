@@ -66,6 +66,11 @@
             $rating = (float) ($product['rating_average'] ?? 0);
             $reviewCount = (int) ($product['reviews_count'] ?? 0);
             $schemas = collect($schemas ?? [])->filter()->values();
+            $breadcrumbs = [
+                ['label' => 'Головна', 'url' => route('home')],
+                ['label' => $category->name, 'url' => url('/catalog/'.$category->slug)],
+                ['label' => $product['name']],
+            ];
 
             $productPayload = [
                 'id' => $product['id'],
@@ -86,13 +91,7 @@
             <main>
                 <section class="product-pdp">
                     <div class="container">
-                        <nav class="product-breadcrumbs" aria-label="Хлібні крихти">
-                            <a href="{{ route('home') }}">Головна</a>
-                            <span aria-hidden="true">/</span>
-                            <a href="{{ url('/catalog/'.$category->slug) }}">{{ $category->name }}</a>
-                            <span aria-hidden="true">/</span>
-                            <span>{{ $product['name'] }}</span>
-                        </nav>
+                        @include('storefront.partials.breadcrumbs', ['items' => $breadcrumbs])
 
                         <div class="product-pdp__layout">
                             <section class="product-gallery" aria-label="Фото товару">

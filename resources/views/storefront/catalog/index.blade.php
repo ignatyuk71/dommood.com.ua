@@ -41,6 +41,14 @@
                 ? 'товар'
                 : ((($lastTwoDigits < 11 || $lastTwoDigits > 14) && $lastDigit >= 2 && $lastDigit <= 4) ? 'товари' : 'товарів');
             $categoryDescription = trim((string) ($category?->description ?? ''));
+            $breadcrumbs = [
+                ['label' => 'Головна', 'url' => route('home')],
+                ['label' => 'Каталог', 'url' => url('/catalog')],
+            ];
+
+            if ($category) {
+                $breadcrumbs[] = ['label' => $category->name];
+            }
         @endphp
 
         <div class="storefront-page storefront-catalog-page">
@@ -49,15 +57,7 @@
             <main>
                 <section class="storefront-catalog-hero">
                     <div class="container">
-                        <nav class="storefront-catalog-breadcrumbs" aria-label="Хлібні крихти">
-                            <a href="{{ route('home') }}">Головна</a>
-                            <span>/</span>
-                            <a href="{{ url('/catalog') }}">Каталог</a>
-                            @if ($category)
-                                <span>/</span>
-                                <span>{{ $category->name }}</span>
-                            @endif
-                        </nav>
+                        @include('storefront.partials.breadcrumbs', ['items' => $breadcrumbs])
 
                         <div class="storefront-catalog-hero__grid">
                             <div class="storefront-catalog-hero__content">
