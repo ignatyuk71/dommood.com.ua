@@ -75,9 +75,10 @@ svg {
 .storefront-breadcrumbs {
     color: #888;
     display: block;
-    font-size: clamp(13px, 0.95vw, 15px);
+    font-family: "Avenir Next", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    font-size: clamp(13px, 1vw, 15px);
     line-height: 1.45;
-    margin: 0 0 var(--dm-breadcrumb-bottom-space);
+    margin: 0 0 clamp(0.85rem, 1.6vw, 1.35rem);
     max-width: 100%;
     min-width: 0;
 }
@@ -177,6 +178,10 @@ svg {
         overflow-wrap: normal;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+
+    .storefront-breadcrumbs__list > li:not(:first-child):not(.is-current) {
+        max-width: clamp(4.25rem, 32vw, 9.75rem);
     }
 }
 
@@ -4412,8 +4417,8 @@ svg {
 @media (max-width: 575.98px) {
     .storefront-catalog-hero .container,
     .storefront-catalog-section .container {
-        padding-left: 0.75rem;
-        padding-right: 0.75rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
 
     .storefront-catalog-hero h1 {
