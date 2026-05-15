@@ -5762,6 +5762,62 @@ svg {
     width: 18px;
 }
 
+.storefront-cart-free-shipping {
+    border-bottom: 1px solid rgba(23, 25, 31, 0.1);
+    display: grid;
+    gap: 0.42rem;
+    padding: 0.72rem 1rem 0.84rem;
+}
+
+.storefront-cart-panel__head .storefront-cart-free-shipping {
+    border-bottom: 0;
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    padding: 0.18rem 0.55rem 0.68rem;
+    width: 100%;
+}
+
+.storefront-cart-free-shipping p {
+    color: #5f6673;
+    font-size: 0.82rem;
+    line-height: 1.25;
+    margin: 0;
+    text-align: center;
+    width: 100%;
+}
+
+.storefront-cart-free-shipping > div {
+    background: #eceff5;
+    border-radius: 999px;
+    height: 7px;
+    overflow: hidden;
+    position: relative;
+}
+
+.storefront-cart-free-shipping > div::before {
+    background: #f45166;
+    border-radius: inherit;
+    content: "";
+    display: block;
+    height: 100%;
+    transition: width 0.2s ease;
+    width: var(--free-progress-percent, 0%);
+}
+
+.storefront-cart-free-shipping > div span {
+    align-items: center;
+    color: #fff;
+    display: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    inset: 0 auto 0 0;
+    justify-content: center;
+    line-height: 1;
+    min-width: 46px;
+    position: absolute;
+    width: var(--free-progress-percent, 0%);
+}
+
 .storefront-cart-coupon {
     border-bottom: 1px solid rgba(23, 25, 31, 0.1);
 }

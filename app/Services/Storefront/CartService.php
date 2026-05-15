@@ -18,6 +18,10 @@ class CartService
 {
     public const SESSION_KEY = 'storefront_cart_token';
 
+    private const FALLBACK_FREE_SHIPPING_THRESHOLD_CENTS = DeliveryPolicyService::DEFAULT_FREE_SHIPPING_THRESHOLD_CENTS;
+
+    public function __construct(private readonly DeliveryPolicyService $deliveryPolicy) {}
+
     public function current(Request $request): Cart
     {
         $cart = $this->findCurrent($request);
@@ -243,6 +247,8 @@ class CartService
             ->map(fn (CartItem $item): array => $this->serializeItem($item))
             ->values()
             ->all();
+        $freeShippingThresholdCents = $this->freeShippingThresholdCents();
+        $freeShippingProgress = $this->freeShippingProgress((int) $cart->total_cents, $freeShippingThresholdCents);
 
         return [
             'id' => $cart->id,
@@ -255,6 +261,10 @@ class CartService
             'subtotal_cents' => (int) $cart->subtotal_cents,
             'discount_total_cents' => (int) $cart->discount_total_cents,
             'total_cents' => (int) $cart->total_cents,
+            'free_shipping_threshold_cents' => $freeShippingThresholdCents,
+            'free_shipping_remaining_cents' => $freeShippingProgress['remaining_cents'],
+            'free_shipping_progress_percent' => $freeShippingProgress['progress_percent'],
+            'free_shipping_label' => $freeShippingProgress['label'],
             'is_empty' => count($items) === 0,
         ];
     }
@@ -278,6 +288,8 @@ class CartService
         $isEmpty = $quantityCount <= 0 || (bool) ($payload['is_empty'] ?? false);
         $quantityLabel = $this->quantityLabel($quantityCount);
         $totalFormatted = $this->formatMoney($totalCents, $currency);
+        $freeShippingThresholdCents = (int) ($payload['free_shipping_threshold_cents'] ?? $this->freeShippingThresholdCents());
+        $freeShippingProgress = $this->freeShippingProgress($totalCents, $freeShippingThresholdCents);
 
         return [
             'items_count' => (int) ($payload['items_count'] ?? 0),
@@ -287,6 +299,10 @@ class CartService
             'total_cents' => $totalCents,
             'currency' => $currency,
             'total_formatted' => $totalFormatted,
+            'free_shipping_threshold_cents' => $freeShippingThresholdCents,
+            'free_shipping_remaining_cents' => $freeShippingProgress['remaining_cents'],
+            'free_shipping_progress_percent' => $freeShippingProgress['progress_percent'],
+            'free_shipping_label' => $freeShippingProgress['label'],
             'header_label' => $isEmpty ? '' : $totalFormatted,
             'aria_label' => $isEmpty ? 'Кошик' : $quantityLabel.' · '.$totalFormatted,
             'is_empty' => $isEmpty,
@@ -303,6 +319,10 @@ class CartService
             'total_cents' => 0,
             'currency' => 'UAH',
             'total_formatted' => '0 грн',
+            'free_shipping_threshold_cents' => self::FALLBACK_FREE_SHIPPING_THRESHOLD_CENTS,
+            'free_shipping_remaining_cents' => self::FALLBACK_FREE_SHIPPING_THRESHOLD_CENTS,
+            'free_shipping_progress_percent' => 0,
+            'free_shipping_label' => 'Додайте ще 1 200 грн, щоб отримати безкоштовну доставку',
             'header_label' => '',
             'aria_label' => 'Кошик',
             'is_empty' => true,
@@ -386,18 +406,31 @@ class CartService
     private function resolveVariant(Product $product, ?int $variantId): ?ProductVariant
     {
         if (! $variantId) {
+            if ($product->variants->isNotEmpty()) {
+                throw ValidationException::withMessages([
+                    'product_variant_id' => 'Оберіть доступний варіант товару.',
+                ]);
+            }
+
             return null;
         }
 
         $variant = $product->variants->firstWhere('id', $variantId);
 
-        if (! $variant) {
+        if (! $variant || ! $this->variantIsAvailable($product, $variant)) {
             throw ValidationException::withMessages([
                 'product_variant_id' => 'Обраний варіант товару недоступний.',
             ]);
         }
 
         return $variant;
+    }
+
+    private function variantIsAvailable(Product $product, ProductVariant $variant): bool
+    {
+        return $product->stock_status !== Product::STOCK_OUT_OF_STOCK
+            && (bool) $variant->is_active
+            && (int) $variant->stock_quantity > 0;
     }
 
     private function resolvePromocode(string $code): Promocode
@@ -467,6 +500,27 @@ class CartService
     private function money(?int $amount): string
     {
         return $this->formatMoney($amount);
+    }
+
+    private function freeShippingThresholdCents(): int
+    {
+        return $this->deliveryPolicy->freeShippingThresholdCents();
+    }
+
+    private function freeShippingProgress(int $cartTotalCents, int $thresholdCents): array
+    {
+        $thresholdCents = max(1, $thresholdCents);
+        $cartTotalCents = max(0, $cartTotalCents);
+        $remainingCents = max(0, $thresholdCents - $cartTotalCents);
+        $progressPercent = min(100, (int) floor(($cartTotalCents / $thresholdCents) * 100));
+
+        return [
+            'remaining_cents' => $remainingCents,
+            'progress_percent' => $progressPercent,
+            'label' => $remainingCents > 0
+                ? 'Додайте ще '.$this->formatMoney($remainingCents).', щоб отримати безкоштовну доставку'
+                : 'Безкоштовна доставка доступна для цього замовлення',
+        ];
     }
 
     private function quantityLabel(int $quantity): string
@@ -550,6 +604,7 @@ class CartService
                 'old_price_cents' => (int) ($variant->old_price_cents ?: $product->old_price_cents),
                 'price_formatted' => $this->formatMoney($variant->price_cents ?: $product->price_cents, $product->currency ?: 'UAH'),
                 'is_current' => (int) $item->product_variant_id === (int) $variant->id,
+                'is_available' => $this->variantIsAvailable($product, $variant),
             ])
             ->values()
             ->all();
@@ -561,56 +616,11 @@ class CartService
             return '';
         }
 
-        $name = trim((string) $variant->name);
         $size = trim((string) $variant->size);
-        $color = trim((string) $variant->color_name);
-        $parts = [];
-
-        $this->pushVariantLabelPart($parts, $name);
-        $this->pushVariantLabelPart($parts, $size);
-        $this->pushVariantLabelPart($parts, $color);
-
-        $label = collect($parts)
-            ->filter()
-            ->unique(fn (string $part): string => $this->normalizeVariantLabelPart($part))
-            ->implode(' / ');
+        $name = trim((string) $variant->name);
+        $label = $size !== '' ? $size : $name;
 
         return $label !== '' ? $label : 'Варіант #'.$variant->id;
-    }
-
-    private function pushVariantLabelPart(array &$parts, string $candidate): void
-    {
-        $candidateText = trim($candidate);
-        $candidate = $this->normalizeVariantLabelPart($candidateText);
-
-        if ($candidate === '') {
-            return;
-        }
-
-        foreach ($parts as $index => $part) {
-            $partKey = $this->normalizeVariantLabelPart($part);
-
-            if (Str::contains($partKey, $candidate)) {
-                return;
-            }
-
-            if (Str::contains($candidate, $partKey)) {
-                $parts[$index] = $candidate === $partKey ? $part : $candidateText;
-
-                return;
-            }
-        }
-
-        $parts[] = $candidateText;
-    }
-
-    private function normalizeVariantLabelPart(string $value): string
-    {
-        return Str::of($value)
-            ->lower()
-            ->replaceMatches('/[^\pL\pN]+/u', '')
-            ->trim()
-            ->toString();
     }
 
     private function serializeProduct(Product $product): array

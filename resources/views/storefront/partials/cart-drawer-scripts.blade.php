@@ -128,6 +128,42 @@
 	            return `${quantity} товарів`;
 	        };
 
+	        const formatMoney = (amount, currency = 'UAH') => {
+	            const value = new Intl.NumberFormat('uk-UA', {
+	                maximumFractionDigits: Number(amount || 0) % 100 === 0 ? 0 : 2,
+	                minimumFractionDigits: 0,
+	            }).format(Number(amount || 0) / 100);
+
+	            return currency === 'UAH' ? `${value} грн` : `${value} ${currency}`;
+	        };
+
+	        const updateFreeShippingProgress = (summary = {}) => {
+	            document.querySelectorAll('[data-free-shipping-progress]').forEach((element) => {
+	                const threshold = Math.max(1, Number(summary?.free_shipping_threshold_cents || element.dataset.freeShippingThreshold || 120000));
+	                const total = Math.max(0, Number(summary?.total_cents ?? element.dataset.freeShippingCurrent ?? 0));
+	                const remaining = Math.max(0, Number(summary?.free_shipping_remaining_cents ?? (threshold - total)));
+	                const progress = Math.min(100, Math.max(0, Number(summary?.free_shipping_progress_percent ?? Math.floor((total / threshold) * 100))));
+	                const label = summary?.free_shipping_label || (remaining > 0
+	                    ? `Додайте ще ${formatMoney(remaining, summary?.currency || 'UAH')}, щоб отримати безкоштовну доставку`
+	                    : 'Безкоштовна доставка доступна для цього замовлення');
+	                const labelElement = element.querySelector('[data-free-shipping-label]');
+	                const percentElement = element.querySelector('[data-free-shipping-percent]');
+
+	                element.dataset.freeShippingThreshold = String(threshold);
+	                element.dataset.freeShippingCurrent = String(total);
+	                element.style.setProperty('--free-progress-percent', `${progress}%`);
+
+	                if (labelElement) {
+	                    labelElement.textContent = label;
+	                }
+
+	                if (percentElement) {
+	                    percentElement.textContent = `${progress}%`;
+	                    percentElement.hidden = true;
+	                }
+	            });
+	        };
+
 	        const updateCartIndicators = (summary = {}) => {
 	            const quantityCount = Number(summary?.quantity_count ?? summary?.items_count ?? 0);
 	            const isEmpty = summary?.is_empty ?? quantityCount <= 0;
@@ -149,6 +185,8 @@
 	                element.classList.toggle('has-cart-items', !isEmpty);
 	                element.setAttribute('aria-label', isEmpty ? 'Кошик' : `Кошик: ${ariaLabel}`);
 	            });
+
+	            updateFreeShippingProgress(summary);
 	        };
 
         const showDrawerError = async (message) => {
@@ -226,12 +264,12 @@
 
             setSubmittingState(form, submitter, true);
 
-            try {
-                if (form.matches('[data-cart-add]')) {
-                    await window.StorefrontFeedback?.animateAddToCart?.(form, submitter);
-                }
+	            try {
+	                if (form.matches('[data-cart-add]')) {
+	                    window.StorefrontFeedback?.animateAddToCart?.(form, submitter);
+	                }
 
-                const response = await fetch(form.action, {
+	                const response = await fetch(form.action, {
                     method: (form.getAttribute('method') || 'post').toUpperCase(),
                     body: formData,
                     headers: {

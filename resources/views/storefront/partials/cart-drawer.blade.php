@@ -6,6 +6,13 @@
 
         return $currency === 'UAH' ? $value.' грн' : $value.' '.$currency;
     };
+    $freeShippingThreshold = max(1, (int) ($cart['free_shipping_threshold_cents'] ?? \App\Services\Storefront\DeliveryPolicyService::DEFAULT_FREE_SHIPPING_THRESHOLD_CENTS));
+    $cartTotalCents = max(0, (int) ($cart['total_cents'] ?? 0));
+    $freeShippingRemaining = max(0, (int) ($cart['free_shipping_remaining_cents'] ?? ($freeShippingThreshold - $cartTotalCents)));
+    $freeShippingProgress = min(100, max(0, (int) ($cart['free_shipping_progress_percent'] ?? floor(($cartTotalCents / $freeShippingThreshold) * 100))));
+    $freeShippingLabel = $cart['free_shipping_label'] ?? ($freeShippingRemaining > 0
+        ? 'Додайте ще '.$formatMoney($freeShippingRemaining, $cart['currency'] ?? 'UAH').', щоб отримати безкоштовну доставку'
+        : 'Безкоштовна доставка доступна для цього замовлення');
 @endphp
 
 <div
@@ -34,6 +41,22 @@
             @endif
             <strong>Кошик</strong>
             <span aria-hidden="true"></span>
+
+            @unless ($cart['is_empty'])
+                <section
+                    class="storefront-cart-free-shipping"
+                    aria-label="Прогрес безкоштовної доставки"
+                    data-free-shipping-progress
+                    data-free-shipping-threshold="{{ $freeShippingThreshold }}"
+                    data-free-shipping-current="{{ $cartTotalCents }}"
+                    style="--free-progress-percent: {{ $freeShippingProgress }}%;"
+                >
+                    <p data-free-shipping-label>{{ $freeShippingLabel }}</p>
+                    <div aria-hidden="true">
+                        <span data-free-shipping-percent hidden>{{ $freeShippingProgress }}%</span>
+                    </div>
+                </section>
+            @endunless
         </div>
 
         @if ($cart['is_empty'])
@@ -75,8 +98,9 @@
                                                     <option
                                                         value="{{ $variantOption['id'] }}"
                                                         @selected($variantOption['is_current'])
+                                                        @disabled(! ($variantOption['is_available'] ?? true) && ! $variantOption['is_current'])
                                                     >
-                                                        {{ $variantOption['label'] }}
+                                                        {{ $variantOption['label'] }}@if (! ($variantOption['is_available'] ?? true)) — немає@endif
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -114,11 +138,6 @@
                         </div>
                     </article>
                 @endforeach
-            </section>
-
-            <section class="storefront-cart-benefit" aria-label="Накопичувальна знижка">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12v8H4v-8"/><path d="M22 7H2v5h20z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 1 1 2.2-3.7L12 7Z"/><path d="M12 7h4.5a2.5 2.5 0 1 0-2.2-3.7L12 7Z"/></svg>
-                <span>Увійти для відображення накопичувальної знижки</span>
             </section>
 
             <details class="storefront-cart-coupon" @if ($errors->has('code') || filled($cart['promocode_code'])) open @endif>

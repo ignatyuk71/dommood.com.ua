@@ -99,6 +99,9 @@ class SiteSettingsService
                 'monobank_webhook_url' => url('/payments/monobank/callback'),
                 'monobank_result_url' => url('/payments/monobank/result'),
             ],
+            'payment_delivery' => [
+                'free_shipping_threshold' => '1200.00',
+            ],
             'security' => [
                 'admin_2fa_required' => false,
                 'manager_ip_allowlist' => '',
