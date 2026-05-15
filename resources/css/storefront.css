@@ -81,18 +81,20 @@ svg {
     margin: 0 0 clamp(0.85rem, 1.6vw, 1.35rem);
     max-width: 100%;
     min-width: 0;
+    overflow: hidden;
 }
 
 .storefront-breadcrumbs__list {
     align-items: baseline;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 0.25rem 0.45rem;
     list-style: none;
     margin: 0;
     max-width: 100%;
     min-width: 0;
     padding: 0;
+    white-space: nowrap;
 }
 
 .storefront-breadcrumbs__list > li {
@@ -116,12 +118,15 @@ svg {
 
 .storefront-breadcrumbs a,
 .storefront-breadcrumbs span {
-    display: inline;
+    display: block;
     max-width: 100%;
     min-width: 0;
-    overflow-wrap: anywhere;
+    overflow: hidden;
+    overflow-wrap: normal;
+    text-overflow: ellipsis;
     text-decoration-thickness: 1px;
     text-underline-offset: 0.14em;
+    white-space: nowrap;
 }
 
 .storefront-breadcrumbs a {
@@ -141,15 +146,7 @@ svg {
 @media (max-width: 575.98px) {
     .storefront-breadcrumbs {
         margin-bottom: clamp(0.85rem, 2.8vw, 1.15rem);
-        overflow: hidden;
         padding: 0.05rem 0;
-    }
-
-    .storefront-breadcrumbs__list {
-        flex-wrap: nowrap;
-        gap: 0.25rem 0.45rem;
-        overflow: hidden;
-        white-space: nowrap;
     }
 
     .storefront-breadcrumbs__list > li {
@@ -169,19 +166,6 @@ svg {
 
     .storefront-breadcrumbs__list > li + li::before {
         margin-right: 0.45rem;
-    }
-
-    .storefront-breadcrumbs a,
-    .storefront-breadcrumbs span {
-        display: block;
-        overflow: hidden;
-        overflow-wrap: normal;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .storefront-breadcrumbs__list > li:not(:first-child):not(.is-current) {
-        max-width: clamp(4.25rem, 32vw, 9.75rem);
     }
 }
 
