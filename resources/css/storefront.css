@@ -137,6 +137,49 @@ svg {
     text-decoration: none;
 }
 
+@media (max-width: 575.98px) {
+    .storefront-breadcrumbs {
+        margin-bottom: clamp(0.85rem, 2.8vw, 1.15rem);
+        overflow: hidden;
+        padding: 0.05rem 0;
+    }
+
+    .storefront-breadcrumbs__list {
+        flex-wrap: nowrap;
+        gap: 0.25rem 0.45rem;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .storefront-breadcrumbs__list > li {
+        flex: 0 0 auto;
+        max-width: 9.75rem;
+    }
+
+    .storefront-breadcrumbs__list > li:first-child {
+        max-width: 7rem;
+    }
+
+    .storefront-breadcrumbs__list > li.is-current {
+        flex: 1 1 auto;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .storefront-breadcrumbs__list > li + li::before {
+        margin-right: 0.45rem;
+    }
+
+    .storefront-breadcrumbs a,
+    .storefront-breadcrumbs span {
+        display: block;
+        overflow: hidden;
+        overflow-wrap: normal;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
 .storefront-site-header svg {
     fill: none;
     stroke: currentColor;

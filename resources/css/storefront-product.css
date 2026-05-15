@@ -36,6 +36,12 @@
     flex-basis: min(100%, 36rem);
 }
 
+@media (max-width: 575.98px) {
+    .storefront-product-page .storefront-breadcrumbs__list > li.is-current {
+        flex-basis: auto;
+    }
+}
+
 .product-pdp__layout {
     align-items: start;
     display: grid;
