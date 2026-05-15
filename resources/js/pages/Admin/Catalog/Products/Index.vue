@@ -512,13 +512,15 @@ onBeforeUnmount(() => {
 
                             <div class="min-w-0">
                                 <div class="flex min-w-0 items-center gap-2">
-                                    <Link
-                                        :href="route('admin.products.edit', product.id)"
+                                    <a
+                                        :href="product.public_url"
                                         class="block max-h-10 overflow-hidden text-sm font-bold leading-5 text-[#242231] transition hover:text-[#7561f7] hover:underline"
+                                        target="_blank"
+                                        rel="noopener"
                                         @click.stop
                                     >
                                         {{ product.name || 'Без назви' }}
-                                    </Link>
+                                    </a>
                                     <ChevronDown
                                         class="hidden h-4 w-4 shrink-0 text-slate-400 transition sm:block"
                                         :class="isExpanded(product.id) ? 'rotate-180 text-[#7561f7]' : ''"

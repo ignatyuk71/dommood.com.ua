@@ -970,6 +970,7 @@ class ProductController extends Controller
             'size_chart_id' => $product->size_chart_id,
             'name' => $product->name,
             'slug' => $product->slug,
+            'public_url' => $this->publicProductUrl($product),
             'sku' => $product->sku,
             'short_description' => $product->short_description,
             'description' => $full ? $product->description : null,
@@ -1036,6 +1037,17 @@ class ProductController extends Controller
             'variants' => [],
             'images' => [],
         ];
+    }
+
+    private function publicProductUrl(Product $product): string
+    {
+        $category = $product->primaryCategory ?: $product->categories->first();
+
+        if (! $category || blank($product->slug)) {
+            return url('/catalog');
+        }
+
+        return url('/catalog/'.$category->slug.'/'.$product->slug);
     }
 
     private function serializeAttributeRows(Product $product): array
