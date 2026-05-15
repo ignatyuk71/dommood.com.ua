@@ -149,7 +149,7 @@
                 @if ($seoText)
                     <section class="storefront-catalog-seo">
                         <div class="container">
-                            <article class="storefront-seo-card">
+                            <article class="storefront-seo-card storefront-catalog-seo__content">
                                 {!! $seoText !!}
                             </article>
                         </div>

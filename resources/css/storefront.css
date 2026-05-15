@@ -4055,7 +4055,66 @@ svg {
 
 .storefront-catalog-seo {
     background: #ffffff;
-    padding: 0 0 4rem;
+    padding: clamp(0.7rem, 2vw, 1.2rem) 0 clamp(3rem, 6vw, 4.5rem);
+}
+
+.storefront-catalog-seo__content {
+    background: transparent;
+    border: 0;
+    border-top: 1px solid rgba(23, 25, 31, 0.1);
+    border-radius: 0;
+    display: block;
+    max-width: 980px;
+    padding: clamp(1.45rem, 3vw, 2.25rem) 0 0;
+}
+
+.storefront-catalog-seo__content h2,
+.storefront-catalog-seo__content h3 {
+    color: #20202a;
+    font-weight: 520;
+    letter-spacing: 0;
+    line-height: 1.18;
+    margin: clamp(1.6rem, 3vw, 2.2rem) 0 0.75rem;
+}
+
+.storefront-catalog-seo__content h2:first-child,
+.storefront-catalog-seo__content h3:first-child {
+    margin-top: 0;
+}
+
+.storefront-catalog-seo__content h2 {
+    font-size: clamp(1.45rem, 2.3vw, 2rem);
+}
+
+.storefront-catalog-seo__content h3 {
+    font-size: clamp(1.18rem, 1.8vw, 1.45rem);
+}
+
+.storefront-catalog-seo__content p,
+.storefront-catalog-seo__content li {
+    color: #4d5765;
+    font-size: 0.98rem;
+    font-weight: 400;
+    line-height: 1.72;
+}
+
+.storefront-catalog-seo__content p {
+    margin: 0 0 0.95rem;
+}
+
+.storefront-catalog-seo__content ul,
+.storefront-catalog-seo__content ol {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0.95rem 0 1.15rem;
+    max-width: 760px;
+    padding-left: 1.2rem;
+}
+
+.storefront-catalog-seo__content strong,
+.storefront-catalog-seo__content b {
+    color: #343b49;
+    font-weight: 620;
 }
 
 .storefront-catalog-filter-drawer {
