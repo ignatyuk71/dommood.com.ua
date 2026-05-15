@@ -773,12 +773,18 @@ class CatalogController extends Controller
             [
                 '@type' => 'ListItem',
                 'position' => 2,
+                'name' => 'Каталог',
+                'item' => url('/catalog'),
+            ],
+            [
+                '@type' => 'ListItem',
+                'position' => 3,
                 'name' => $category->name ?? 'Каталог',
                 'item' => url('/catalog/'.($category->slug ?? '')),
             ],
             [
                 '@type' => 'ListItem',
-                'position' => 3,
+                'position' => 4,
                 'name' => $product['name'],
                 'item' => $canonicalUrl,
             ],

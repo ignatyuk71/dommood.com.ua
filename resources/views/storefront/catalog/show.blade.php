@@ -68,6 +68,7 @@
             $schemas = collect($schemas ?? [])->filter()->values();
             $breadcrumbs = [
                 ['label' => 'Головна', 'url' => route('home')],
+                ['label' => 'Каталог', 'url' => url('/catalog')],
                 ['label' => $category->name, 'url' => url('/catalog/'.$category->slug)],
                 ['label' => $product['name']],
             ];
