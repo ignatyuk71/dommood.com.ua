@@ -109,6 +109,9 @@ const form = useForm({
 
 const SEO_TITLE_LIMIT = 60;
 const SEO_DESCRIPTION_LIMIT = 160;
+const GALLERY_MAX_IMAGES = 20;
+const GALLERY_MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024;
+const GALLERY_ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const publicOrigin = () => (typeof window === 'undefined' ? 'https://dommood.com.ua' : window.location.origin);
 
 const normalizeSeoText = (value) => String(value ?? '')
@@ -318,6 +321,16 @@ const galleryItems = computed(() => {
         .filter(Boolean);
 });
 
+const galleryErrorMessage = computed(() => {
+    if (form.errors.images) {
+        return form.errors.images;
+    }
+
+    const nestedImageError = Object.entries(form.errors).find(([key]) => key.startsWith('images.'));
+
+    return nestedImageError?.[1] ?? '';
+});
+
 const availableAttributesFor = (row = null) => {
     const used = new Set(attributeRows.value
         .filter((item) => item.uid !== row?.uid)
@@ -439,10 +452,57 @@ const openImageDialog = () => {
     fileInput.value?.click();
 };
 
+const clearGalleryErrors = () => {
+    form.clearErrors('images');
+
+    Object.keys(form.errors)
+        .filter((key) => key.startsWith('images.'))
+        .forEach((key) => form.clearErrors(key));
+};
+
 const addImageFiles = (fileList) => {
-    const files = Array.from(fileList ?? []).filter((file) => file?.type?.startsWith('image/'));
+    const files = Array.from(fileList ?? []).filter(Boolean);
+
+    if (!files.length) {
+        return;
+    }
+
+    const availableSlots = Math.max(0, GALLERY_MAX_IMAGES - galleryItems.value.length);
+
+    if (availableSlots === 0) {
+        form.setError('images', `У галереї можна додати не більше ${GALLERY_MAX_IMAGES} фото.`);
+
+        return;
+    }
+
+    const validFiles = [];
+    let validationMessage = '';
 
     files.forEach((file) => {
+        if (!GALLERY_ALLOWED_MIME_TYPES.includes(file.type)) {
+            validationMessage = 'Галерея приймає лише JPG, PNG або WEBP.';
+
+            return;
+        }
+
+        if (file.size > GALLERY_MAX_FILE_SIZE_BYTES) {
+            validationMessage = 'Розмір одного фото в галереї не може перевищувати 15 MB.';
+
+            return;
+        }
+
+        validFiles.push(file);
+    });
+
+    if (validFiles.length === 0) {
+        form.setError('images', validationMessage || 'Не вдалося додати фото до галереї.');
+
+        return;
+    }
+
+    clearGalleryErrors();
+
+    validFiles.slice(0, availableSlots).forEach((file) => {
         const url = URL.createObjectURL(file);
         const imageKey = `n:${uid()}`;
         objectUrls.value.push(url);
@@ -455,6 +515,12 @@ const addImageFiles = (fileList) => {
         });
         galleryOrder.value.push(imageKey);
     });
+
+    if (validFiles.length > availableSlots) {
+        form.setError('images', `У галереї можна додати не більше ${GALLERY_MAX_IMAGES} фото.`);
+    } else if (validationMessage) {
+        form.setError('images', validationMessage);
+    }
 };
 
 const onImagesSelected = (event) => {
@@ -716,7 +782,7 @@ onBeforeUnmount(() => {
                         <span class="flex flex-col items-center gap-3 px-6 py-8 text-sm font-bold text-[#343241]">
                             <ImagePlus class="h-7 w-7 text-[#7561f7]" />
                             Перетягни файли або натисни для вибору
-                            <span class="text-xs font-semibold text-slate-500">JPG, PNG або WebP до 6 MB</span>
+                            <span class="text-xs font-semibold text-slate-500">JPG, PNG або WebP до 15 MB</span>
                         </span>
                     </button>
 
@@ -743,7 +809,7 @@ onBeforeUnmount(() => {
                             <span v-if="index === 0" class="absolute bottom-3 right-3 rounded-lg bg-[#7561f7] px-2 py-1 text-xs font-bold text-white">Головне</span>
                         </div>
                     </div>
-                    <InputError class="mt-2" :message="form.errors.images" />
+                    <InputError class="mt-2" :message="galleryErrorMessage" />
                 </div>
 
                 <div class="rounded-lg bg-white p-5 shadow-[0_16px_45px_rgba(61,58,101,0.08)]">
@@ -905,6 +971,18 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div class="rounded-lg bg-white p-5 shadow-[0_16px_45px_rgba(61,58,101,0.08)]">
+                    <label class="text-sm font-bold text-slate-700" for="seo_text">SEO текст</label>
+                    <textarea
+                        id="seo_text"
+                        v-model="form.seo_text"
+                        rows="5"
+                        class="mt-2 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
+                        placeholder="Додатковий текст для товарної сторінки, якщо він потрібен"
+                    />
+                    <InputError class="mt-2" :message="form.errors.seo_text" />
+                </div>
+
+                <div class="rounded-lg bg-white p-5 shadow-[0_16px_45px_rgba(61,58,101,0.08)]">
                     <div class="flex flex-col gap-3 border-b border-slate-100 pb-4 lg:flex-row lg:items-start lg:justify-between">
                         <div>
                             <p class="text-xs font-black uppercase tracking-[0.18em] text-[#7561f7]">SEO</p>
@@ -980,18 +1058,6 @@ onBeforeUnmount(() => {
                                     Залиш порожнім, якщо канонічна сторінка — поточний товар у каталозі.
                                 </p>
                                 <InputError class="mt-2" :message="form.errors.canonical_url" />
-                            </div>
-
-                            <div>
-                                <label class="text-sm font-bold text-slate-700" for="seo_text">SEO текст</label>
-                                <textarea
-                                    id="seo_text"
-                                    v-model="form.seo_text"
-                                    rows="5"
-                                    class="mt-2 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
-                                    placeholder="Додатковий текст для товарної сторінки, якщо він потрібен"
-                                />
-                                <InputError class="mt-2" :message="form.errors.seo_text" />
                             </div>
                         </div>
 

@@ -59,9 +59,9 @@ class UpdateProductRequest extends FormRequest
             'variants.*.price' => ['nullable', 'numeric', 'min:0', 'max:9999999.99'],
             'variants.*.stock_quantity' => ['nullable', 'integer', 'min:0', 'max:999999'],
             'variants.*.is_active' => ['boolean'],
-            'images' => ['nullable', 'array', 'max:12'],
-            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:6144'],
-            'new_image_keys' => ['nullable', 'array', 'max:12'],
+            'images' => ['nullable', 'array', 'max:20'],
+            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:15360'],
+            'new_image_keys' => ['nullable', 'array', 'max:20'],
             'new_image_keys.*' => ['string', 'max:80'],
             'image_order' => ['nullable', 'array', 'max:50'],
             'image_order.*' => ['string', 'max:100'],
@@ -83,5 +83,15 @@ class UpdateProductRequest extends FormRequest
             'stock_status' => $this->input('stock_status') ?: Product::STOCK_IN_STOCK,
             'currency' => $this->input('currency') ?: 'UAH',
         ]);
+    }
+
+    public function messages(): array
+    {
+        return [
+            'images.max' => 'У галереї можна додати не більше 20 фото.',
+            'images.*.image' => 'Кожен файл у галереї має бути зображенням.',
+            'images.*.mimes' => 'Галерея приймає лише JPG, PNG або WEBP.',
+            'images.*.max' => 'Розмір одного фото в галереї не може перевищувати 15 MB.',
+        ];
     }
 }
