@@ -7,6 +7,14 @@ BRANCH="main"
 TS="$(date +%F_%H%M%S)"
 KEEP_RELEASES="${KEEP_RELEASES:-5}"
 RELEASE_DIR="$APP_DIR/releases/$TS"
+DEPLOY_UID="$(id -u)"
+
+make_writable_for_deploy() {
+  for path in "$@"; do
+    [ -e "$path" ] || continue
+    find "$path" -user "$DEPLOY_UID" -exec chmod ug+rwX {} + 2>/dev/null || true
+  done
+}
 
 mkdir -p "$APP_DIR/releases" "$APP_DIR/shared"
 mkdir -p "$APP_DIR/shared/storage/app/public"
@@ -25,7 +33,7 @@ ln -sfn "$APP_DIR/shared/storage" "$RELEASE_DIR/storage"
 rm -rf "$RELEASE_DIR/bootstrap/cache"
 ln -sfn "$APP_DIR/shared/bootstrap/cache" "$RELEASE_DIR/bootstrap/cache"
 
-chmod -R ug+rwX "$APP_DIR/shared/storage" "$APP_DIR/shared/bootstrap/cache"
+make_writable_for_deploy "$APP_DIR/shared/storage" "$APP_DIR/shared/bootstrap/cache"
 
 cd "$RELEASE_DIR"
 composer install --no-dev --optimize-autoloader --no-interaction
@@ -46,7 +54,7 @@ cp -R "$APP_DIR/shared/build" "$RELEASE_DIR/public/build"
 chmod -R a+rX "$RELEASE_DIR/public/build"
 rm -rf "$APP_DIR/shared/build"
 
-chmod -R ug+rwX "$APP_DIR/shared/storage" "$APP_DIR/shared/bootstrap/cache"
+make_writable_for_deploy "$APP_DIR/shared/storage" "$APP_DIR/shared/bootstrap/cache"
 
 ln -sfn "$RELEASE_DIR" "$APP_DIR/current"
 
