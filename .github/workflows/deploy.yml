@@ -31,7 +31,19 @@ jobs:
         run: npm ci
 
       - name: Build assets
-        run: npm run build
+        run: |
+          set -o pipefail
+          node -v
+          npm -v
+          set +e
+          npm run build 2>&1 | tee /tmp/dommood-build.log
+          status=${PIPESTATUS[0]}
+          set -e
+          if [ "$status" -ne 0 ]; then
+            message="$(tail -n 40 /tmp/dommood-build.log | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')"
+            echo "::error title=Build assets failed::$message"
+            exit "$status"
+          fi
 
       - name: Setup SSH
         run: |
