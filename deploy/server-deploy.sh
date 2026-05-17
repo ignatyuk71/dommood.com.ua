@@ -7,6 +7,7 @@ BRANCH="main"
 TS="$(date +%F_%H%M%S)"
 KEEP_RELEASES="${KEEP_RELEASES:-5}"
 RELEASE_DIR="$APP_DIR/releases/$TS"
+PREVIOUS_CURRENT="$(readlink -f "$APP_DIR/current" 2>/dev/null || true)"
 DEPLOY_UID="$(id -u)"
 
 make_writable_for_deploy() {
@@ -50,7 +51,11 @@ if [ ! -d "$APP_DIR/shared/build" ]; then
 fi
 
 rm -rf "$RELEASE_DIR/public/build"
-cp -R "$APP_DIR/shared/build" "$RELEASE_DIR/public/build"
+mkdir -p "$RELEASE_DIR/public/build"
+if [ -n "$PREVIOUS_CURRENT" ] && [ -d "$PREVIOUS_CURRENT/public/build" ]; then
+  cp -a "$PREVIOUS_CURRENT/public/build/." "$RELEASE_DIR/public/build/"
+fi
+cp -a "$APP_DIR/shared/build/." "$RELEASE_DIR/public/build/"
 chmod -R a+rX "$RELEASE_DIR/public/build"
 rm -rf "$APP_DIR/shared/build"
 
