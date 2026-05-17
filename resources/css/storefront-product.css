@@ -496,6 +496,10 @@
     position: relative;
 }
 
+.product-size-options label {
+    flex: 0 0 auto;
+}
+
 .product-color-options label.is-disabled,
 .product-size-options label.is-disabled {
     cursor: not-allowed;
@@ -2156,22 +2160,22 @@
     }
 
     .product-size-options {
-        display: grid;
+        display: flex;
+        flex-wrap: nowrap;
         gap: 0.55rem;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        overflow-x: visible;
-        padding-bottom: 0;
+        overflow-x: auto;
+        padding-bottom: 0.2rem;
     }
 
     .product-size-options label {
-        min-width: 0;
+        flex: 0 0 auto;
     }
 
     .product-size-options span {
-        min-width: 0;
-        padding-left: 0.35rem;
-        padding-right: 0.35rem;
-        width: 100%;
+        min-width: max-content;
+        padding-left: 0.65rem;
+        padding-right: 0.65rem;
+        width: auto;
     }
 
     .product-color-gallery {
