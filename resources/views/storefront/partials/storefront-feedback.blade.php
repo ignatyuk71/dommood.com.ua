@@ -150,7 +150,7 @@
             const midX = startX + (endX - startX) * 0.52;
             const midY = Math.min(startY, endY) - Math.max(42, Math.abs(endX - startX) * 0.09);
             const flyer = createFlyer(source);
-            const animationDuration = 1720;
+            const animationDuration = 1050;
 
             flyer.style.width = `${size}px`;
             flyer.style.height = `${size}px`;

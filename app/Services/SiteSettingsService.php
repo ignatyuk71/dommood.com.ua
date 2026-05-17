@@ -66,7 +66,7 @@ class SiteSettingsService
                 'require_phone' => true,
                 'require_email' => false,
                 'require_last_name' => false,
-                'default_order_status' => 'awaiting_confirmation',
+                'default_order_status' => 'new',
                 'min_order_amount' => '0.00',
                 'terms_url' => '/terms',
                 'privacy_url' => '/privacy-policy',

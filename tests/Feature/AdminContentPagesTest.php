@@ -64,7 +64,7 @@ class AdminContentPagesTest extends TestCase
                 'canonical_url' => '',
                 'published_at' => now()->format('Y-m-d H:i:s'),
             ])
-            ->assertRedirect(route('admin.pages.edit', $page));
+            ->assertRedirect(route('admin.pages.index'));
 
         $page->refresh();
 

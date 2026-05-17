@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Cache;
 class ShippingLookupController extends Controller
 {
     private const CACHE_TTL_SECONDS = 10800;
+    private const NOVA_POSHTA_POSTOMAT_TYPE_REF = 'f9316480-5f2d-425d-bc2c-ac7cd29decf0';
 
     public function __construct(
         private readonly NovaPoshtaApi $novaPoshta,
@@ -88,7 +89,8 @@ class ShippingLookupController extends Controller
         $type = $data['type'] ?? null;
         $page = (int) ($data['page'] ?? 1);
         $limit = min(50, max(1, (int) ($data['limit'] ?? 20)));
-        $cacheKey = $this->cacheKey('np:warehouses', compact('cityRef', 'query', 'type', 'page', 'limit'));
+        $typeOfWarehouseRef = $type === 'postomat' ? self::NOVA_POSHTA_POSTOMAT_TYPE_REF : null;
+        $cacheKey = $this->cacheKey('np:warehouses', compact('cityRef', 'query', 'type', 'typeOfWarehouseRef', 'page', 'limit'));
 
         if (! $this->novaPoshta->configured()) {
             return response()->json([
@@ -104,7 +106,7 @@ class ShippingLookupController extends Controller
             ]);
         }
 
-        $response = $this->novaPoshta->findWarehouses($cityRef, $query, $limit, $page);
+        $response = $this->novaPoshta->findWarehouses($cityRef, $query, $limit, $page, $typeOfWarehouseRef);
         $error = $this->providerError($response);
         $warehouses = $error ? [] : collect($response['data'] ?? [])
             ->map(fn (array $row): array => [
@@ -117,6 +119,7 @@ class ShippingLookupController extends Controller
             ])
             ->filter(fn (array $row): bool => filled($row['ref']) && filled($row['name']))
             ->when($type, fn ($items) => $items->where('type', $type))
+            ->take($limit)
             ->values()
             ->all();
 

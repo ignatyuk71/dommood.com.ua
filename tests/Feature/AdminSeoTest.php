@@ -9,8 +9,6 @@ use App\Models\ContentPage;
 use App\Models\FilterSeoPage;
 use App\Models\Product;
 use App\Models\ProductAttribute;
-use App\Models\SeoRedirect;
-use App\Models\SeoTemplate;
 use App\Models\User;
 use App\Services\Seo\SeoResolver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -32,6 +30,8 @@ class AdminSeoTest extends TestCase
     public function test_admin_can_open_seo_overview_with_audit_summary(): void
     {
         $user = User::factory()->create();
+
+        ContentPage::query()->forceDelete();
 
         Product::query()->create([
             'primary_category_id' => null,
@@ -171,6 +171,9 @@ class AdminSeoTest extends TestCase
     public function test_admin_can_regenerate_sitemap(): void
     {
         $user = User::factory()->create();
+
+        ContentPage::query()->forceDelete();
+
         $category = Category::query()->create([
             'name' => 'Каталог',
             'slug' => 'catalog',

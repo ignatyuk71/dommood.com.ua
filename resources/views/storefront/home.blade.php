@@ -11,12 +11,10 @@
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
         <link rel="manifest" href="/site.webmanifest">
         <meta name="theme-color" content="#29277f">
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=inter:400,500,600&display=swap" rel="stylesheet">
         @if (file_exists(public_path('hot')))
             @vite('resources/css/storefront.css')
         @else
-            <link rel="stylesheet" href="{{ Vite::asset('resources/css/storefront.css') }}">
+            @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront.css')])
         @endif
     </head>
     <body>
@@ -140,8 +138,8 @@
                 ],
                 [
                     'question' => 'Від якої суми доставка безкоштовна?',
-                    'answer' => 'Безкоштовна доставка діє для замовлень від 1200 грн. Остаточні умови доставки менеджер підтвердить під час оформлення замовлення.',
-                    'answer_html' => 'Безкоштовна доставка діє для замовлень від <span class="storefront-inline-price">1200 грн</span>. Остаточні умови доставки менеджер підтвердить під час оформлення замовлення.',
+                    'answer' => 'Безкоштовна доставка діє для замовлень від '.($freeShippingThresholdLabel ?? '1 200 грн').'. Остаточні умови доставки менеджер підтвердить під час оформлення замовлення.',
+                    'answer_html' => 'Безкоштовна доставка діє для замовлень від <span class="storefront-inline-price">'.e($freeShippingThresholdLabel ?? '1 200 грн').'</span>. Остаточні умови доставки менеджер підтвердить під час оформлення замовлення.',
                 ],
                 [
                     'question' => 'Як швидко оформити замовлення?',
@@ -344,9 +342,9 @@
                         </nav>
 
                         <nav class="storefront-mobile-action-links" aria-label="Дії клієнта">
-                            <a href="{{ $canLogin ? route('login') : '#' }}">
-                                <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 20a7 7 0 0 1 14 0"/><circle cx="12" cy="12" r="10"/></svg>
-                                Вхід для клієнтів
+                            <a href="{{ $canLogin ? route('login') : url('/account') }}">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+                                <span>Вхід</span>
                             </a>
                         </nav>
 
@@ -402,6 +400,8 @@
                                                 <img
                                                     src="{{ $heroMainBanner['image_url'] }}"
                                                     alt="{{ $heroMainBanner['alt'] ?? $storeName }}"
+                                                    width="1600"
+                                                    height="920"
                                                     fetchpriority="high"
                                                     decoding="async"
                                                 >
@@ -427,7 +427,7 @@
                                                             @if ($banner['mobile_image_url'] ?? null)
                                                                 <source media="(max-width: 767.98px)" srcset="{{ $banner['mobile_image_url'] }}">
                                                             @endif
-                                                            <img src="{{ $banner['image_url'] }}" alt="{{ $banner['alt'] ?? $banner['title'] ?? $storeName }}" loading="lazy" decoding="async">
+                                                            <img src="{{ $banner['image_url'] }}" alt="{{ $banner['alt'] ?? $banner['title'] ?? $storeName }}" loading="lazy" decoding="async" width="900" height="760">
                                                         </picture>
                                                     @else
                                                         <span class="storefront-image-placeholder">{{ mb_substr($banner['title'] ?? 'DM', 0, 2) }}</span>
@@ -451,7 +451,7 @@
                                     <a href="{{ $category['url'] }}" class="storefront-category-banner__rail-card">
                                         <span class="storefront-category-banner__rail-media">
                                             @if ($category['image_url'])
-                                                <img src="{{ $category['image_url'] }}" alt="{{ $category['name'] }}" loading="lazy" decoding="async">
+                                                <img src="{{ $category['image_url'] }}" alt="{{ $category['name'] }}" loading="lazy" decoding="async" width="240" height="240">
                                             @else
                                                 <span class="storefront-image-placeholder">{{ mb_substr($category['name'], 0, 2) }}</span>
                                             @endif
@@ -516,7 +516,7 @@
                                             <a href="{{ $promoProduct['url'] }}" class="storefront-featured-product" aria-label="Переглянути товар: {{ $promoProduct['name'] }}">
                                                 <span class="storefront-featured-product__media">
                                                     @if ($promoProduct['image_url'])
-                                                        <img src="{{ $promoProduct['image_url'] }}" alt="{{ $promoProduct['name'] }}" loading="lazy">
+                                                        <img src="{{ $promoProduct['image_url'] }}" alt="{{ $promoProduct['name'] }}" loading="lazy" width="640" height="640">
                                                     @else
                                                         <span class="storefront-image-placeholder">DM</span>
                                                     @endif
@@ -611,7 +611,7 @@
                                             <a href="{{ $promoProduct['url'] }}" class="storefront-featured-product" aria-label="Переглянути товар: {{ $promoProduct['name'] }}">
                                                 <span class="storefront-featured-product__media">
                                                     @if ($promoProduct['image_url'])
-                                                        <img src="{{ $promoProduct['image_url'] }}" alt="{{ $promoProduct['name'] }}" loading="lazy">
+                                                        <img src="{{ $promoProduct['image_url'] }}" alt="{{ $promoProduct['name'] }}" loading="lazy" width="640" height="640">
                                                     @else
                                                         <span class="storefront-image-placeholder">DM</span>
                                                     @endif
@@ -724,7 +724,7 @@
                             <div class="storefront-benefits__layout">
                                 <div class="storefront-benefits__message">
                                     <h2 id="storefront-benefits-title">Купувати просто</h2>
-                                    <p>Швидке оформлення, актуальна наявність і безкоштовна доставка від <span class="storefront-inline-price">1200 грн</span>.</p>
+                                    <p>Швидке оформлення, актуальна наявність і безкоштовна доставка від <span class="storefront-inline-price">{{ $freeShippingThresholdLabel ?? '1 200 грн' }}</span>.</p>
                                     <a href="{{ url('/catalog') }}" class="storefront-benefits__cta">
                                         До каталогу
                                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
@@ -747,7 +747,7 @@
                                         </span>
                                         <div class="storefront-benefit-card__body">
                                             <h3>Безкоштовна доставка</h3>
-                                            <p>Доставка за наш рахунок для замовлень від <span class="storefront-inline-price">1200 грн</span>.</p>
+                                            <p>Доставка за наш рахунок для замовлень від <span class="storefront-inline-price">{{ $freeShippingThresholdLabel ?? '1 200 грн' }}</span>.</p>
                                         </div>
                                     </article>
                                     <article class="storefront-benefit-card">

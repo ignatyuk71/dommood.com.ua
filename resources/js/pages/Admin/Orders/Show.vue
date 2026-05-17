@@ -124,7 +124,7 @@ const paymentIconClass = (tone) => ({
     unpaid: 'text-slate-500',
 }[tone] ?? 'text-slate-500');
 
-const paymentIcon = (order) => ['cod', 'cash_on_delivery'].includes(order.payment_method) ? Banknote : CreditCard;
+const paymentIcon = (order) => order.payment_ui?.tone === 'cod' ? Banknote : CreditCard;
 
 const paymentMetaRows = computed(() => [
     { label: 'Провайдер', value: displayValue(localOrder.value.payment_provider) },

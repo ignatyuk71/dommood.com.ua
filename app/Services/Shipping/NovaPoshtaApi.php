@@ -40,11 +40,12 @@ class NovaPoshtaApi
         ]);
     }
 
-    public function findWarehouses(string $cityRef, string $query = '', int $limit = 20, int $page = 1): array
+    public function findWarehouses(string $cityRef, string $query = '', int $limit = 20, int $page = 1, ?string $typeOfWarehouseRef = null): array
     {
         return $this->request('Address', 'getWarehouses', [
             'CityRef' => $cityRef,
             'FindByString' => $query,
+            'TypeOfWarehouseRef' => $typeOfWarehouseRef,
             'Limit' => $limit,
             'Page' => $page,
         ]);

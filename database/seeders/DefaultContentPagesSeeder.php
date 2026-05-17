@@ -16,7 +16,7 @@ class DefaultContentPagesSeeder extends Seeder
                 'title' => 'Оплата і доставка',
                 'slug' => 'oplata-i-dostavka',
                 'content' => $this->paymentAndDeliveryContent(),
-                'meta_description' => 'Умови оплати і доставки DomMood: Нова пошта, безкоштовна доставка від 1200 грн та способи оплати.',
+                'meta_description' => 'Умови оплати і доставки DomMood: Нова пошта, безкоштовна доставка від 1 200 грн та способи оплати.',
             ],
             [
                 'title' => 'Обмін та повернення',
@@ -258,7 +258,7 @@ HTML,
     <section class="info-page__section">
         <h2>Доставка</h2>
         <p>Інтернет-магазин <strong>DomMood</strong> здійснює доставку товарів по всій Україні та за кордон.</p>
-        <p><strong>Безкоштовна доставка від 1200 грн.</strong></p>
+        <p><strong>Безкоштовна доставка від 1 200 грн.</strong></p>
     </section>
 
     <section class="info-page__section">

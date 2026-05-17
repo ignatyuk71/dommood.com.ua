@@ -11,7 +11,7 @@
         @if (file_exists(public_path('hot')))
             @vite('resources/css/storefront.css')
         @else
-            <link rel="stylesheet" href="{{ Vite::asset('resources/css/storefront.css') }}">
+            @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront.css')])
         @endif
     </head>
     <body>

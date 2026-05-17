@@ -331,6 +331,16 @@ const galleryErrorMessage = computed(() => {
     return nestedImageError?.[1] ?? '';
 });
 
+const variantsErrorMessage = computed(() => {
+    if (form.errors.variants) {
+        return form.errors.variants;
+    }
+
+    const nestedVariantError = Object.entries(form.errors).find(([key]) => key.startsWith('variants.'));
+
+    return nestedVariantError?.[1] ?? '';
+});
+
 const availableAttributesFor = (row = null) => {
     const used = new Set(attributeRows.value
         .filter((item) => item.uid !== row?.uid)
@@ -754,6 +764,19 @@ onBeforeUnmount(() => {
                             />
                             <InputError class="mt-2" :message="form.errors.short_description" />
                         </div>
+
+                        <div class="md:col-span-12">
+                            <label class="text-sm font-bold text-slate-700" for="description">Опис товару</label>
+                            <textarea
+                                id="description"
+                                v-model="form.description"
+                                rows="8"
+                                class="mt-2 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
+                                placeholder="Основний опис, який показується у вкладці «Опис» на сторінці товару"
+                            />
+                            <p class="mt-2 text-xs font-semibold text-slate-500">Сюди вносимо основний текст про товар. Додатковий SEO текст заповнюється нижче окремо.</p>
+                            <InputError class="mt-2" :message="form.errors.description" />
+                        </div>
                     </div>
                 </div>
 
@@ -968,17 +991,19 @@ onBeforeUnmount(() => {
                             </button>
                         </div>
                     </div>
+                    <InputError class="mt-2" :message="variantsErrorMessage" />
                 </div>
 
                 <div class="rounded-lg bg-white p-5 shadow-[0_16px_45px_rgba(61,58,101,0.08)]">
-                    <label class="text-sm font-bold text-slate-700" for="seo_text">SEO текст</label>
+                    <label class="text-sm font-bold text-slate-700" for="seo_text">Додатковий SEO текст</label>
                     <textarea
                         id="seo_text"
                         v-model="form.seo_text"
                         rows="5"
                         class="mt-2 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
-                        placeholder="Додатковий текст для товарної сторінки, якщо він потрібен"
+                        placeholder="Додатковий SEO блок для низу сторінки товару. Не дублюй основний опис."
                     />
+                    <p class="mt-2 text-xs font-semibold text-slate-500">Цей текст виводиться окремим SEO блоком нижче опису товару.</p>
                     <InputError class="mt-2" :message="form.errors.seo_text" />
                 </div>
 

@@ -9,6 +9,7 @@ use App\Models\Menu;
 use App\Models\MenuItem;
 use App\Services\Seo\SeoResolver;
 use App\Services\SiteSettingsService;
+use App\Services\Storefront\DeliveryPolicyService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
@@ -18,6 +19,7 @@ class PageController extends Controller
     public function __construct(
         private readonly SeoResolver $seo,
         private readonly SiteSettingsService $settings,
+        private readonly DeliveryPolicyService $deliveryPolicy,
     ) {
     }
 
@@ -29,10 +31,12 @@ class PageController extends Controller
             ->firstOrFail();
 
         $storeSettings = $this->settings->get('store');
+        $seo = $this->applyDeliveryPolicyToSeo($this->seo->metaForPage($page), $page);
+        $this->applyDeliveryPolicyToPage($page);
 
         return view('storefront.page', [
             'page' => $page,
-            'seo' => $this->seo->metaForPage($page),
+            'seo' => $seo,
             'storeName' => $storeSettings['store_name'] ?? 'DomMood',
             'supportEmail' => $storeSettings['support_email'] ?? null,
             'supportPhone' => $storeSettings['support_phone'] ?? null,
@@ -42,6 +46,40 @@ class PageController extends Controller
             'mobileMenuItems' => $this->menuItems('mobile'),
             'footerMenuItems' => $this->menuItems('footer'),
         ]);
+    }
+
+    private function applyDeliveryPolicyToPage(ContentPage $page): void
+    {
+        if ($page->slug !== 'oplata-i-dostavka') {
+            return;
+        }
+
+        $page->content = $this->replaceFreeShippingThreshold((string) $page->content);
+        $page->meta_description = $this->replaceFreeShippingThreshold((string) $page->meta_description);
+    }
+
+    private function applyDeliveryPolicyToSeo(array $seo, ContentPage $page): array
+    {
+        if ($page->slug !== 'oplata-i-dostavka') {
+            return $seo;
+        }
+
+        if (isset($seo['meta_description'])) {
+            $seo['meta_description'] = $this->replaceFreeShippingThreshold((string) $seo['meta_description']);
+        }
+
+        return $seo;
+    }
+
+    private function replaceFreeShippingThreshold(string $text): string
+    {
+        $label = $this->deliveryPolicy->freeShippingThresholdLabel();
+
+        return str_replace(
+            ['від 1200 грн', 'від 1 200 грн'],
+            ['від '.$label, 'від '.$label],
+            $text,
+        );
     }
 
     private function menuItems(string $slug, bool $withFallback = false): array
@@ -95,7 +133,6 @@ class PageController extends Controller
             ['title' => 'Головна', 'url' => url('/'), 'target' => '_self', 'badge' => null, 'children' => []],
             ['title' => 'Каталог', 'url' => url('/catalog'), 'target' => '_self', 'badge' => null, 'children' => []],
             ['title' => 'Новинки', 'url' => url('/catalog?filter=new'), 'target' => '_self', 'badge' => 'New', 'children' => []],
-            ['title' => 'Акції', 'url' => url('/sale'), 'target' => '_self', 'badge' => 'Sale', 'children' => []],
         ];
     }
 

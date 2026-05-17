@@ -156,6 +156,13 @@
             <nav class="storefront-mobile-nav" aria-label="Мобільне меню сайту">
                 @include('storefront.partials.mobile-menu-items', ['items' => $mobileNavigationItems, 'level' => 0])
             </nav>
+
+            <nav class="storefront-mobile-action-links" aria-label="Дії клієнта">
+                <a href="{{ $canLogin ? route('login') : url('/account') }}">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+                    <span>Вхід</span>
+                </a>
+            </nav>
         </aside>
     </div>
 </header>

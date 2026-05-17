@@ -89,7 +89,7 @@ class ContentPageTest extends TestCase
 
         $this->get('/oplata-i-dostavka/')
             ->assertOk()
-            ->assertSee('Безкоштовна доставка від 1200 грн')
+            ->assertSee('Безкоштовна доставка від 1 200 грн')
             ->assertSee('Відстежити посилку');
 
         $this->get('/pro-nas/')

@@ -7,7 +7,9 @@ use App\Models\DeliveryMethod;
 use App\Models\DeliveryTariff;
 use App\Models\PaymentMethod;
 use App\Models\PaymentTransaction;
+use App\Services\AdminActivityLogger;
 use App\Services\SiteSettingsService;
+use App\Services\Storefront\DeliveryPolicyService;
 use App\Support\AdminPermissions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -101,6 +103,7 @@ class PaymentDeliveryController extends Controller
             'paymentMethods' => $paymentMethods,
             'tariffs' => $tariffs,
             'transactions' => $transactions,
+            'deliverySettings' => $this->deliverySettings($request),
             'options' => [
                 'deliveryProviders' => self::DELIVERY_PROVIDERS,
                 'deliveryTypes' => self::DELIVERY_TYPES,
@@ -118,6 +121,40 @@ class PaymentDeliveryController extends Controller
                     : 0,
             ],
         ]);
+    }
+
+    public function updateSettings(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'free_shipping_threshold' => ['required', 'numeric', 'min:0.01', 'max:999999'],
+        ]);
+
+        $oldSettings = $this->settings->get('payment_delivery');
+        $newSettings = $this->settings->set('payment_delivery', [
+            'free_shipping_threshold' => $this->moneyValue($this->moneyToCents($data['free_shipping_threshold'])),
+        ]);
+        $clearedDeliveryMethods = DeliveryMethod::query()
+            ->whereNotNull('free_from_cents')
+            ->update(['free_from_cents' => null]);
+        $clearedTariffs = DeliveryTariff::query()
+            ->whereNotNull('free_from_cents')
+            ->update(['free_from_cents' => null]);
+
+        app(AdminActivityLogger::class)->log(
+            $request,
+            'payment_delivery.settings_updated',
+            oldValues: ['free_shipping_threshold' => $oldSettings['free_shipping_threshold'] ?? null],
+            newValues: [
+                'free_shipping_threshold' => $newSettings['free_shipping_threshold'] ?? null,
+                'cleared_delivery_method_thresholds' => $clearedDeliveryMethods,
+                'cleared_tariff_thresholds' => $clearedTariffs,
+            ],
+            description: 'Менеджер оновив загальні правила доставки',
+        );
+
+        return redirect()
+            ->route('admin.payment-delivery.show', 'delivery-methods')
+            ->with('success', 'Поріг безкоштовної доставки збережено');
     }
 
     public function storeDeliveryMethod(Request $request): RedirectResponse
@@ -263,7 +300,6 @@ class PaymentDeliveryController extends Controller
             'type' => ['required', Rule::in(collect(self::DELIVERY_TYPES)->pluck('value')->all())],
             'description' => ['nullable', 'string', 'max:1000'],
             'base_price' => ['nullable', 'numeric', 'min:0', 'max:999999'],
-            'free_from' => ['nullable', 'numeric', 'min:0', 'max:999999'],
             'is_active' => ['boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:100000'],
         ]);
@@ -294,7 +330,6 @@ class PaymentDeliveryController extends Controller
             'min_order' => ['nullable', 'numeric', 'min:0', 'max:999999'],
             'max_order' => ['nullable', 'numeric', 'min:0', 'max:999999'],
             'price' => ['nullable', 'numeric', 'min:0', 'max:999999'],
-            'free_from' => ['nullable', 'numeric', 'min:0', 'max:999999'],
             'is_active' => ['boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:100000'],
         ]);
@@ -309,7 +344,7 @@ class PaymentDeliveryController extends Controller
             'type' => $data['type'],
             'description' => $data['description'] ?? null,
             'base_price_cents' => $this->moneyToCents($data['base_price'] ?? 0),
-            'free_from_cents' => $this->nullableMoneyToCents($data['free_from'] ?? null),
+            'free_from_cents' => null,
             'is_active' => (bool) ($data['is_active'] ?? false),
             'sort_order' => (int) ($data['sort_order'] ?? 0),
         ];
@@ -342,7 +377,7 @@ class PaymentDeliveryController extends Controller
             'min_order_cents' => $this->moneyToCents($data['min_order'] ?? 0),
             'max_order_cents' => $this->nullableMoneyToCents($data['max_order'] ?? null),
             'price_cents' => $this->moneyToCents($data['price'] ?? 0),
-            'free_from_cents' => $this->nullableMoneyToCents($data['free_from'] ?? null),
+            'free_from_cents' => null,
             'is_active' => (bool) ($data['is_active'] ?? false),
             'sort_order' => (int) ($data['sort_order'] ?? 0),
         ];
@@ -350,6 +385,8 @@ class PaymentDeliveryController extends Controller
 
     private function serializeDeliveryMethod(DeliveryMethod $method): array
     {
+        $deliveryPolicy = app(DeliveryPolicyService::class);
+
         return [
             'id' => $method->id,
             'name' => $method->name,
@@ -361,8 +398,7 @@ class PaymentDeliveryController extends Controller
             'description' => $method->description,
             'base_price' => $this->formatMoney($method->base_price_cents),
             'base_price_value' => $this->moneyValue($method->base_price_cents),
-            'free_from' => $this->formatNullableMoney($method->free_from_cents),
-            'free_from_value' => $this->moneyValue($method->free_from_cents),
+            'free_from_effective' => $deliveryPolicy->freeShippingThresholdLabel(),
             'is_active' => $method->is_active,
             'sort_order' => $method->sort_order,
             'tariffs_count' => $method->tariffs_count ?? 0,
@@ -409,6 +445,17 @@ class PaymentDeliveryController extends Controller
                 'mode' => $payments['monobank_mode'] ?? 'test',
                 'settings_route' => route('admin.settings.site.show', 'payments'),
             ],
+        ];
+    }
+
+    private function deliverySettings(Request $request): array
+    {
+        $policy = app(DeliveryPolicyService::class);
+
+        return [
+            'free_shipping_threshold' => $policy->freeShippingThresholdValue(),
+            'free_shipping_threshold_label' => $policy->freeShippingThresholdLabel(),
+            'can_manage' => (bool) $request->user()?->can(AdminPermissions::DELIVERY_METHODS_MANAGE),
         ];
     }
 
@@ -460,8 +507,6 @@ class PaymentDeliveryController extends Controller
             'max_order_value' => $this->moneyValue($tariff->max_order_cents),
             'price' => $this->formatMoney($tariff->price_cents),
             'price_value' => $this->moneyValue($tariff->price_cents),
-            'free_from' => $this->formatNullableMoney($tariff->free_from_cents),
-            'free_from_value' => $this->moneyValue($tariff->free_from_cents),
             'is_active' => $tariff->is_active,
             'sort_order' => $tariff->sort_order,
         ];

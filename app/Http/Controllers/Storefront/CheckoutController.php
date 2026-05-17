@@ -4,24 +4,32 @@ namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Storefront\StoreCheckoutRequest;
+use App\Models\Category;
+use App\Models\ContentPage;
 use App\Models\Customer;
 use App\Models\DeliveryMethod;
+use App\Models\Menu;
+use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Services\Payments\LiqPayService;
 use App\Services\SiteSettingsService;
 use App\Services\Storefront\CartService;
+use App\Services\Storefront\DeliveryPolicyService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
     public function __construct(
         private readonly CartService $carts,
         private readonly SiteSettingsService $settings,
+        private readonly DeliveryPolicyService $deliveryPolicy,
     ) {}
 
     public function index(Request $request): View|RedirectResponse
@@ -37,11 +45,17 @@ class CheckoutController extends Controller
 
         return view('storefront.checkout.index', [
             'storeName' => $storeSettings['store_name'] ?? 'DomMood',
+            'supportEmail' => $storeSettings['support_email'] ?? null,
             'supportPhone' => $storeSettings['support_phone'] ?? null,
             'cart' => $cartPayload,
             'deliveryMethods' => $this->deliveryMethods($cartPayload),
             'paymentMethods' => $this->paymentMethods(),
             'checkoutSettings' => $this->settings->get('checkout'),
+            'canLogin' => Route::has('login'),
+            'menuItems' => $this->menuItems('main', withFallback: true),
+            'utilityLinks' => $this->menuItems('utility'),
+            'mobileMenuItems' => $this->menuItems('mobile'),
+            'footerMenuItems' => $this->menuItems('footer'),
         ]);
     }
 
@@ -72,17 +86,34 @@ class CheckoutController extends Controller
             throw ValidationException::withMessages(['payment_method' => 'Оберіть доступний спосіб оплати.']);
         }
 
+        $deliveryType = (string) ($deliveryMethod['type'] ?? 'branch');
+
+        if (in_array($deliveryType, ['branch', 'postomat'], true) && ! $request->filled('delivery_branch')) {
+            throw ValidationException::withMessages(['delivery_branch' => 'Оберіть відділення або поштомат Нової пошти.']);
+        }
+
+        if ($deliveryType === 'courier' && ! $request->filled('delivery_address')) {
+            throw ValidationException::withMessages(['delivery_address' => 'Вкажіть адресу для курʼєрської доставки.']);
+        }
+
         $order = DB::transaction(function () use ($request, $cart, $cartPayload, $deliveryMethod, $paymentMethod): Order {
             $customer = $this->upsertCustomer($request);
             $deliveryPriceCents = (int) $deliveryMethod['price_cents'];
             $totalCents = (int) $cartPayload['total_cents'] + $deliveryPriceCents;
             $customerName = trim($request->string('customer_first_name').' '.$request->string('customer_last_name'));
             $checkoutSettings = $this->settings->get('checkout');
+            $deliverySnapshot = array_merge($deliveryMethod, [
+                'city_ref' => $request->string('delivery_city_ref')->toString() ?: null,
+                'branch_ref' => $request->string('delivery_branch_ref')->toString() ?: null,
+                'city' => $request->string('delivery_city')->toString(),
+                'branch' => $request->string('delivery_branch')->toString() ?: null,
+                'address' => $request->string('delivery_address')->toString() ?: null,
+            ]);
 
             $order = Order::query()->create([
                 'order_number' => $this->generateOrderNumber(),
                 'customer_id' => $customer?->id,
-                'status' => $checkoutSettings['default_order_status'] ?? 'awaiting_confirmation',
+                'status' => $this->initialOrderStatus($checkoutSettings),
                 'payment_status' => ($paymentMethod['type'] ?? null) === 'liqpay' ? 'pending' : 'unpaid',
                 'payment_method' => $paymentMethod['code'],
                 'payment_provider' => ($paymentMethod['type'] ?? null) === 'liqpay' ? 'liqpay' : null,
@@ -90,11 +121,13 @@ class CheckoutController extends Controller
                 'delivery_provider' => $deliveryMethod['provider'] ?? null,
                 'delivery_type' => $deliveryMethod['type'] ?? null,
                 'delivery_city' => $request->string('delivery_city')->toString(),
+                'delivery_city_ref' => $request->string('delivery_city_ref')->toString() ?: null,
                 'delivery_address' => $request->string('delivery_address')->toString() ?: null,
                 'delivery_branch' => $request->string('delivery_branch')->toString() ?: null,
+                'delivery_branch_ref' => $request->string('delivery_branch_ref')->toString() ?: null,
                 'delivery_recipient_name' => $customerName,
                 'delivery_recipient_phone' => $this->normalizePhone($request->string('customer_phone')->toString()),
-                'delivery_snapshot' => $deliveryMethod,
+                'delivery_snapshot' => $deliverySnapshot,
                 'customer_name' => $customerName,
                 'customer_phone' => $this->normalizePhone($request->string('customer_phone')->toString()),
                 'customer_email' => $request->string('customer_email')->toString() ?: null,
@@ -171,9 +204,15 @@ class CheckoutController extends Controller
 
         return view('storefront.checkout.thank-you', [
             'storeName' => $storeSettings['store_name'] ?? 'DomMood',
+            'supportEmail' => $storeSettings['support_email'] ?? null,
             'supportPhone' => $storeSettings['support_phone'] ?? null,
             'order' => $order,
             'liqPayPayload' => $liqPayPayload,
+            'canLogin' => Route::has('login'),
+            'menuItems' => $this->menuItems('main', withFallback: true),
+            'utilityLinks' => $this->menuItems('utility'),
+            'mobileMenuItems' => $this->menuItems('mobile'),
+            'footerMenuItems' => $this->menuItems('footer'),
         ]);
     }
 
@@ -192,16 +231,45 @@ class CheckoutController extends Controller
             return $methods;
         }
 
+        return $this->defaultNovaPoshtaDeliveryMethods();
+    }
+
+    private function defaultNovaPoshtaDeliveryMethods(): array
+    {
+        $freeFromCents = $this->deliveryPolicy->freeShippingThresholdCents();
+
         return [
             [
-                'name' => 'Нова пошта',
+                'name' => 'Нова пошта: відділення',
                 'code' => 'nova_poshta_branch',
                 'provider' => 'nova_poshta',
                 'type' => 'branch',
-                'description' => 'Відділення або поштомат. Менеджер підтвердить точну вартість після замовлення.',
+                'description' => 'Отримання у відділенні Нової пошти. Вартість за тарифом перевізника.',
                 'price_cents' => 0,
                 'base_price_cents' => 0,
-                'free_from_cents' => null,
+                'free_from_cents' => $freeFromCents,
+                'is_free' => true,
+            ],
+            [
+                'name' => 'Нова пошта: поштомат',
+                'code' => 'nova_poshta_postomat',
+                'provider' => 'nova_poshta',
+                'type' => 'postomat',
+                'description' => 'Отримання у поштоматі Нової пошти, якщо він доступний для обраного міста.',
+                'price_cents' => 0,
+                'base_price_cents' => 0,
+                'free_from_cents' => $freeFromCents,
+                'is_free' => true,
+            ],
+            [
+                'name' => 'Курʼєр Нова пошта',
+                'code' => 'nova_poshta_courier',
+                'provider' => 'nova_poshta',
+                'type' => 'courier',
+                'description' => 'Доставка курʼєром за адресою. Вартість уточнюється за тарифом Нової пошти.',
+                'price_cents' => 0,
+                'base_price_cents' => 0,
+                'free_from_cents' => $freeFromCents,
                 'is_free' => true,
             ],
         ];
@@ -237,10 +305,20 @@ class CheckoutController extends Controller
         ];
     }
 
+    private function initialOrderStatus(array $checkoutSettings): string
+    {
+        $status = (string) ($checkoutSettings['default_order_status'] ?? 'new');
+
+        return match ($status) {
+            'confirmed', 'processing' => $status,
+            default => 'new',
+        };
+    }
+
     private function serializeDeliveryMethod(DeliveryMethod $method, int $cartTotalCents): array
     {
         $basePriceCents = (int) $method->base_price_cents;
-        $freeFromCents = $method->free_from_cents ? (int) $method->free_from_cents : null;
+        $freeFromCents = $this->deliveryPolicy->freeShippingThresholdCents();
         $priceCents = $freeFromCents && $cartTotalCents >= $freeFromCents ? 0 : $basePriceCents;
 
         return [
@@ -312,6 +390,91 @@ class CheckoutController extends Controller
 
     private function normalizePhone(string $phone): string
     {
-        return preg_replace('/[^0-9+]/', '', $phone) ?: '';
+        $digits = preg_replace('/\D+/', '', $phone) ?: '';
+
+        if (str_starts_with($digits, '380')) {
+            $digits = substr($digits, 3);
+        } elseif (str_starts_with($digits, '38')) {
+            $digits = substr($digits, 2);
+        }
+
+        $digits = ltrim($digits, '0');
+
+        return $digits !== '' ? '+380'.substr($digits, 0, 9) : '';
+    }
+
+    private function menuItems(string $slug, bool $withFallback = false): array
+    {
+        $menu = Menu::query()
+            ->active()
+            ->where('slug', $slug)
+            ->with([
+                'items' => fn ($query) => $query
+                    ->active()
+                    ->with('linkable')
+                    ->orderByRaw('parent_id is not null')
+                    ->orderBy('sort_order')
+                    ->orderBy('id'),
+            ])
+            ->first();
+
+        if (! $menu || $menu->items->isEmpty()) {
+            return $withFallback ? $this->fallbackMenuItems() : [];
+        }
+
+        $itemsByParent = $menu->items->groupBy(fn (MenuItem $item): string => (string) ($item->parent_id ?: 'root'));
+
+        $items = $itemsByParent
+            ->get('root', collect())
+            ->map(fn (MenuItem $item): array => $this->serializeMenuItem($item, $itemsByParent))
+            ->values()
+            ->all();
+
+        return $items ?: ($withFallback ? $this->fallbackMenuItems() : []);
+    }
+
+    private function serializeMenuItem(MenuItem $item, $itemsByParent): array
+    {
+        return [
+            'title' => $item->title,
+            'url' => $this->menuItemUrl($item),
+            'target' => $item->target ?: '_self',
+            'badge' => $item->badge,
+            'children' => $itemsByParent
+                ->get((string) $item->id, collect())
+                ->map(fn (MenuItem $child): array => $this->serializeMenuItem($child, $itemsByParent))
+                ->values()
+                ->all(),
+        ];
+    }
+
+    private function fallbackMenuItems(): array
+    {
+        return [
+            ['title' => 'Головна', 'url' => url('/'), 'target' => '_self', 'badge' => null, 'children' => []],
+            ['title' => 'Каталог', 'url' => url('/catalog'), 'target' => '_self', 'badge' => null, 'children' => []],
+            ['title' => 'Новинки', 'url' => url('/catalog?filter=new'), 'target' => '_self', 'badge' => 'New', 'children' => []],
+        ];
+    }
+
+    private function menuItemUrl(MenuItem $item): string
+    {
+        $url = match ($item->type) {
+            'category' => $item->linkable instanceof Category ? '/catalog/'.$item->linkable->slug : null,
+            'page' => $item->linkable instanceof ContentPage ? '/'.$item->linkable->slug : null,
+            default => $item->url,
+        };
+
+        $url = trim((string) $url);
+
+        if ($url === '') {
+            return '#';
+        }
+
+        if (Str::startsWith($url, ['http://', 'https://', '#'])) {
+            return $url;
+        }
+
+        return url('/'.ltrim($url, '/'));
     }
 }

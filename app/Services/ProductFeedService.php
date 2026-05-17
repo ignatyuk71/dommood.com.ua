@@ -350,7 +350,7 @@ class ProductFeedService
             return trim(preg_replace('/\s+/', ' ', strip_tags($config->custom_description)) ?? '');
         }
 
-        $description = trim((string) ($product->short_description ?: $product->description ?: $product->meta_description ?: ''));
+        $description = trim((string) ($product->short_description ?: $product->description ?: $product->seo_text ?: $product->meta_description ?: ''));
 
         return trim(preg_replace('/\s+/', ' ', strip_tags($description)) ?? '');
     }

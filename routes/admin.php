@@ -144,6 +144,8 @@ Route::middleware(['auth', 'verified', 'admin.access'])
         });
 
         Route::middleware('admin.permission:'.AdminPermissions::DELIVERY_METHODS_MANAGE)->group(function (): void {
+            Route::put('payment-delivery/settings', [PaymentDeliveryController::class, 'updateSettings'])
+                ->name('payment-delivery.settings.update');
             Route::post('payment-delivery/delivery-methods', [PaymentDeliveryController::class, 'storeDeliveryMethod'])
                 ->name('payment-delivery.delivery-methods.store');
             Route::put('payment-delivery/delivery-methods/{deliveryMethod}', [PaymentDeliveryController::class, 'updateDeliveryMethod'])

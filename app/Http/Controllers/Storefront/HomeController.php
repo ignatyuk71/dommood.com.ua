@@ -10,7 +10,9 @@ use App\Models\Menu;
 use App\Models\MenuItem;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\ProductVariant;
 use App\Services\SiteSettingsService;
+use App\Services\Storefront\DeliveryPolicyService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -21,7 +23,10 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class HomeController extends Controller
 {
-    public function __construct(private readonly SiteSettingsService $settings) {}
+    public function __construct(
+        private readonly SiteSettingsService $settings,
+        private readonly DeliveryPolicyService $deliveryPolicy,
+    ) {}
 
     public function __invoke(Request $request): View|SymfonyResponse
     {
@@ -60,6 +65,7 @@ class HomeController extends Controller
             'outdoorPromoProducts' => $this->categoryProducts($outdoorCategory),
             'pajamasCategory' => $pajamasCategory ? $this->serializeCategory($pajamasCategory) : null,
             'pajamasPromoProducts' => $this->categoryProducts($pajamasCategory),
+            'freeShippingThresholdLabel' => $this->deliveryPolicy->freeShippingThresholdLabel(),
         ]);
     }
 
@@ -73,6 +79,7 @@ class HomeController extends Controller
                 'slug',
                 'sku',
                 'short_description',
+                'description',
                 'status',
                 'price_cents',
                 'old_price_cents',
@@ -93,6 +100,7 @@ class HomeController extends Controller
                     ->orderBy('sort_order')
                     ->orderBy('id'),
             ])
+            ->withCount($this->variantAvailabilityCounts())
             ->active()
             ->where(fn ($query) => $this->published($query))
             ->orderByDesc('is_featured')
@@ -115,6 +123,7 @@ class HomeController extends Controller
                 'slug',
                 'sku',
                 'short_description',
+                'description',
                 'status',
                 'price_cents',
                 'old_price_cents',
@@ -135,6 +144,7 @@ class HomeController extends Controller
                     ->orderBy('sort_order')
                     ->orderBy('id'),
             ])
+            ->withCount($this->variantAvailabilityCounts())
             ->active()
             ->where('is_new', true)
             ->where(fn ($query) => $this->published($query))
@@ -215,6 +225,13 @@ class HomeController extends Controller
             ->orderBy('name')
             ->get()
             ->map(function (Category $category) use ($fallbackImages): array {
+                $fallbackImageUrl = $fallbackImages->get($category->id);
+                $categoryImageUrl = $this->storageUrl($category->image_path);
+
+                if (! $this->isOptimizedCategoryImage($category->image_path)) {
+                    $categoryImageUrl = null;
+                }
+
                 return [
                     'id' => $category->id,
                     'name' => $category->name,
@@ -222,11 +239,20 @@ class HomeController extends Controller
                     'description' => $category->description,
                     'products_count' => (int) $category->active_products_count,
                     'url' => url('/catalog/'.$category->slug),
-                    'image_url' => $this->storageUrl($category->image_path) ?: $fallbackImages->get($category->id),
+                    'image_url' => $fallbackImageUrl ?: $categoryImageUrl,
                 ];
             })
             ->values()
             ->all();
+    }
+
+    private function isOptimizedCategoryImage(?string $path): bool
+    {
+        if (! filled($path)) {
+            return false;
+        }
+
+        return Str::endsWith(Str::lower($path), ['.webp', '.avif']);
     }
 
     private function categoryBySlug(string $slug): ?Category
@@ -252,6 +278,7 @@ class HomeController extends Controller
                 'slug',
                 'sku',
                 'short_description',
+                'description',
                 'status',
                 'price_cents',
                 'old_price_cents',
@@ -272,6 +299,7 @@ class HomeController extends Controller
                     ->orderBy('sort_order')
                     ->orderBy('id'),
             ])
+            ->withCount($this->variantAvailabilityCounts())
             ->active()
             ->where(fn ($query) => $this->published($query))
             ->where(function (Builder $query) use ($category): void {
@@ -349,7 +377,6 @@ class HomeController extends Controller
             ['title' => 'Головна', 'url' => url('/'), 'target' => '_self', 'badge' => null, 'children' => []],
             ['title' => 'Каталог', 'url' => url('/catalog'), 'target' => '_self', 'badge' => null, 'children' => []],
             ['title' => 'Новинки', 'url' => url('/catalog?filter=new'), 'target' => '_self', 'badge' => 'New', 'children' => []],
-            ['title' => 'Акції', 'url' => url('/sale'), 'target' => '_self', 'badge' => 'Sale', 'children' => []],
         ];
     }
 
@@ -377,6 +404,7 @@ class HomeController extends Controller
     private function serializeProduct(Product $product): array
     {
         $mainImage = $product->images->firstWhere('is_main', true) ?? $product->images->first();
+        $stockStatus = $this->resolvedStockStatus($product);
 
         return [
             'id' => $product->id,
@@ -384,11 +412,12 @@ class HomeController extends Controller
             'slug' => $product->slug,
             'sku' => $product->sku,
             'short_description' => $product->short_description,
+            'description' => $product->description,
             'price_cents' => $product->price_cents,
             'old_price_cents' => $product->old_price_cents,
             'currency' => $product->currency ?: 'UAH',
-            'stock_status' => $product->stock_status,
-            'stock_status_label' => $this->stockStatusLabel($product->stock_status),
+            'stock_status' => $stockStatus,
+            'stock_status_label' => $this->stockStatusLabel($stockStatus),
             'is_featured' => $product->is_featured,
             'is_new' => $product->is_new,
             'is_bestseller' => $product->is_bestseller,
@@ -401,6 +430,54 @@ class HomeController extends Controller
             'image_large_url' => $this->imageUrl($mainImage, $product),
             'image_alt' => $mainImage?->alt ?: $product->name,
         ];
+    }
+
+    private function variantAvailabilityCounts(): array
+    {
+        return [
+            'variants as active_variants_count' => fn ($query) => $query->where('is_active', true),
+            'variants as available_variants_count' => fn ($query) => $query
+                ->where('is_active', true)
+                ->where('stock_quantity', '>', 0),
+        ];
+    }
+
+    private function resolvedStockStatus(Product $product): string
+    {
+        if ($this->productHasActiveVariants($product) && ! $this->productHasAvailableVariant($product)) {
+            return Product::STOCK_OUT_OF_STOCK;
+        }
+
+        return $product->stock_status;
+    }
+
+    private function productHasActiveVariants(Product $product): bool
+    {
+        if ($product->relationLoaded('variants')) {
+            return $product->variants->isNotEmpty();
+        }
+
+        return array_key_exists('active_variants_count', $product->getAttributes())
+            && (int) $product->getAttribute('active_variants_count') > 0;
+    }
+
+    private function productHasAvailableVariant(Product $product): bool
+    {
+        if ($product->stock_status === Product::STOCK_OUT_OF_STOCK) {
+            return false;
+        }
+
+        if ($product->relationLoaded('variants')) {
+            return $product->variants->contains(
+                fn (ProductVariant $variant): bool => (bool) $variant->is_active && (int) $variant->stock_quantity > 0
+            );
+        }
+
+        if (array_key_exists('available_variants_count', $product->getAttributes())) {
+            return (int) $product->getAttribute('available_variants_count') > 0;
+        }
+
+        return $product->stock_status !== Product::STOCK_OUT_OF_STOCK;
     }
 
     private function serializePromoProduct(Product $product, Category $category): array

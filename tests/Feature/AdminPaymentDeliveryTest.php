@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\DeliveryMethod;
 use App\Models\DeliveryTariff;
 use App\Models\PaymentMethod;
+use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -47,11 +48,45 @@ class AdminPaymentDeliveryTest extends TestCase
                 ->where('section', 'delivery-methods')
                 ->where('deliveryMethods.0.name', 'Нова пошта')
                 ->where('deliveryMethods.0.base_price', '70.00 грн')
+                ->where('deliverySettings.free_shipping_threshold', '1200.00')
+                ->where('deliverySettings.free_shipping_threshold_label', '1 200 грн')
                 ->where('paymentMethods.0.name', 'Оплата при отриманні')
                 ->where('tariffs.0.name', 'Стандарт')
                 ->where('stats.active_delivery_methods', 1)
                 ->where('stats.active_payment_methods', 1)
                 ->where('stats.active_tariffs', 1));
+    }
+
+    public function test_admin_can_update_global_free_shipping_threshold(): void
+    {
+        $user = User::factory()->create();
+        $deliveryMethod = DeliveryMethod::query()->create([
+            'name' => 'Нова пошта',
+            'code' => 'nova_poshta',
+            'provider' => 'nova_poshta',
+            'type' => 'branch',
+            'base_price_cents' => 7000,
+            'free_from_cents' => 120000,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->put(route('admin.payment-delivery.settings.update'), [
+                'free_shipping_threshold' => '1400',
+            ])
+            ->assertRedirect(route('admin.payment-delivery.show', 'delivery-methods'));
+
+        $payload = SiteSetting::query()->where('section', 'payment_delivery')->firstOrFail()->payload;
+
+        $this->assertSame('1400.00', $payload['free_shipping_threshold']);
+        $this->assertNull($deliveryMethod->refresh()->free_from_cents);
+
+        $this->actingAs($user)
+            ->get(route('admin.payment-delivery.show', 'delivery-methods'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('deliverySettings.free_shipping_threshold', '1400.00')
+                ->where('deliverySettings.free_shipping_threshold_label', '1 400 грн')
+                ->where('deliveryMethods.0.free_from_effective', '1 400 грн'));
     }
 
     public function test_admin_can_create_and_update_delivery_method(): void
@@ -65,7 +100,6 @@ class AdminPaymentDeliveryTest extends TestCase
                 'type' => 'branch',
                 'description' => 'Відділення та поштомати.',
                 'base_price' => '70.50',
-                'free_from' => '2000',
                 'is_active' => true,
                 'sort_order' => 10,
             ])
@@ -75,7 +109,7 @@ class AdminPaymentDeliveryTest extends TestCase
 
         $this->assertSame('nova_posta', $method->code);
         $this->assertSame(7050, $method->base_price_cents);
-        $this->assertSame(200000, $method->free_from_cents);
+        $this->assertNull($method->free_from_cents);
 
         $this->actingAs($user)
             ->put(route('admin.payment-delivery.delivery-methods.update', $method), [
@@ -85,7 +119,6 @@ class AdminPaymentDeliveryTest extends TestCase
                 'type' => 'branch',
                 'description' => 'Оновлений опис.',
                 'base_price' => '80',
-                'free_from' => '',
                 'is_active' => false,
                 'sort_order' => 2,
             ])
@@ -134,7 +167,6 @@ class AdminPaymentDeliveryTest extends TestCase
                 'min_order' => '0',
                 'max_order' => '',
                 'price' => '0',
-                'free_from' => '',
                 'is_active' => true,
                 'sort_order' => 1,
             ])

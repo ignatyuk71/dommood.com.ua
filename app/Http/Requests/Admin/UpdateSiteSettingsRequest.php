@@ -36,7 +36,7 @@ class UpdateSiteSettingsRequest extends FormRequest
                 'require_phone' => ['boolean'],
                 'require_email' => ['boolean'],
                 'require_last_name' => ['boolean'],
-                'default_order_status' => ['required', Rule::in(['awaiting_confirmation', 'pending_payment', 'processing', 'new'])],
+                'default_order_status' => ['required', Rule::in(['new', 'confirmed', 'processing'])],
                 'min_order_amount' => ['nullable', 'numeric', 'min:0', 'max:999999'],
                 'terms_url' => ['nullable', 'string', 'max:255'],
                 'privacy_url' => ['nullable', 'string', 'max:255'],

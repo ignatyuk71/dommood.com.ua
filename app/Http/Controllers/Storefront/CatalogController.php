@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\AttributeValue;
 use App\Models\Category;
 use App\Models\ContentPage;
-use App\Models\DeliveryMethod;
 use App\Models\FilterSeoPage;
 use App\Models\Menu;
 use App\Models\MenuItem;
@@ -17,10 +16,12 @@ use App\Models\ProductVariant;
 use App\Models\Review;
 use App\Services\Seo\SeoResolver;
 use App\Services\SiteSettingsService;
+use App\Services\Storefront\DeliveryPolicyService;
 use App\Support\Catalog\FilterUrlBuilder;
 use App\Support\Catalog\ProductFilterQuery;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -33,6 +34,7 @@ class CatalogController extends Controller
         private readonly SeoResolver $seo,
         private readonly ProductFilterQuery $productFilterQuery,
         private readonly FilterUrlBuilder $filterUrlBuilder,
+        private readonly DeliveryPolicyService $deliveryPolicy,
     ) {}
 
     public function index(Request $request, ?string $categorySlug = null, ?string $filterSegments = null): View
@@ -157,6 +159,7 @@ class CatalogController extends Controller
                             'products.slug',
                             'products.sku',
                             'products.short_description',
+                            'products.description',
                             'products.price_cents',
                             'products.old_price_cents',
                             'products.currency',
@@ -168,6 +171,7 @@ class CatalogController extends Controller
                             'products.published_at',
                             'products.created_at',
                         ])
+                        ->withCount($this->variantAvailabilityCounts())
                         ->active()
                         ->where(fn (Builder $query) => $this->published($query))
                         ->orderBy('product_relations.sort_order')
@@ -210,7 +214,7 @@ class CatalogController extends Controller
                 'product' => array_merge($fallbackProduct, ['color_options' => []]),
                 'faqItems' => $this->productFaq($fallbackProduct, 'Вуличні тапочки'),
                 'relatedProducts' => [],
-                'freeShippingThresholdCents' => 120000,
+                'freeShippingThresholdCents' => $this->freeShippingThresholdCents(),
                 'seo' => [
                     'title' => $fallbackProduct['name'].' | '.$storeName,
                     'meta_description' => $fallbackProduct['short_description'] ?? $fallbackProduct['name'],
@@ -244,6 +248,47 @@ class CatalogController extends Controller
         ]);
     }
 
+    public function storeReview(Request $request, string $categorySlug, string $productSlug): RedirectResponse
+    {
+        $product = Product::query()
+            ->select(['id', 'primary_category_id', 'name', 'slug', 'status', 'published_at'])
+            ->with('primaryCategory:id,slug')
+            ->active()
+            ->where(fn (Builder $query) => $this->published($query))
+            ->where('slug', $productSlug)
+            ->where(function (Builder $query) use ($categorySlug): void {
+                $query->whereHas('primaryCategory', fn (Builder $categoryQuery) => $categoryQuery->where('slug', $categorySlug))
+                    ->orWhereHas('categories', fn (Builder $categoryQuery) => $categoryQuery->where('slug', $categorySlug));
+            })
+            ->firstOrFail();
+
+        if (filled($request->input('website'))) {
+            return back()->with('review_status', 'Дякуємо. Відгук зʼявиться після модерації.');
+        }
+
+        $data = $request->validateWithBag('review', [
+            'author_name' => ['required', 'string', 'max:120'],
+            'author_email' => ['nullable', 'email', 'max:255'],
+            'rating' => ['required', 'integer', 'min:1', 'max:5'],
+            'body' => ['required', 'string', 'min:3', 'max:2000'],
+            'website' => ['nullable', 'string', 'max:0'],
+        ]);
+
+        Review::query()->create([
+            'product_id' => $product->id,
+            'author_name' => $data['author_name'],
+            'author_email' => $data['author_email'] ?? null,
+            'rating' => (int) $data['rating'],
+            'body' => $data['body'],
+            'status' => Review::STATUS_PENDING,
+            'source' => 'site',
+            'ip_address' => $request->ip(),
+            'user_agent' => Str::limit((string) $request->userAgent(), 1000, ''),
+        ]);
+
+        return back()->with('review_status', 'Дякуємо. Відгук зʼявиться після модерації.');
+    }
+
     private function catalogProductQuery(Request $request, ?Category $category, array $categoryIds = [], bool $hasExplicitCategoryFilter = false): Builder
     {
         return Product::query()
@@ -254,6 +299,7 @@ class CatalogController extends Controller
                 'slug',
                 'sku',
                 'short_description',
+                'description',
                 'status',
                 'price_cents',
                 'old_price_cents',
@@ -275,6 +321,7 @@ class CatalogController extends Controller
                     ->orderBy('sort_order')
                     ->orderBy('id'),
             ])
+            ->withCount($this->variantAvailabilityCounts())
             ->active()
             ->where(fn ($query) => $this->published($query))
             ->when($categoryIds !== [], fn (Builder $query) => $this->whereInCategories($query, $categoryIds))
@@ -854,6 +901,7 @@ class CatalogController extends Controller
             ?: $product->primaryCategory
             ?: ($product->relationLoaded('categories') ? $product->categories->first() : null);
         $categorySlug = $category?->slug ?: ($product->primaryCategory?->slug ?: 'catalog');
+        $stockStatus = $this->resolvedStockStatus($product);
 
         return [
             'id' => $product->id,
@@ -862,11 +910,12 @@ class CatalogController extends Controller
             'sku' => $product->sku,
             'short_description' => $product->short_description,
             'description' => $product->description,
+            'seo_text' => $product->seo_text,
             'price_cents' => $product->price_cents,
             'old_price_cents' => $product->old_price_cents,
             'currency' => $product->currency ?: 'UAH',
-            'stock_status' => $product->stock_status,
-            'stock_status_label' => $this->stockStatusLabel($product->stock_status),
+            'stock_status' => $stockStatus,
+            'stock_status_label' => $this->stockStatusLabel($stockStatus),
             'is_featured' => $product->is_featured,
             'is_new' => $product->is_new,
             'is_bestseller' => $product->is_bestseller,
@@ -901,6 +950,54 @@ class CatalogController extends Controller
         ];
     }
 
+    private function variantAvailabilityCounts(): array
+    {
+        return [
+            'variants as active_variants_count' => fn ($query) => $query->where('is_active', true),
+            'variants as available_variants_count' => fn ($query) => $query
+                ->where('is_active', true)
+                ->where('stock_quantity', '>', 0),
+        ];
+    }
+
+    private function resolvedStockStatus(Product $product): string
+    {
+        if ($this->productHasActiveVariants($product) && ! $this->productHasAvailableVariant($product)) {
+            return Product::STOCK_OUT_OF_STOCK;
+        }
+
+        return $product->stock_status;
+    }
+
+    private function productHasActiveVariants(Product $product): bool
+    {
+        if ($product->relationLoaded('variants')) {
+            return $product->variants->isNotEmpty();
+        }
+
+        return array_key_exists('active_variants_count', $product->getAttributes())
+            && (int) $product->getAttribute('active_variants_count') > 0;
+    }
+
+    private function productHasAvailableVariant(Product $product): bool
+    {
+        if ($product->stock_status === Product::STOCK_OUT_OF_STOCK) {
+            return false;
+        }
+
+        if ($product->relationLoaded('variants')) {
+            return $product->variants->contains(
+                fn (ProductVariant $variant): bool => (bool) $variant->is_active && (int) $variant->stock_quantity > 0
+            );
+        }
+
+        if (array_key_exists('available_variants_count', $product->getAttributes())) {
+            return (int) $product->getAttribute('available_variants_count') > 0;
+        }
+
+        return $product->stock_status !== Product::STOCK_OUT_OF_STOCK;
+    }
+
     private function serializeImage(ProductImage $image, Product $product): array
     {
         return [
@@ -931,7 +1028,10 @@ class CatalogController extends Controller
             'price_cents' => $variant->price_cents ?: $product->price_cents,
             'old_price_cents' => $variant->old_price_cents ?: $product->old_price_cents,
             'stock_quantity' => $variant->stock_quantity,
-            'is_available' => $product->stock_status !== Product::STOCK_OUT_OF_STOCK,
+            'is_available' => $product->stock_status !== Product::STOCK_OUT_OF_STOCK && (int) $variant->stock_quantity > 0,
+            'stock_status_label' => $product->stock_status !== Product::STOCK_OUT_OF_STOCK && (int) $variant->stock_quantity > 0
+                ? $this->stockStatusLabel($product->stock_status)
+                : 'Немає в наявності',
             'image_url' => $image ? $this->imageUrl($image, null) : null,
             'attributes' => $variant->relationLoaded('attributeValues')
                 ? $variant->attributeValues
@@ -954,13 +1054,6 @@ class CatalogController extends Controller
             $rows->push([
                 'name' => 'Бренд',
                 'value' => $product->brand->name,
-            ]);
-        }
-
-        if ($product->relationLoaded('colorGroup') && $product->colorGroup) {
-            $rows->push([
-                'name' => 'Колір',
-                'value' => $product->colorGroup->name,
             ]);
         }
 
@@ -1047,22 +1140,61 @@ class CatalogController extends Controller
 
     private function variantLabel(ProductVariant $variant): string
     {
-        $label = collect([$variant->name, $variant->color_name, $variant->size])
+        $name = trim((string) $variant->name);
+        $size = trim((string) $variant->size);
+        $color = trim((string) $variant->color_name);
+        $parts = [];
+
+        $this->pushVariantLabelPart($parts, $name);
+        $this->pushVariantLabelPart($parts, $size);
+        $this->pushVariantLabelPart($parts, $color);
+
+        $label = collect($parts)
             ->filter()
-            ->unique()
+            ->unique(fn (string $part): string => $this->normalizeVariantLabelPart($part))
             ->implode(' / ');
 
         return $label !== '' ? $label : 'Варіант #'.$variant->id;
     }
 
+    private function pushVariantLabelPart(array &$parts, string $candidate): void
+    {
+        $candidateText = trim($candidate);
+        $candidate = $this->normalizeVariantLabelPart($candidateText);
+
+        if ($candidate === '') {
+            return;
+        }
+
+        foreach ($parts as $index => $part) {
+            $partKey = $this->normalizeVariantLabelPart($part);
+
+            if (Str::contains($partKey, $candidate)) {
+                return;
+            }
+
+            if (Str::contains($candidate, $partKey)) {
+                $parts[$index] = $candidate === $partKey ? $part : $candidateText;
+
+                return;
+            }
+        }
+
+        $parts[] = $candidateText;
+    }
+
+    private function normalizeVariantLabelPart(string $value): string
+    {
+        return Str::of($value)
+            ->lower()
+            ->replaceMatches('/[^\pL\pN]+/u', '')
+            ->trim()
+            ->toString();
+    }
+
     private function freeShippingThresholdCents(): int
     {
-        $threshold = DeliveryMethod::query()
-            ->where('is_active', true)
-            ->whereNotNull('free_from_cents')
-            ->min('free_from_cents');
-
-        return (int) ($threshold ?: 120000);
+        return $this->deliveryPolicy->freeShippingThresholdCents();
     }
 
     private function relatedProductCards(Product $product, Category $category): array
@@ -1078,6 +1210,7 @@ class CatalogController extends Controller
                     'slug',
                     'sku',
                     'short_description',
+                    'description',
                     'price_cents',
                     'old_price_cents',
                     'currency',
@@ -1097,6 +1230,7 @@ class CatalogController extends Controller
                         ->orderBy('sort_order')
                         ->orderBy('id'),
                 ])
+                ->withCount($this->variantAvailabilityCounts())
                 ->active()
                 ->where(fn (Builder $query) => $this->published($query))
                 ->where('id', '!=', $product->id)
@@ -1127,6 +1261,7 @@ class CatalogController extends Controller
                 'slug',
                 'sku',
                 'short_description',
+                'description',
                 'price_cents',
                 'old_price_cents',
                 'currency',
@@ -1443,7 +1578,6 @@ class CatalogController extends Controller
             ['title' => 'Головна', 'url' => url('/'), 'target' => '_self', 'badge' => null, 'children' => []],
             ['title' => 'Каталог', 'url' => url('/catalog'), 'target' => '_self', 'badge' => null, 'children' => []],
             ['title' => 'Новинки', 'url' => url('/catalog?filter=new'), 'target' => '_self', 'badge' => 'New', 'children' => []],
-            ['title' => 'Акції', 'url' => url('/sale'), 'target' => '_self', 'badge' => 'Sale', 'children' => []],
         ];
     }
 

@@ -82,6 +82,10 @@ class NovaPoshtaShippingLookupTest extends TestCase
             ->assertJsonCount(1, 'items')
             ->assertJsonPath('items.0.ref', 'postomat-ref')
             ->assertJsonPath('items.0.type', 'postomat');
+
+        Http::assertSent(fn ($request): bool => $request['modelName'] === 'Address'
+            && $request['calledMethod'] === 'getWarehouses'
+            && ($request['methodProperties']['TypeOfWarehouseRef'] ?? null) === 'f9316480-5f2d-425d-bc2c-ac7cd29decf0');
     }
 
     public function test_can_calculate_nova_poshta_delivery_price(): void

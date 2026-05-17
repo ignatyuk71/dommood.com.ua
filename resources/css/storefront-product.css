@@ -798,11 +798,12 @@
 
 .product-service-info__free > div::before {
     background: #f04444;
+    border-radius: inherit;
     content: "";
     display: block;
     height: 100%;
     transition: width 0.2s ease;
-    width: var(--free-progress-percent, 0%);
+    width: clamp(0%, var(--free-progress-percent, 0%), 100%);
 }
 
 .product-service-info__free > div span {
@@ -815,7 +816,7 @@
     line-height: 1;
     min-width: 44px;
     position: absolute;
-    width: var(--free-progress-percent, 0%);
+    width: clamp(0%, var(--free-progress-percent, 0%), 100%);
 }
 
 .product-service-accordion {

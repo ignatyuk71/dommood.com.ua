@@ -20,6 +20,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -591,6 +592,7 @@ class ProductController extends Controller
     private function syncVariants(Product $product, array $variants): void
     {
         $keptIds = [];
+        $seenSkus = [];
 
         foreach (array_values($variants) as $index => $variantData) {
             if (! is_array($variantData) || ! $this->shouldPersistVariant($variantData)) {
@@ -615,10 +617,27 @@ class ProductController extends Controller
                 'sort_order' => $index * 10,
             ];
 
-            if ($variant) {
-                $variant->update($payload);
-            } else {
-                $variant = $product->variants()->create($payload);
+            $skuKey = mb_strtolower((string) ($payload['sku'] ?? ''));
+            if ($skuKey !== '') {
+                if (isset($seenSkus[$skuKey])) {
+                    throw ValidationException::withMessages([
+                        'variants' => "У варіаціях дублюється SKU \"{$payload['sku']}\". Для кожної варіації SKU має бути унікальним.",
+                    ]);
+                }
+
+                $seenSkus[$skuKey] = true;
+            }
+
+            try {
+                if ($variant) {
+                    $variant->update($payload);
+                } else {
+                    $variant = $product->variants()->create($payload);
+                }
+            } catch (UniqueConstraintViolationException $exception) {
+                throw ValidationException::withMessages([
+                    'variants' => "SKU варіації \"{$payload['sku']}\" вже зайнятий. Задайте унікальний SKU.",
+                ]);
             }
 
             $keptIds[] = $variant->id;
@@ -659,9 +678,19 @@ class ProductController extends Controller
                 continue;
             }
 
+            try {
+                $storedPath = $this->storeImage($product, $image, $index);
+            } catch (\Throwable $exception) {
+                report($exception);
+
+                throw ValidationException::withMessages([
+                    'images' => 'Не вдалося зберегти фото товару. Перевірте файл або повторіть завантаження.',
+                ]);
+            }
+
             $imageModel = $product->images()->create([
                 'disk' => 'public',
-                'path' => $this->storeImage($product, $image, $index),
+                'path' => $storedPath,
                 'alt' => $product->name,
                 'title' => $product->name,
                 'is_main' => false,

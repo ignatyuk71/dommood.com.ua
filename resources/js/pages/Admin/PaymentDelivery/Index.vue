@@ -43,6 +43,10 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    deliverySettings: {
+        type: Object,
+        required: true,
+    },
 });
 
 const sectionMeta = {
@@ -86,7 +90,6 @@ const deliveryForm = useForm({
     type: 'branch',
     description: '',
     base_price: '0.00',
-    free_from: '',
     is_active: true,
     sort_order: 0,
 });
@@ -111,9 +114,12 @@ const tariffForm = useForm({
     min_order: '0.00',
     max_order: '',
     price: '0.00',
-    free_from: '',
     is_active: true,
     sort_order: 0,
+});
+
+const deliverySettingsForm = useForm({
+    free_shipping_threshold: props.deliverySettings.free_shipping_threshold,
 });
 
 const resetDelivery = () => {
@@ -143,7 +149,6 @@ const editDelivery = (method) => {
         type: method.type,
         description: method.description ?? '',
         base_price: method.base_price_value,
-        free_from: method.free_from_value,
         is_active: method.is_active,
         sort_order: method.sort_order,
     });
@@ -178,7 +183,6 @@ const editTariff = (tariff) => {
         min_order: tariff.min_order_value,
         max_order: tariff.max_order_value,
         price: tariff.price_value,
-        free_from: tariff.free_from_value,
         is_active: tariff.is_active,
         sort_order: tariff.sort_order,
     });
@@ -202,6 +206,15 @@ const submitDelivery = () => {
     }
 
     deliveryForm.transform(payload).post(route('admin.payment-delivery.delivery-methods.store'), options);
+};
+
+const submitDeliverySettings = () => {
+    deliverySettingsForm.put(route('admin.payment-delivery.settings.update'), {
+        preserveScroll: true,
+        onSuccess: () => deliverySettingsForm.defaults({
+            free_shipping_threshold: props.deliverySettings.free_shipping_threshold,
+        }),
+    });
 };
 
 const submitPayment = () => {
@@ -287,6 +300,40 @@ const connectionStatusLabel = (connection) => {
             </nav>
 
             <section v-if="section === 'delivery-methods'" class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+                <form class="rounded-lg bg-white p-4 shadow-[0_16px_45px_rgba(61,58,101,0.08)] xl:col-span-2" @submit.prevent="submitDeliverySettings">
+                    <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px_150px] lg:items-end">
+                        <div>
+                            <p class="text-sm font-extrabold text-slate-500">Загальне правило доставки</p>
+                            <h2 class="mt-1 text-lg font-bold text-[#343241]">Поріг безкоштовної доставки</h2>
+                            <p class="mt-1 text-sm text-slate-500">
+                                Це значення показується у картці товару, кошику, на головній і використовується як базове правило для checkout.
+                            </p>
+                        </div>
+                        <div>
+                            <label :class="labelClass">Безкоштовно від</label>
+                            <input
+                                v-model="deliverySettingsForm.free_shipping_threshold"
+                                :class="inputClass"
+                                type="number"
+                                min="0.01"
+                                step="0.01"
+                                :disabled="!deliverySettings.can_manage"
+                                required
+                            />
+                            <p class="mt-2 text-xs font-semibold text-slate-500">Зараз на сайті: {{ deliverySettings.free_shipping_threshold_label }}</p>
+                            <InputError class="mt-1" :message="deliverySettingsForm.errors.free_shipping_threshold" />
+                        </div>
+                        <button
+                            type="submit"
+                            class="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#7561f7] px-4 text-sm font-bold text-white hover:bg-[#6552e8] disabled:opacity-60"
+                            :disabled="!deliverySettings.can_manage || deliverySettingsForm.processing"
+                        >
+                            <Save class="h-4 w-4" />
+                            Зберегти
+                        </button>
+                    </div>
+                </form>
+
                 <div class="rounded-lg bg-white shadow-[0_16px_45px_rgba(61,58,101,0.08)]">
                     <div class="border-b border-slate-100 px-4 py-4">
                         <h2 class="text-lg font-bold text-[#343241]">Методи доставки</h2>
@@ -319,7 +366,7 @@ const connectionStatusLabel = (connection) => {
                                 </div>
                                 <div class="flex items-center justify-between gap-4 whitespace-nowrap">
                                     <span>Безкоштовно від:</span>
-                                    <span class="font-bold text-[#343241]">{{ method.free_from }}</span>
+                                    <span class="font-bold text-[#343241]">{{ method.free_from_effective }}</span>
                                 </div>
                                 <div class="flex items-center justify-between gap-4 whitespace-nowrap">
                                     <span>Тарифів:</span>
@@ -382,15 +429,9 @@ const connectionStatusLabel = (connection) => {
                                     </select>
                                 </div>
                             </div>
-                            <div class="grid gap-3 sm:grid-cols-2">
-                                <div>
-                                    <label :class="labelClass">Базова ціна</label>
-                                    <input v-model="deliveryForm.base_price" :class="inputClass" type="number" min="0" step="0.01" />
-                                </div>
-                                <div>
-                                    <label :class="labelClass">Безкоштовно від</label>
-                                    <input v-model="deliveryForm.free_from" :class="inputClass" type="number" min="0" step="0.01" placeholder="Не задано" />
-                                </div>
+                            <div>
+                                <label :class="labelClass">Базова ціна</label>
+                                <input v-model="deliveryForm.base_price" :class="inputClass" type="number" min="0" step="0.01" />
                             </div>
                             <div>
                                 <label :class="labelClass">Опис</label>
@@ -576,10 +617,6 @@ const connectionStatusLabel = (connection) => {
                                     <span>Замовлення:</span>
                                     <span class="font-bold text-[#343241]">{{ tariff.min_order }} - {{ tariff.max_order }}</span>
                                 </div>
-                                <div class="flex items-center justify-between gap-4 whitespace-nowrap">
-                                    <span>Безкоштовно від:</span>
-                                    <span class="font-bold text-[#343241]">{{ tariff.free_from }}</span>
-                                </div>
                             </div>
                             <div class="flex justify-end gap-2">
                                 <button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:border-[#7561f7] hover:text-[#7561f7]" @click="editTariff(tariff)">
@@ -639,15 +676,9 @@ const connectionStatusLabel = (connection) => {
                                 <input v-model="tariffForm.city" :class="inputClass" type="text" placeholder="Опційно" />
                             </div>
                         </div>
-                        <div class="grid gap-3 sm:grid-cols-2">
-                            <div>
-                                <label :class="labelClass">Ціна</label>
-                                <input v-model="tariffForm.price" :class="inputClass" type="number" min="0" step="0.01" />
-                            </div>
-                            <div>
-                                <label :class="labelClass">Безкоштовно від</label>
-                                <input v-model="tariffForm.free_from" :class="inputClass" type="number" min="0" step="0.01" placeholder="Не задано" />
-                            </div>
+                        <div>
+                            <label :class="labelClass">Ціна</label>
+                            <input v-model="tariffForm.price" :class="inputClass" type="number" min="0" step="0.01" />
                         </div>
                         <div class="grid gap-3 sm:grid-cols-2">
                             <div>

@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Category;
 use App\Models\Banner;
+use App\Models\Category;
 use App\Models\Menu;
 use App\Models\MenuItem;
 use App\Models\Product;
@@ -99,9 +99,9 @@ class HomePageTest extends TestCase
         $footerParent = MenuItem::query()->where('title', 'Покупцям')->firstOrFail();
 
         foreach ([
-            ['Доставка і оплата', '/payment-delivery'],
-            ['Обмін і повернення', '/returns-exchanges'],
-            ['Контакти магазину', '/contacts'],
+            ['Оплата і доставка', '/oplata-i-dostavka'],
+            ['Обмін та повернення', '/obmin-ta-povernennya'],
+            ['Контакти', '/kontakty'],
             ['Новинки у футері', '/catalog?filter=new'],
             ['Каталог у футері', '/catalog'],
             ['Instagram', 'https://www.instagram.com/dommood.com.ua/'],
@@ -126,7 +126,7 @@ class HomePageTest extends TestCase
                 return count($items) === 1
                     && $items[0]['title'] === 'Покупцям'
                     && count($items[0]['children']) === 6
-                    && $items[0]['children'][0]['title'] === 'Доставка і оплата'
+                    && $items[0]['children'][0]['title'] === 'Оплата і доставка'
                     && $items[0]['children'][5]['title'] === 'Instagram';
             })
             ->assertViewHas('products', function (array $products) use ($cardPath): bool {
@@ -178,7 +178,7 @@ class HomePageTest extends TestCase
             ->assertSee('Що нас питають найчастіше?')
             ->assertSee('Чи підходять пухнасті тапочки для вулиці?')
             ->assertSee('Від якої суми доставка безкоштовна?')
-            ->assertSee('Безкоштовна доставка діє для замовлень від 1200 грн')
+            ->assertSee('Безкоштовна доставка діє для замовлень від 1 200 грн')
             ->assertSee('"@type":"FAQPage"', false)
             ->assertSee('"@type":"Question"', false)
             ->assertSee('data-featured-carousel', false)
@@ -198,10 +198,10 @@ class HomePageTest extends TestCase
             ->assertSee('brand/icons/whatsapp.svg', false)
             ->assertSee('Покупцям')
             ->assertSee('Контактна інформація')
-            ->assertSee('/payment-delivery', false)
-            ->assertSee('Доставка і оплата')
-            ->assertSee('Обмін і повернення')
-            ->assertSee('Контакти магазину')
+            ->assertSee('/oplata-i-dostavka', false)
+            ->assertSee('Оплата і доставка')
+            ->assertSee('Обмін та повернення')
+            ->assertSee('Контакти')
             ->assertSee('Новинки у футері')
             ->assertSee('Каталог у футері')
             ->assertSee('Instagram')
@@ -228,6 +228,37 @@ class HomePageTest extends TestCase
             ->assertDontSee('href="#"', false)
             ->assertDontSee('Тестове повідомлення магазину')
             ->assertDontSee('Чернетка товару');
+    }
+
+    public function test_home_product_card_uses_variant_stock_quantity(): void
+    {
+        $category = Category::query()->create([
+            'name' => 'Капці',
+            'slug' => 'kaptsi',
+            'is_active' => true,
+        ]);
+        $product = Product::query()->create([
+            'primary_category_id' => $category->id,
+            'name' => 'Капці без залишків',
+            'slug' => 'kaptsi-bez-zalyshkiv',
+            'status' => Product::STATUS_ACTIVE,
+            'stock_status' => Product::STOCK_IN_STOCK,
+            'price_cents' => 79900,
+            'is_new' => true,
+            'published_at' => now()->subMinute(),
+        ]);
+        $product->variants()->create([
+            'sku' => 'DM-HOME-ZERO',
+            'size' => '36-37',
+            'price_cents' => 79900,
+            'stock_quantity' => 0,
+            'is_active' => true,
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Капці без залишків')
+            ->assertSee('Немає в наявності');
     }
 
     public function test_home_page_renders_active_home_hero_banner(): void

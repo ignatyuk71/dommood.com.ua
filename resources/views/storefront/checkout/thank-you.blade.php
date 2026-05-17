@@ -4,11 +4,15 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="robots" content="noindex,nofollow">
-        <title>Замовлення оформлено - {{ $storeName }}</title>
+        <title>Дякуємо за замовлення - {{ $storeName }}</title>
+        <link rel="icon" href="/favicon.ico" sizes="any">
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        <meta name="theme-color" content="#29277f">
         @if (file_exists(public_path('hot')))
-            @vite('resources/css/storefront.css')
+            @vite(['resources/css/storefront.css', 'resources/css/storefront-checkout.css'])
         @else
-            <link rel="stylesheet" href="{{ Vite::asset('resources/css/storefront.css') }}">
+            @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront.css')])
+            @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront-checkout.css')])
         @endif
     </head>
     <body>
@@ -18,67 +22,154 @@
 
                 return $currency === 'UAH' ? $value.' грн' : $value.' '.$currency;
             };
+
+            $paymentLabels = [
+                'cod' => 'Оплата при отриманні',
+                'cash_on_delivery' => 'Оплата при отриманні',
+                'card' => 'Оплата карткою',
+                'liqpay' => 'LiqPay',
+                'monobank' => 'Monobank',
+                'mono' => 'Monobank',
+                'iban' => 'Оплата на рахунок',
+            ];
+            $deliveryLabels = [
+                'nova_poshta_branch' => 'Нова пошта: відділення',
+                'nova_poshta_postomat' => 'Нова пошта: поштомат',
+                'nova_poshta_courier' => 'Нова пошта: курʼєр',
+                'ukrposhta' => 'Укрпошта',
+                'courier' => 'Курʼєр',
+                'pickup' => 'Самовивіз',
+            ];
+            $deliveryAddress = collect([$order->delivery_city, $order->delivery_branch ?: $order->delivery_address])
+                ->filter()
+                ->implode(', ');
             $breadcrumbs = [
                 ['label' => 'Головна', 'url' => route('home')],
                 ['label' => 'Оформлення замовлення', 'url' => route('checkout.index')],
                 ['label' => 'Дякуємо за замовлення'],
             ];
+            $purchaseItems = $order->items->map(fn ($item) => [
+                'item_id' => $item->sku ?: (string) $item->product_id,
+                'item_name' => $item->product_name,
+                'item_variant' => $item->variant_name,
+                'price' => round(((int) $item->price_cents) / 100, 2),
+                'quantity' => (int) $item->quantity,
+            ])->values();
         @endphp
 
         <div class="storefront-page storefront-checkout-page">
-            <header class="storefront-checkout-topbar">
-                <a href="{{ route('home') }}" class="storefront-checkout-logo" aria-label="{{ $storeName }} - головна">
-                    <img src="{{ asset('brand/dom-mood-wordmark-black.png') }}" alt="{{ $storeName }}" width="168" height="28">
-                </a>
-                <nav aria-label="Checkout кроки">
-                    <span>Кошик</span>
-                    <span>Checkout</span>
-                    <span class="is-active">Підтвердження</span>
-                </nav>
-            </header>
+            @include('storefront.partials.site-header')
 
-            <main class="storefront-thankyou">
-                @include('storefront.partials.breadcrumbs', ['items' => $breadcrumbs])
+            <main class="storefront-thankyou-page">
+                <div class="container">
+                    @include('storefront.partials.breadcrumbs', ['items' => $breadcrumbs])
 
-                <section class="storefront-thankyou-card" aria-labelledby="thankyou-title">
-                    <span class="storefront-thankyou-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
-                    </span>
-                    <h1 id="thankyou-title">Замовлення оформлено</h1>
-                    <p>Номер замовлення <strong>#{{ $order->order_number }}</strong>. Менеджер підтвердить деталі й наявність найближчим робочим часом.</p>
+                    <section class="storefront-thankyou-hero" aria-labelledby="thankyou-title">
+                        <span class="storefront-thankyou-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>
+                        </span>
+                        <div>
+                            <p>Замовлення #{{ $order->order_number }}</p>
+                            <h1 id="thankyou-title">Дякуємо, замовлення прийнято</h1>
+                            <span>Менеджер перевірить наявність, доставку та звʼяжеться з вами найближчим робочим часом.</span>
+                        </div>
+                    </section>
 
-                    <div class="storefront-thankyou-meta">
-                        <div>
-                            <span>Сума</span>
-                            <strong>{{ $formatMoney($order->total_cents, $order->currency) }}</strong>
-                        </div>
-                        <div>
-                            <span>Отримувач</span>
-                            <strong>{{ $order->customer_name }}</strong>
-                        </div>
-                        <div>
-                            <span>Доставка</span>
-                            <strong>{{ $order->delivery_city ?: 'Уточнюється' }}</strong>
-                        </div>
+                    <div class="storefront-thankyou-layout">
+                        <section class="storefront-thankyou-card storefront-thankyou-details" aria-labelledby="thankyou-details-title">
+                            <h2 id="thankyou-details-title">Деталі замовлення</h2>
+
+                            <div class="storefront-thankyou-meta">
+                                <div>
+                                    <span>Сума</span>
+                                    <strong>{{ $formatMoney($order->total_cents, $order->currency) }}</strong>
+                                </div>
+                                <div>
+                                    <span>Отримувач</span>
+                                    <strong>{{ $order->customer_name }}</strong>
+                                </div>
+                                <div>
+                                    <span>Телефон</span>
+                                    <strong>{{ $order->customer_phone }}</strong>
+                                </div>
+                                <div>
+                                    <span>Доставка</span>
+                                    <strong>{{ $deliveryLabels[$order->delivery_method] ?? $order->delivery_method ?? 'Уточнюється' }}</strong>
+                                </div>
+                                <div>
+                                    <span>Адреса</span>
+                                    <strong>{{ $deliveryAddress !== '' ? $deliveryAddress : 'Уточнюється' }}</strong>
+                                </div>
+                                <div>
+                                    <span>Оплата</span>
+                                    <strong>{{ $paymentLabels[$order->payment_method] ?? $order->payment_method ?? 'Уточнюється' }}</strong>
+                                </div>
+                            </div>
+
+                            <div class="storefront-thankyou-next">
+                                <h2>Що далі</h2>
+                                <ol>
+                                    <li>Ми перевіримо наявність товарів і коректність даних доставки.</li>
+                                    <li>Менеджер підтвердить замовлення телефоном або в месенджері.</li>
+                                    <li>Після відправки ви отримаєте номер ТТН Нової пошти.</li>
+                                </ol>
+                            </div>
+                        </section>
+
+                        <aside class="storefront-thankyou-card storefront-thankyou-summary" aria-labelledby="thankyou-summary-title">
+                            <h2 id="thankyou-summary-title">Ваше замовлення</h2>
+
+                            <div class="storefront-thankyou-items">
+                                @foreach ($order->items as $item)
+                                    @php($snapshot = $item->product_snapshot ?? [])
+                                    <article>
+                                        @if ($snapshot['image_url'] ?? null)
+                                            <img src="{{ $snapshot['image_url'] }}" alt="{{ $snapshot['image_alt'] ?? $item->product_name }}" loading="lazy">
+                                        @else
+                                            <span class="storefront-image-placeholder">{{ mb_substr($item->product_name, 0, 2) }}</span>
+                                        @endif
+                                        <div>
+                                            <h3>{{ $item->product_name }}</h3>
+                                            <p>
+                                                @if ($item->variant_name)
+                                                    <span>{{ $item->variant_name }}</span>
+                                                @endif
+                                                @if ($item->sku)
+                                                    <span>Арт. {{ $item->sku }}</span>
+                                                @endif
+                                            </p>
+                                            <strong>{{ $item->quantity }} шт. · {{ $formatMoney($item->total_cents, $order->currency) }}</strong>
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+
+                            @if ($liqPayPayload)
+                                <form method="post" action="https://www.liqpay.ua/api/3/checkout" accept-charset="utf-8" class="storefront-thankyou-payment">
+                                    <input type="hidden" name="data" value="{{ $liqPayPayload['data'] }}">
+                                    <input type="hidden" name="signature" value="{{ $liqPayPayload['signature'] }}">
+                                    <button type="submit" class="storefront-checkout-btn storefront-checkout-btn--primary">Оплатити онлайн</button>
+                                </form>
+                            @endif
+
+                            <div class="storefront-thankyou-actions">
+                                <a href="{{ url('/catalog') }}" class="storefront-checkout-btn storefront-checkout-btn--primary">Повернутися в каталог</a>
+                                @if ($supportPhone)
+                                    <a href="tel:{{ preg_replace('/[^0-9+]/', '', $supportPhone) }}" class="storefront-checkout-btn storefront-checkout-btn--ghost">Звʼязатися з магазином</a>
+                                @endif
+                            </div>
+                        </aside>
                     </div>
-
-                    @if ($liqPayPayload)
-                        <form method="post" action="https://www.liqpay.ua/api/3/checkout" accept-charset="utf-8" class="storefront-thankyou-payment">
-                            <input type="hidden" name="data" value="{{ $liqPayPayload['data'] }}">
-                            <input type="hidden" name="signature" value="{{ $liqPayPayload['signature'] }}">
-                            <button type="submit" class="storefront-checkout-btn storefront-checkout-btn--primary">Оплатити онлайн</button>
-                        </form>
-                    @endif
-
-                    <div class="storefront-thankyou-actions">
-                        <a href="{{ url('/catalog') }}" class="storefront-checkout-btn storefront-checkout-btn--ghost">Повернутися в каталог</a>
-                        @if ($supportPhone)
-                            <a href="tel:{{ preg_replace('/[^0-9+]/', '', $supportPhone) }}" class="storefront-checkout-btn storefront-checkout-btn--ghost">Звʼязатися з магазином</a>
-                        @endif
-                    </div>
-                </section>
+                </div>
             </main>
+
+            @include('storefront.partials.site-footer')
         </div>
+
+        @include('storefront.partials.cart-drawer-root')
+        @include('storefront.partials.storefront-feedback')
+        @include('storefront.partials.storefront-ui-scripts')
+        @include('storefront.partials.cart-drawer-scripts')
 
         <script>
             window.dataLayer = window.dataLayer || [];
@@ -88,13 +179,7 @@
                     transaction_id: @json($order->order_number),
                     value: {{ number_format(((int) $order->total_cents) / 100, 2, '.', '') }},
                     currency: @json($order->currency ?: 'UAH'),
-                    items: @json($order->items->map(fn ($item) => [
-                        'item_id' => $item->sku ?: (string) $item->product_id,
-                        'item_name' => $item->product_name,
-                        'item_variant' => $item->variant_name,
-                        'price' => round(((int) $item->price_cents) / 100, 2),
-                        'quantity' => (int) $item->quantity,
-                    ])->values())
+                    items: @json($purchaseItems)
                 }
             });
         </script>

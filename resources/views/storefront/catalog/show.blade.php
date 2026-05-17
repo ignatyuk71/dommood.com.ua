@@ -4,11 +4,11 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>{{ $seo['title'] ?? ($product['name'].' - '.$storeName) }}</title>
-        <meta name="description" content="{{ $seo['meta_description'] ?? ($product['short_description'] ?: $product['name']) }}">
+        <meta name="description" content="{{ $seo['meta_description'] ?? ($product['short_description'] ?: trim(strip_tags((string) ($product['description'] ?? ''))) ?: $product['name']) }}">
         <link rel="canonical" href="{{ $seo['canonical_url'] ?? url('/catalog/'.$category->slug.'/'.$product['slug']) }}">
         <meta property="og:type" content="product">
         <meta property="og:title" content="{{ $seo['title'] ?? $product['name'] }}">
-        <meta property="og:description" content="{{ $seo['meta_description'] ?? ($product['short_description'] ?: $product['name']) }}">
+        <meta property="og:description" content="{{ $seo['meta_description'] ?? ($product['short_description'] ?: trim(strip_tags((string) ($product['description'] ?? ''))) ?: $product['name']) }}">
         @if ($product['image_url'])
             <meta property="og:image" content="{{ $product['image_url'] }}">
         @endif
@@ -19,8 +19,8 @@
         @if (file_exists(public_path('hot')))
             @vite(['resources/css/storefront.css', 'resources/css/storefront-product.css'])
         @else
-            <link rel="stylesheet" href="{{ Vite::asset('resources/css/storefront.css') }}">
-            <link rel="stylesheet" href="{{ Vite::asset('resources/css/storefront-product.css') }}">
+            @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront.css')])
+            @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront-product.css')])
         @endif
     </head>
     <body>
@@ -36,7 +36,11 @@
             };
 
             $variants = collect($product['variants'] ?? []);
-            $initialVariant = $variants->first();
+            $initialVariant = $variants->first(fn (array $variant): bool => (bool) ($variant['is_available'] ?? false)) ?: $variants->first();
+            $initialVariantAvailable = $initialVariant ? (bool) ($initialVariant['is_available'] ?? false) : (($product['stock_status'] ?? 'in_stock') !== \App\Models\Product::STOCK_OUT_OF_STOCK);
+            $initialColorKey = $initialVariant ? mb_strtolower(($initialVariant['color_name'] ?? '').'|'.($initialVariant['color_hex'] ?? '')) : '';
+            $initialSizeKey = $initialVariant ? mb_strtolower((string) ($initialVariant['size'] ?? '')) : '';
+            $initialStockLabel = $initialVariant['stock_status_label'] ?? ($initialVariantAvailable ? $product['stock_status_label'] : 'Немає в наявності');
             $currentPrice = (int) ($initialVariant['price_cents'] ?? $product['price_cents']);
             $currentOldPrice = (int) ($initialVariant['old_price_cents'] ?? $product['old_price_cents']);
             $hasDiscount = $currentOldPrice > $currentPrice && $currentPrice > 0;
@@ -56,15 +60,57 @@
 
             $colors = $variants
                 ->filter(fn (array $variant): bool => filled($variant['color_name'] ?? null) || filled($variant['color_hex'] ?? null))
+                ->sortByDesc(fn (array $variant): bool => (bool) ($variant['is_available'] ?? false))
                 ->unique(fn (array $variant): string => mb_strtolower(($variant['color_name'] ?? '').'|'.($variant['color_hex'] ?? '')))
                 ->values();
             $colorProducts = collect($product['color_options'] ?? []);
             $sizes = $variants
                 ->filter(fn (array $variant): bool => filled($variant['size'] ?? null))
+                ->sortByDesc(fn (array $variant): bool => (bool) ($variant['is_available'] ?? false))
                 ->unique(fn (array $variant): string => mb_strtolower($variant['size']))
                 ->values();
             $rating = (float) ($product['rating_average'] ?? 0);
             $reviewCount = (int) ($product['reviews_count'] ?? 0);
+            $productAttributes = collect($product['attributes'] ?? [])
+                ->filter(fn (array $attribute): bool => filled($attribute['name'] ?? null) && filled($attribute['value'] ?? null))
+                ->values();
+            $productReviews = collect($product['reviews'] ?? [])
+                ->filter(fn (array $review): bool => filled($review['title'] ?? null) || filled($review['body'] ?? null))
+                ->values();
+            $reviewRatingAverage = $productReviews->isNotEmpty()
+                ? round((float) ($rating ?: $productReviews->avg(fn (array $review): int => (int) ($review['rating'] ?? 0))), 1)
+                : 0.0;
+            $reviewHasErrors = $errors->getBag('review')->any();
+            $reviewSubmitted = session()->has('review_status');
+            $activeProductTab = ($reviewHasErrors || $reviewSubmitted) ? 'reviews' : 'description';
+            $reviewFormAction = route('catalog.product.reviews.store', [
+                'categorySlug' => $category->slug,
+                'productSlug' => $product['slug'],
+            ]);
+            $productDescriptionHtml = trim((string) ($product['description'] ?? ''));
+            $productSeoTextHtml = trim((string) ($product['seo_text'] ?? ''));
+
+            if ($productDescriptionHtml === '' && $productSeoTextHtml !== '') {
+                $productDescriptionHtml = $productSeoTextHtml;
+                $productSeoTextHtml = '';
+            }
+
+            $productDescriptionText = trim(strip_tags($productDescriptionHtml));
+
+            if ($productDescriptionText === '') {
+                $productDescriptionText = trim((string) ($product['short_description'] ?? ''));
+            }
+
+            if ($productDescriptionText === '') {
+                $productDescriptionText = 'Продумана модель для щоденного комфорту: мʼяка посадка, практичні матеріали та швидке оформлення замовлення з доставкою по Україні.';
+            }
+
+            $productSummaryIntro = trim((string) ($product['short_description'] ?? ''));
+
+            if ($productSummaryIntro === '') {
+                $productSummaryIntro = \Illuminate\Support\Str::limit($productDescriptionText, 220);
+            }
+
             $schemas = collect($schemas ?? [])->filter()->values();
             $breadcrumbs = [
                 ['label' => 'Головна', 'url' => route('home')],
@@ -72,17 +118,40 @@
                 ['label' => $category->name, 'url' => url('/catalog/'.$category->slug)],
                 ['label' => $product['name']],
             ];
+            $shortMonths = [1 => 'січ', 2 => 'лют', 3 => 'бер', 4 => 'кві', 5 => 'тра', 6 => 'чер', 7 => 'лип', 8 => 'сер', 9 => 'вер', 10 => 'жов', 11 => 'лис', 12 => 'гру'];
+            $formatShortDate = static fn ($date): string => $date->format('j').' '.($shortMonths[(int) $date->format('n')] ?? $date->format('M'));
+            $deliveryStart = now()->addDays(2);
+            $deliveryEnd = now()->addDays(3);
+            $freeDeliveryThreshold = max(1, (int) ($freeShippingThresholdCents ?? \App\Services\Storefront\DeliveryPolicyService::DEFAULT_FREE_SHIPPING_THRESHOLD_CENTS));
+            $cartTotalCents = max(0, (int) ($headerCartSummary['total_cents'] ?? 0));
+            $freeDeliveryLeft = max(0, $freeDeliveryThreshold - $cartTotalCents);
+            $freeDeliveryProgress = min(100, (int) floor(($cartTotalCents / $freeDeliveryThreshold) * 100));
+            $freeDeliveryLabel = $freeDeliveryLeft > 0
+                ? 'Додайте ще '.$formatMoney($freeDeliveryLeft, 'UAH').', щоб отримати безкоштовну доставку'
+                : 'Безкоштовна доставка доступна для цього замовлення';
 
             $productPayload = [
                 'id' => $product['id'],
                 'name' => $product['name'],
+                'url' => $productUrl($product),
+                'image_url' => $product['image_url'],
+                'image_alt' => $product['image_alt'] ?? $product['name'],
                 'currency' => $product['currency'],
                 'base_price_cents' => $product['price_cents'],
                 'base_old_price_cents' => $product['old_price_cents'],
                 'sku' => $product['sku'],
                 'stock_status' => $product['stock_status'],
                 'stock_status_label' => $product['stock_status_label'],
+                'is_new' => (bool) ($product['is_new'] ?? false),
+                'is_bestseller' => (bool) ($product['is_bestseller'] ?? false),
+                'is_featured' => (bool) ($product['is_featured'] ?? false),
                 'variants' => $variants->values()->all(),
+            ];
+            $breadcrumbs = [
+                ['label' => 'Головна', 'url' => route('home')],
+                ['label' => 'Каталог', 'url' => url('/catalog')],
+                ['label' => $category->name, 'url' => url('/catalog/'.$category->slug)],
+                ['label' => $product['name']],
             ];
         @endphp
 
@@ -124,8 +193,8 @@
                                 <div class="product-summary__head">
                                     <div class="product-summary__eyebrow">{{ $category->name }}</div>
                                     <h1 id="product-title">{{ $product['name'] }}</h1>
-                                    @if ($product['short_description'])
-                                        <p class="product-summary__intro">{{ $product['short_description'] }}</p>
+                                    @if ($productSummaryIntro !== '')
+                                        <p class="product-summary__intro">{{ $productSummaryIntro }}</p>
                                     @endif
                                     <div class="product-meta-row">
                                         <span class="product-rating" aria-label="{{ $rating > 0 ? 'Рейтинг '.$rating.' з 5' : 'Відгуків ще немає' }}">
@@ -145,6 +214,10 @@
                                         <strong data-product-price>{{ $formatMoney($currentPrice, $product['currency']) }}</strong>
                                         <del data-product-old-price @if (! $hasDiscount) hidden @endif>{{ $formatMoney($currentOldPrice, $product['currency']) }}</del>
                                     </div>
+                                    <span @class(['product-stock', 'is-warning' => $initialVariantAvailable && $product['stock_status'] === 'preorder', 'is-muted' => ! $initialVariantAvailable || $product['stock_status'] === 'out_of_stock']) data-product-stock>
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m7.8 12.2 2.8 2.8 5.8-6.1"/></svg>
+                                        <span data-product-stock-label>{{ $initialStockLabel }}</span>
+                                    </span>
                                 </div>
 
                                 @if ($colorProducts->isNotEmpty())
@@ -186,9 +259,11 @@
                                                         @php
                                                             $colorLabel = $variant['color_name'] ?: 'Колір '.$loop->iteration;
                                                             $colorKey = mb_strtolower(($variant['color_name'] ?? '').'|'.($variant['color_hex'] ?? ''));
+                                                            $isVariantAvailable = (bool) ($variant['is_available'] ?? false);
+                                                            $isActiveColor = $colorKey !== '' && $colorKey === $initialColorKey;
                                                         @endphp
-                                                        <label @class(['is-active' => $loop->first]) data-product-color-option>
-                                                            <input type="radio" name="product_color" value="{{ $colorKey }}" @checked($loop->first)>
+                                                        <label @class(['is-active' => $isActiveColor, 'is-disabled' => ! $isVariantAvailable]) data-product-color-option>
+                                                            <input type="radio" name="product_color" value="{{ $colorKey }}" @checked($isActiveColor) @disabled(! $isVariantAvailable)>
                                                             <span class="product-color-options__swatch @if ($variant['image_url']) has-image @endif" style="--product-color: {{ $variant['color_hex'] ?: '#f4ece6' }}; @if ($variant['image_url']) --product-swatch-image: url('{{ $variant['image_url'] }}'); @endif"></span>
                                                             <span class="product-color-options__label">{{ $colorLabel }}</span>
                                                         </label>
@@ -204,8 +279,13 @@
                                                 </legend>
                                                 <div class="product-size-options">
                                                     @foreach ($sizes as $variant)
-                                                        <label @class(['is-active' => $loop->first]) data-product-size-option>
-                                                            <input type="radio" name="product_size" value="{{ mb_strtolower($variant['size']) }}" @checked($loop->first)>
+                                                        @php
+                                                            $sizeKey = mb_strtolower((string) $variant['size']);
+                                                            $isVariantAvailable = (bool) ($variant['is_available'] ?? false);
+                                                            $isActiveSize = $sizeKey !== '' && $sizeKey === $initialSizeKey;
+                                                        @endphp
+                                                        <label @class(['is-active' => $isActiveSize, 'is-disabled' => ! $isVariantAvailable]) data-product-size-option>
+                                                            <input type="radio" name="product_size" value="{{ $sizeKey }}" @checked($isActiveSize) @disabled(! $isVariantAvailable)>
                                                             <span>{{ $variant['size'] }}</span>
                                                         </label>
                                                     @endforeach
@@ -216,8 +296,12 @@
                                                 <legend><span>Варіант</span></legend>
                                                 <div class="product-size-options">
                                                     @foreach ($variants as $variant)
-                                                        <label @class(['is-active' => $loop->first]) data-product-variant-option>
-                                                            <input type="radio" name="product_variant_choice" value="{{ $variant['id'] }}" @checked($loop->first)>
+                                                        @php
+                                                            $isVariantAvailable = (bool) ($variant['is_available'] ?? false);
+                                                            $isActiveVariant = (int) ($variant['id'] ?? 0) === (int) ($initialVariant['id'] ?? 0);
+                                                        @endphp
+                                                        <label @class(['is-active' => $isActiveVariant, 'is-disabled' => ! $isVariantAvailable]) data-product-variant-option>
+                                                            <input type="radio" name="product_variant_choice" value="{{ $variant['id'] }}" @checked($isActiveVariant) @disabled(! $isVariantAvailable)>
                                                             <span>{{ $variant['label'] }}</span>
                                                         </label>
                                                     @endforeach
@@ -225,17 +309,15 @@
                                             </fieldset>
                                         @endif
 
-                                        <span @class(['product-stock', 'is-warning' => $product['stock_status'] === 'preorder', 'is-muted' => $product['stock_status'] === 'out_of_stock']) data-product-stock>{{ $product['stock_status_label'] }}</span>
-
                                         <div class="product-buy-actions">
                                             <div class="product-quantity" aria-label="Кількість">
                                                 <button type="button" data-product-qty-minus aria-label="Зменшити кількість">−</button>
                                                 <input type="number" min="1" max="99" value="1" inputmode="numeric" data-product-qty aria-label="Кількість товару">
                                                 <button type="button" data-product-qty-plus aria-label="Збільшити кількість">+</button>
                                             </div>
-                                            <button type="submit" class="product-add-button">
+                                            <button type="submit" class="product-add-button" data-product-add-button @disabled(! $initialVariantAvailable)>
                                                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
-                                                <span>У кошик</span>
+                                                <span data-product-add-label>{{ $initialVariantAvailable ? 'У кошик' : 'Немає в наявності' }}</span>
                                             </button>
                                         </div>
                                     </form>
@@ -259,56 +341,291 @@
                                     </div>
                                 @endif
 
-                                <div class="product-benefits" aria-label="Переваги покупки">
-                                    <div class="product-benefit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h11v10H4z"/><path d="M15 10h3.5l1.5 2.2V17h-5z"/><circle cx="7" cy="18" r="1.5"/><circle cx="17.5" cy="18" r="1.5"/></svg><span>Відправка після підтвердження</span></div>
-                                    <div class="product-benefit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 4 4L20 4"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6"/></svg><span>Обмін/повернення 14 днів</span></div>
-                                    <div class="product-benefit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h18v10H3z"/><path d="M7 11h5"/><path d="M17 13h.01"/></svg><span>Оплата онлайн або при отриманні</span></div>
-                                    <div class="product-benefit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.35-7-10a4 4 0 0 1 7-2.65A4 4 0 0 1 19 11c0 5.65-7 10-7 10Z"/></svg><span>Акуратне пакування</span></div>
+                                <div class="product-service-info" aria-label="Доставка, оплата та повернення">
+                                    <div class="product-service-info__note">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                                        <span>Очікуйте на замовлення в період <span>{{ $formatShortDate($deliveryStart) }} - {{ $formatShortDate($deliveryEnd) }}</span></span>
+                                    </div>
+                                    <div class="product-service-info__note">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h11v10H4z"/><path d="M15 10h3.5l1.5 2.2V17h-5z"/><circle cx="7" cy="18" r="1.5"/><circle cx="17.5" cy="18" r="1.5"/></svg>
+                                        <span>Безкоштовна доставка та повернення: <span>Для всіх замовлень від {{ $formatMoney($freeDeliveryThreshold, 'UAH') }}</span></span>
+                                    </div>
+                                    <div
+                                        class="product-service-info__free"
+                                        data-free-shipping-progress
+                                        data-free-shipping-threshold="{{ $freeDeliveryThreshold }}"
+                                        data-free-shipping-current="{{ $cartTotalCents }}"
+                                        style="--free-progress-percent: {{ $freeDeliveryProgress }}%;"
+                                    >
+                                        <span data-free-shipping-label>{{ $freeDeliveryLabel }}</span>
+                                        <div aria-hidden="true"></div>
+                                    </div>
+
+                                    <div class="product-service-accordion">
+                                        <details>
+                                            <summary>Доставка</summary>
+                                            <div class="product-service-accordion__body">
+                                                <div class="product-delivery-table" role="table" aria-label="Способи доставки">
+                                                    <div role="row">
+                                                        <span role="columnheader">Спосіб доставки</span>
+                                                        <span role="columnheader">Термін</span>
+                                                        <span role="columnheader">Вартість</span>
+                                                    </div>
+                                                    <div role="row">
+                                                        <span role="cell"><span>У поштомат</span><small>Зручно для компактних замовлень із самовивозом у вашому районі.</small></span>
+                                                        <span role="cell">1-3 робочі дні</span>
+                                                        <span role="cell">80 грн</span>
+                                                    </div>
+                                                    <div role="row">
+                                                        <span role="cell"><span>У відділення</span><small>Отримання у відділенні Нової пошти після прибуття посилки.</small></span>
+                                                        <span role="cell">1-3 робочі дні</span>
+                                                        <span role="cell">90 грн</span>
+                                                    </div>
+                                                    <div role="row">
+                                                        <span role="cell"><span>Кур’єром</span><small>Доставка кур’єром Нової пошти на вказану адресу.</small></span>
+                                                        <span role="cell">1-4 робочі дні</span>
+                                                        <span role="cell">120 грн</span>
+                                                    </div>
+                                                </div>
+                                                <ul>
+                                                    <li>Доставка в села/селища: +25 грн до тарифу.</li>
+                                                    <li>Після оформлення замовлення ви отримаєте SMS/Viber з номером ТТН.</li>
+                                                </ul>
+                                            </div>
+                                        </details>
+                                        <details>
+                                            <summary>Оплата</summary>
+                                            <div class="product-service-accordion__body">
+                                                <ul>
+                                                    <li><span>Банківська картка</span> - оплата онлайн через сервіс LiqPay, Monobank або Приват24.</li>
+                                                    <li><span>Готівка</span> - при отриманні на відділенні Нової Пошти.</li>
+                                                    <li><span>Безготівковий розрахунок</span> - для юр. осіб та ФОП, видаємо рахунок-фактуру.</li>
+                                                </ul>
+                                            </div>
+                                        </details>
+                                        <details>
+                                            <summary>Обмін та повернення</summary>
+                                            <div class="product-service-accordion__body">
+                                                <ul>
+                                                    <li>Обмін та повернення: протягом 14 днів згідно з законодавством України.</li>
+                                                    <li>Кошти повертаємо на картку протягом 1-3 робочих днів.</li>
+                                                </ul>
+                                            </div>
+                                        </details>
+                                    </div>
                                 </div>
                             </aside>
                         </div>
+
+                        <section class="product-details-tabs" aria-label="Деталі товару" data-product-tabs>
+                            <div class="product-details-tabs__nav" role="tablist" aria-label="Інформація про товар">
+                                <button type="button" id="product-tab-description" role="tab" aria-selected="{{ $activeProductTab === 'description' ? 'true' : 'false' }}" aria-controls="product-panel-description" data-product-tab="description">Опис</button>
+                                <button type="button" id="product-tab-delivery" role="tab" aria-selected="{{ $activeProductTab === 'delivery' ? 'true' : 'false' }}" aria-controls="product-panel-delivery" data-product-tab="delivery">Доставка і повернення</button>
+                                <button type="button" id="product-tab-reviews" role="tab" aria-selected="{{ $activeProductTab === 'reviews' ? 'true' : 'false' }}" aria-controls="product-panel-reviews" data-product-tab="reviews">Відгуки({{ $reviewCount }})</button>
+                                <button type="button" id="product-tab-characteristics" role="tab" aria-selected="{{ $activeProductTab === 'characteristics' ? 'true' : 'false' }}" aria-controls="product-panel-characteristics" data-product-tab="characteristics">Характеристики</button>
+                            </div>
+
+                            <div class="product-details-tabs__panels">
+                                <section id="product-panel-description" @class(['product-details-tabs__panel', 'is-active' => $activeProductTab === 'description']) role="tabpanel" aria-labelledby="product-tab-description" data-product-tab-panel="description" @if ($activeProductTab !== 'description') hidden @endif>
+                                    <div class="product-details-tabs__grid">
+                                        <div class="product-details-tabs__copy">
+                                            <h2>{{ $product['name'] }}</h2>
+                                            @if ($productDescriptionHtml !== '')
+                                                <div>{!! $productDescriptionHtml !!}</div>
+                                            @else
+                                                <p>{!! nl2br(e($productDescriptionText)) !!}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section id="product-panel-delivery" @class(['product-details-tabs__panel', 'is-active' => $activeProductTab === 'delivery']) role="tabpanel" aria-labelledby="product-tab-delivery" data-product-tab-panel="delivery" @if ($activeProductTab !== 'delivery') hidden @endif>
+                                    <div class="product-delivery-details">
+                                        <div class="product-delivery-details__head">
+                                            <h2>Доставка і повернення</h2>
+                                            <p>Відправляємо замовлення Новою поштою по Україні. Орієнтовне отримання: {{ $formatShortDate($deliveryStart) }} - {{ $formatShortDate($deliveryEnd) }}. Якщо розмір не підійшов, допоможемо швидко оформити обмін або повернення.</p>
+                                        </div>
+
+                                        <div class="product-delivery-details__grid">
+                                            <article>
+                                                <h3>Доставка</h3>
+                                                <ul>
+                                                    <li>У відділення або поштомат Нової пошти: 1-3 робочі дні.</li>
+                                                    <li>Курʼєром на адресу: 1-4 робочі дні.</li>
+                                                    <li>Після відправки надсилаємо номер ТТН у SMS або месенджер.</li>
+                                                </ul>
+                                            </article>
+
+                                            <article>
+                                                <h3>Безкоштовна доставка</h3>
+                                                <ul>
+                                                    <li>Діє для замовлень від {{ $formatMoney($freeDeliveryThreshold, 'UAH') }}.</li>
+                                                    <li>Якщо сума менша, доставка оплачується за тарифами перевізника.</li>
+                                                    <li>Менеджер підтвердить фінальну суму перед відправкою.</li>
+                                                </ul>
+                                            </article>
+
+                                            <article>
+                                                <h3>Обмін</h3>
+                                                <ul>
+                                                    <li>Обмінюємо розмір або модель протягом 14 днів після отримання.</li>
+                                                    <li>Товар має бути без слідів використання, збереженим пакуванням і товарним виглядом.</li>
+                                                    <li>Перед повторною відправкою менеджер допоможе перевірити заміри.</li>
+                                                </ul>
+                                            </article>
+
+                                            <article>
+                                                <h3>Повернення</h3>
+                                                <ul>
+                                                    <li>Повернення можливе протягом 14 днів згідно із законодавством України.</li>
+                                                    <li>Кошти повертаємо на картку протягом 1-3 робочих днів після перевірки товару.</li>
+                                                    <li>Для старту повернення напишіть нам у зручний месенджер і вкажіть номер замовлення.</li>
+                                                </ul>
+                                            </article>
+                                        </div>
+
+                                        <div class="product-delivery-details__steps" aria-label="Як оформити обмін або повернення">
+                                            <h3>Як оформити обмін або повернення</h3>
+                                            <ol>
+                                                <li><span>1</span>Напишіть менеджеру номер замовлення та причину звернення.</li>
+                                                <li><span>2</span>Отримайте інструкцію для відправки товару Новою поштою.</li>
+                                                <li><span>3</span>Після перевірки товару ми відправимо заміну або повернемо кошти.</li>
+                                            </ol>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section id="product-panel-reviews" @class(['product-details-tabs__panel', 'is-active' => $activeProductTab === 'reviews']) role="tabpanel" aria-labelledby="product-tab-reviews" data-product-tab-panel="reviews" @if ($activeProductTab !== 'reviews') hidden @endif>
+                                    <div class="product-reviews">
+                                        <div class="product-reviews__head">
+                                            <h2>Відгуки</h2>
+                                            <button type="button" class="product-review-action" data-product-dialog-open="review-form">
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                                <span>Залишити відгук</span>
+                                            </button>
+                                        </div>
+
+                                        @if (session('review_status'))
+                                            <div class="product-review-status" role="status">{{ session('review_status') }}</div>
+                                        @endif
+
+                                        <div class="product-reviews__summary">
+                                            <div class="product-reviews__score-card">
+                                                <strong>{{ number_format($reviewRatingAverage, 1, '.', '') }}</strong>
+                                                <span class="product-review-stars" aria-label="Рейтинг {{ number_format($reviewRatingAverage, 1, '.', '') }} з 5">
+                                                    @for ($star = 1; $star <= 5; $star++)
+                                                        <svg viewBox="0 0 20 20" aria-hidden="true" @class(['is-filled' => $reviewRatingAverage >= ($star - 0.25)])><path d="m10 1.9 2.5 5.1 5.6.8-4 4 1 5.6-5-2.7-5 2.7 1-5.6-4-4 5.5-.8L10 1.9Z"/></svg>
+                                                    @endfor
+                                                </span>
+                                                <span>{{ $reviewCount }} Відгуки</span>
+                                            </div>
+
+                                            <div class="product-rating-breakdown" aria-label="Розподіл оцінок">
+                                                @foreach ([5, 4, 3, 2, 1] as $score)
+                                                    @php
+                                                        $scoreCount = $productReviews->filter(fn (array $review): bool => (int) ($review['rating'] ?? 0) === $score)->count();
+                                                        $scorePercent = $productReviews->isNotEmpty() ? (int) round(($scoreCount / $productReviews->count()) * 100) : 0;
+                                                    @endphp
+                                                    <div class="product-rating-breakdown__row" style="--review-rating-percent: {{ $scorePercent }}%;">
+                                                        <span class="product-rating-breakdown__label">{{ $score }} <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 1.9 2.5 5.1 5.6.8-4 4 1 5.6-5-2.7-5 2.7 1-5.6-4-4 5.5-.8L10 1.9Z"/></svg></span>
+                                                        <span class="product-rating-breakdown__bar" aria-hidden="true"><span></span></span>
+                                                        <span class="product-rating-breakdown__count">{{ $scoreCount }}</span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+
+                                        @if ($productReviews->isNotEmpty())
+                                            <div class="product-review-list">
+                                                @foreach ($productReviews as $review)
+                                                    @php
+                                                        $reviewText = (string) (($review['body'] ?? null) ?: ($review['title'] ?? ''));
+                                                    @endphp
+                                                    <article class="product-review-row">
+                                                        <header>
+                                                            <strong>{{ $review['author_name'] ?? 'Покупець DomMood' }}</strong>
+                                                            @if ($review['published_at'] ?? null)
+                                                                <time>{{ $review['published_at'] }}</time>
+                                                            @endif
+                                                        </header>
+                                                        <span class="product-review-stars" aria-label="Оцінка {{ (int) ($review['rating'] ?? 0) }} з 5">
+                                                            @for ($star = 1; $star <= 5; $star++)
+                                                                <svg viewBox="0 0 20 20" aria-hidden="true" @class(['is-filled' => (int) ($review['rating'] ?? 0) >= $star])><path d="m10 1.9 2.5 5.1 5.6.8-4 4 1 5.6-5-2.7-5 2.7 1-5.6-4-4 5.5-.8L10 1.9Z"/></svg>
+                                                            @endfor
+                                                        </span>
+                                                        <p>{{ $reviewText }}</p>
+                                                    </article>
+                                                @endforeach
+                                            </div>
+                                        @else
+                                            <div class="product-details-tabs__empty">
+                                                <h2>Відгуків про цей товар ще немає</h2>
+                                                <p>Перші відгуки зʼявляться після модерації покупок. Рейтинг магазину й товару оновлюється тільки для підтверджених відгуків.</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </section>
+
+                                <section id="product-panel-characteristics" @class(['product-details-tabs__panel', 'is-active' => $activeProductTab === 'characteristics']) role="tabpanel" aria-labelledby="product-tab-characteristics" data-product-tab-panel="characteristics" @if ($activeProductTab !== 'characteristics') hidden @endif>
+                                    @if ($productAttributes->isNotEmpty())
+                                        <div class="product-attributes">
+                                            <h2>Характеристики</h2>
+                                            <dl class="product-attributes-list" aria-label="Характеристики товару">
+                                                @foreach ($productAttributes as $attribute)
+                                                    <div class="product-attributes-list__row">
+                                                        <dt>{{ rtrim($attribute['name'], ':') }}</dt>
+                                                        <dd>{{ $attribute['value'] }}</dd>
+                                                    </div>
+                                                @endforeach
+                                            </dl>
+                                        </div>
+                                    @else
+                                        <div class="product-details-tabs__empty">
+                                            <h2>Характеристики уточнюються</h2>
+                                            <p>Менеджер перевірить матеріал, розмірну сітку або інші деталі перед відправкою замовлення.</p>
+                                        </div>
+                                    @endif
+                                </section>
+                            </div>
+                        </section>
                     </div>
                 </section>
 
-                @if (count($relatedProducts ?? []) > 0)
-                    <section class="product-related">
+                @if ($productSeoTextHtml !== '')
+                    <section class="storefront-catalog-seo" aria-label="Додатковий SEO текст товару">
                         <div class="container">
-                            <div class="storefront-section-heading">
-                                <div>
-                                    <h2>З цим товаром купують</h2>
-                                    <p>Схожі моделі, які легко додати до замовлення або підібрати в іншому кольорі.</p>
-                                </div>
-                                <a href="{{ url('/catalog/'.$category->slug) }}" class="storefront-section-link">До категорії</a>
-                            </div>
-                            <div class="storefront-product-grid storefront-catalog-grid">
-                                @foreach ($relatedProducts as $relatedProduct)
-                                    @include('storefront.partials.product-card', [
-                                        'product' => $relatedProduct,
-                                        'productUrl' => $productUrl,
-                                        'formatMoney' => $formatMoney,
-                                    ])
-                                @endforeach
-                            </div>
+                            <article class="storefront-seo-card">
+                                {!! $productSeoTextHtml !!}
+                            </article>
                         </div>
                     </section>
                 @endif
+
+                <section class="product-related product-recently-viewed" data-recently-viewed-section hidden>
+                    <div class="container">
+                        <div class="storefront-section-heading">
+                            <div>
+                                <h2>Нещодавно переглянуті</h2>
+                                <p>Товари, які ви відкривали раніше на сайті.</p>
+                            </div>
+                            <div class="product-recently-viewed__controls" aria-label="Керування каруселлю">
+                                <button type="button" data-recently-viewed-prev aria-label="Попередні товари">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+                                </button>
+                                <button type="button" data-recently-viewed-next aria-label="Наступні товари">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="product-recently-viewed__viewport">
+                            <div class="product-recently-viewed__track" data-recently-viewed-track role="list"></div>
+                        </div>
+                    </div>
+                </section>
             </main>
 
             @include('storefront.partials.site-footer')
         </div>
-
-        @if ($isPurchasable)
-            <div class="product-mobile-purchase" data-product-mobile-sticky>
-                <div class="product-mobile-purchase__price">
-                    <span data-product-mobile-price>{{ $formatMoney($currentPrice, $product['currency']) }}</span>
-                    <del data-product-mobile-old-price @if (! $hasDiscount) hidden @endif>{{ $formatMoney($currentOldPrice, $product['currency']) }}</del>
-                </div>
-                <button type="button" data-product-mobile-submit>
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
-                    <span>У кошик</span>
-                </button>
-            </div>
-        @endif
 
         <dialog class="product-dialog" data-product-dialog="size-chart">
             <div class="product-dialog__panel">
@@ -370,6 +687,54 @@
                         </ol>
                     </div>
                 </div>
+            </div>
+        </dialog>
+
+        <dialog class="product-dialog product-dialog--review" data-product-dialog="review-form" @if ($reviewHasErrors) data-product-dialog-auto-open @endif>
+            <div class="product-dialog__panel">
+                <button type="button" class="product-dialog__close" data-product-dialog-close aria-label="Закрити">×</button>
+                <h2>Залишити відгук</h2>
+                <form method="post" action="{{ $reviewFormAction }}" class="product-review-form">
+                    @csrf
+                    <input type="text" name="website" value="" tabindex="-1" autocomplete="off" class="product-review-form__trap" aria-hidden="true">
+
+                    <label>
+                        <span>Ваше імʼя</span>
+                        <input type="text" name="author_name" value="{{ old('author_name') }}" autocomplete="name" required>
+                        @error('author_name', 'review')<small>{{ $message }}</small>@enderror
+                    </label>
+
+                    <label>
+                        <span>Email</span>
+                        <input type="email" name="author_email" value="{{ old('author_email') }}" autocomplete="email" placeholder="Не обовʼязково">
+                        @error('author_email', 'review')<small>{{ $message }}</small>@enderror
+                    </label>
+
+                    <fieldset class="product-review-form__rating">
+                        <legend>Оцінка</legend>
+                        <div>
+                            @for ($star = 5; $star >= 1; $star--)
+                                <label>
+                                    <input type="radio" name="rating" value="{{ $star }}" @checked((int) old('rating', 5) === $star)>
+                                    <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m10 1.9 2.5 5.1 5.6.8-4 4 1 5.6-5-2.7-5 2.7 1-5.6-4-4 5.5-.8L10 1.9Z"/></svg>
+                                    <span>{{ $star }}</span>
+                                </label>
+                            @endfor
+                        </div>
+                        @error('rating', 'review')<small>{{ $message }}</small>@enderror
+                    </fieldset>
+
+                    <label>
+                        <span>Відгук</span>
+                        <textarea name="body" rows="3" required>{{ old('body') }}</textarea>
+                        @error('body', 'review')<small>{{ $message }}</small>@enderror
+                    </label>
+
+                    <div class="product-review-form__footer">
+                        <button type="submit" class="product-review-form__submit">Надіслати відгук</button>
+                        <p>Відгук буде опубліковано після модерації.</p>
+                    </div>
+                </form>
             </div>
         </dialog>
 

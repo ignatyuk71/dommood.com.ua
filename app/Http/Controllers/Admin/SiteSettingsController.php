@@ -214,10 +214,9 @@ class SiteSettingsController extends Controller
                                 ['value' => 'required', 'label' => 'Обовʼязково'],
                             ], 'span' => 1],
                             ['name' => 'default_order_status', 'label' => 'Статус нового замовлення', 'type' => 'select', 'options' => [
-                                ['value' => 'awaiting_confirmation', 'label' => 'Очікує підтвердження'],
-                                ['value' => 'pending_payment', 'label' => 'Очікує оплату'],
-                                ['value' => 'processing', 'label' => 'В обробці'],
                                 ['value' => 'new', 'label' => 'Нове'],
+                                ['value' => 'confirmed', 'label' => 'Підтверджено'],
+                                ['value' => 'processing', 'label' => 'В роботі'],
                             ], 'span' => 1],
                             ['name' => 'min_order_amount', 'label' => 'Мінімальна сума, грн', 'type' => 'number', 'placeholder' => '0.00', 'span' => 1],
                             ['name' => 'one_click_enabled', 'label' => 'Замовлення в 1 клік', 'type' => 'toggle', 'span' => 1],

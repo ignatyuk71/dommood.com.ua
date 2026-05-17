@@ -37,7 +37,10 @@ class ProductImageOptimizer
         }
 
         $path = $directory.'/'.$filename.'.webp';
-        Storage::disk('public')->put($path, $binary);
+
+        if (! Storage::disk('public')->put($path, $binary)) {
+            throw new \RuntimeException('Не вдалося зберегти зображення товару.');
+        }
 
         return $path;
     }
@@ -70,7 +73,10 @@ class ProductImageOptimizer
             }
 
             $path = $directory.'/'.$baseFilename.'-'.$variant.'.webp';
-            Storage::disk($disk)->put($path, $binary);
+            if (! Storage::disk($disk)->put($path, $binary)) {
+                continue;
+            }
+
             $storedPaths[$variant] = $path;
         }
 

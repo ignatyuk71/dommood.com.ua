@@ -1,5 +1,12 @@
 @php
     $hasDiscount = (int) ($product['old_price_cents'] ?? 0) > (int) ($product['price_cents'] ?? 0);
+    $cardDescription = trim((string) ($product['short_description'] ?? ''));
+
+    if ($cardDescription === '') {
+        $cardDescription = trim(strip_tags((string) ($product['description'] ?? '')));
+    }
+
+    $cardDescription = \Illuminate\Support\Str::limit($cardDescription, 130);
 @endphp
 
 <article class="storefront-product-card" data-product-id="{{ $product['id'] }}">
@@ -32,6 +39,10 @@
                 <a href="{{ $productUrl($product) }}">{{ $product['name'] }}</a>
             </h3>
         </div>
+
+        @if ($cardDescription !== '')
+            <p>{{ $cardDescription }}</p>
+        @endif
 
         <div class="storefront-product-card__footer">
             <div class="storefront-product-price">

@@ -9,6 +9,8 @@ use App\Models\OrderStatusHistory;
 use App\Models\PaymentTransaction;
 use App\Models\ProductImage;
 use App\Services\AdminActivityLogger;
+use Carbon\CarbonImmutable;
+use DateTimeInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +23,8 @@ use Inertia\Response;
 
 class OrderController extends Controller
 {
+    private const ADMIN_TIMEZONE = 'Europe/Kyiv';
+
     private const STATUS_OPTIONS = [
         'new' => [
             'label' => 'Нове',
@@ -53,7 +57,7 @@ class OrderController extends Controller
     ];
 
     private const STATUS_GROUPS = [
-        'new' => ['new'],
+        'new' => ['new', 'awaiting_confirmation', 'pending_payment'],
         'in_work' => ['confirmed', 'processing', 'shipped'],
         'completed' => ['completed'],
         'returned' => ['returned', 'cancelled'],
@@ -122,7 +126,7 @@ class OrderController extends Controller
                 });
             })
             ->when(array_key_exists($filters['status'], self::STATUS_OPTIONS), function ($query) use ($filters): void {
-                $query->where('status', $filters['status']);
+                $query->whereIn('status', $this->statusFilterValues($filters['status']));
             }, function ($query) use ($filters): void {
                 if (isset(self::STATUS_GROUPS[$filters['status_group']])) {
                     $query->whereIn('status', self::STATUS_GROUPS[$filters['status_group']]);
@@ -260,16 +264,16 @@ class OrderController extends Controller
         return [
             'id' => $order->id,
             'order_number' => $order->order_number,
-            'created_at' => $order->created_at?->format('d.m.Y H:i'),
-            'status' => $order->status,
+            'created_at' => $this->adminDateTime($order->created_at),
+            'status' => $this->normalizeOrderStatus($order->status),
             'status_meta' => $this->statusMeta($order->status),
             'payment_status' => $order->payment_status,
             'payment_status_label' => self::PAYMENT_STATUS_LABELS[$order->payment_status] ?? $order->payment_status,
             'payment_method' => $order->payment_method,
-            'payment_method_label' => self::PAYMENT_METHOD_LABELS[$order->payment_method] ?? ($order->payment_method ?: 'Не вказано'),
+            'payment_method_label' => $this->paymentMethodLabel($order->payment_method),
             'payment_provider' => $order->payment_provider,
             'payment_reference' => $order->payment_reference,
-            'paid_at' => $order->paid_at?->format('d.m.Y H:i'),
+            'paid_at' => $this->adminDateTime($order->paid_at),
             'amount_due' => $this->formatMoney($this->amountDueCents($order), $order->currency),
             'payment_ui' => $this->paymentUi($order),
             'delivery_method' => $order->delivery_method,
@@ -292,6 +296,7 @@ class OrderController extends Controller
             'subtotal' => $this->formatMoney($order->subtotal_cents, $order->currency),
             'discount_total' => $this->formatMoney($order->discount_total_cents, $order->currency),
             'delivery_price' => $this->formatMoney($order->delivery_price_cents, $order->currency),
+            'has_free_delivery' => $this->hasFreeDelivery($order),
             'total' => $this->formatMoney($order->total_cents, $order->currency),
             'total_cents' => $order->total_cents,
             'comment' => $order->comment,
@@ -347,9 +352,9 @@ class OrderController extends Controller
             'amount' => $this->formatMoney($transaction->amount_cents, $transaction->currency ?: $currency),
             'is_test' => $transaction->is_test,
             'failure_reason' => $transaction->failure_reason,
-            'processed_at' => $transaction->processed_at?->format('d.m.Y H:i'),
-            'paid_at' => $transaction->paid_at?->format('d.m.Y H:i'),
-            'created_at' => $transaction->created_at?->format('d.m.Y H:i'),
+            'processed_at' => $this->adminDateTime($transaction->processed_at),
+            'paid_at' => $this->adminDateTime($transaction->paid_at),
+            'created_at' => $this->adminDateTime($transaction->created_at),
         ];
     }
 
@@ -383,7 +388,7 @@ class OrderController extends Controller
             'to_status_label' => $this->statusMeta($history->to_status)['label'],
             'comment' => $history->comment,
             'user_name' => $history->user?->name,
-            'created_at' => $history->created_at?->format('d.m.Y H:i'),
+            'created_at' => $this->adminDateTime($history->created_at),
         ];
     }
 
@@ -401,6 +406,7 @@ class OrderController extends Controller
 
     private function statusMeta(string $status): array
     {
+        $status = $this->normalizeOrderStatus($status);
         $meta = self::STATUS_OPTIONS[$status] ?? [
             'label' => $status,
             'class' => 'bg-slate-100 text-slate-600',
@@ -413,6 +419,22 @@ class OrderController extends Controller
         ];
     }
 
+    private function normalizeOrderStatus(?string $status): string
+    {
+        return match ($status) {
+            'awaiting_confirmation', 'pending_payment', null, '' => 'new',
+            default => $status,
+        };
+    }
+
+    private function statusFilterValues(string $status): array
+    {
+        return match ($status) {
+            'new' => self::STATUS_GROUPS['new'],
+            default => [$status],
+        };
+    }
+
     private function deliveryLine(Order $order): string
     {
         return collect([
@@ -421,6 +443,23 @@ class OrderController extends Controller
         ])
             ->filter(fn (?string $value): bool => trim((string) $value) !== '')
             ->first() ?? '';
+    }
+
+    private function hasFreeDelivery(Order $order): bool
+    {
+        if ((int) $order->delivery_price_cents > 0) {
+            return false;
+        }
+
+        $snapshot = $order->delivery_snapshot ?? [];
+
+        if (! is_array($snapshot)) {
+            return false;
+        }
+
+        $freeFromCents = (int) ($snapshot['free_from_cents'] ?? 0);
+
+        return $freeFromCents > 0 && (int) $order->subtotal_cents >= $freeFromCents;
     }
 
     private function sourceCode(Order $order): string
@@ -465,8 +504,8 @@ class OrderController extends Controller
     {
         $status = $order->payment_status ?: 'unpaid';
         $method = $order->payment_method ?: '';
-        $methodLabel = self::PAYMENT_METHOD_LABELS[$method] ?? ($method ?: 'Не вказано');
-        $isCashOnDelivery = in_array($method, ['cod', 'cash_on_delivery'], true) || $status === 'cod';
+        $methodLabel = $this->paymentMethodLabel($method);
+        $isCashOnDelivery = $this->isCashOnDeliveryMethod($method) || $status === 'cod';
         $amountDue = $this->amountDueCents($order);
 
         $tone = match ($status) {
@@ -499,9 +538,16 @@ class OrderController extends Controller
             'method_label' => $tone === 'cod' ? 'Післяплата' : $methodLabel,
             'status_label' => $statusLabel,
             'amount_label' => $amountLabel,
-            'paid_at' => $order->paid_at?->format('d.m.Y H:i'),
+            'paid_at' => $this->adminDateTime($order->paid_at),
             'reference' => $order->payment_reference,
         ];
+    }
+
+    private function adminDateTime(?DateTimeInterface $dateTime): ?string
+    {
+        return $dateTime
+            ? CarbonImmutable::instance($dateTime)->setTimezone(self::ADMIN_TIMEZONE)->format('d.m.Y H:i')
+            : null;
     }
 
     private function amountDueCents(Order $order): int
@@ -511,6 +557,50 @@ class OrderController extends Controller
         }
 
         return (int) $order->total_cents;
+    }
+
+    private function paymentMethodLabel(?string $method): string
+    {
+        $method = trim((string) $method);
+
+        if ($method === '') {
+            return 'Не вказано';
+        }
+
+        $normalized = str_replace('-', '_', mb_strtolower($method));
+
+        if (isset(self::PAYMENT_METHOD_LABELS[$normalized])) {
+            return self::PAYMENT_METHOD_LABELS[$normalized];
+        }
+
+        if ($this->isCashOnDeliveryMethod($normalized)) {
+            return 'Оплата при отриманні';
+        }
+
+        if (str_contains($normalized, 'liqpay')) {
+            return 'LiqPay';
+        }
+
+        if (str_contains($normalized, 'mono')) {
+            return 'Monobank';
+        }
+
+        if (str_contains($normalized, 'card')) {
+            return 'Оплата карткою';
+        }
+
+        return $method;
+    }
+
+    private function isCashOnDeliveryMethod(?string $method): bool
+    {
+        $method = str_replace('-', '_', mb_strtolower(trim((string) $method)));
+
+        return in_array($method, ['cod', 'cash_on_delivery'], true)
+            || str_contains($method, 'cash')
+            || str_contains($method, 'cod')
+            || str_contains($method, 'afterpay')
+            || str_contains($method, 'after_payment');
     }
 
     private function itemImageUrl(OrderItem $item, array $snapshot): ?string

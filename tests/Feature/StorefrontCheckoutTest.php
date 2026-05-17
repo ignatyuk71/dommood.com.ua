@@ -41,11 +41,15 @@ class StorefrontCheckoutTest extends TestCase
         ])->assertOk()
             ->assertJsonPath('items_count', 1)
             ->assertJsonPath('quantity_count', 1)
-            ->assertJsonPath('is_empty', false);
+            ->assertJsonPath('is_empty', false)
+            ->assertJsonPath('cart_summary.free_shipping_remaining_cents', 87500)
+            ->assertJsonPath('cart_summary.free_shipping_progress_percent', 27);
 
         $this->assertStringContainsString('data-cart-drawer', $response->json('drawer_html'));
         $this->assertStringContainsString('storefront-cart-drawer-shell is-open', $response->json('drawer_html'));
         $this->assertStringContainsString('Домашні капці Welcome Home', $response->json('drawer_html'));
+        $this->assertStringContainsString('storefront-cart-free-shipping', $response->json('drawer_html'));
+        $this->assertStringContainsString('Додайте ще 875 грн', $response->json('drawer_html'));
         $this->assertSame('Товар додано до кошика.', $response->json('status_message'));
     }
 
@@ -78,6 +82,22 @@ class StorefrontCheckoutTest extends TestCase
         ]);
     }
 
+    public function test_customer_cannot_add_zero_stock_variant_to_cart(): void
+    {
+        $product = $this->makeProduct();
+        $variant = $this->makeVariant($product, '36-37', 32500);
+        $variant->update(['stock_quantity' => 0]);
+
+        $this->postJson(route('cart.items.store'), [
+            'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
+            'quantity' => 1,
+        ])->assertStatus(422)
+            ->assertJsonValidationErrors('product_variant_id');
+
+        $this->assertDatabaseCount('cart_items', 0);
+    }
+
     public function test_checkout_creates_order_from_session_cart(): void
     {
         $product = $this->makeProduct();
@@ -108,6 +128,8 @@ class StorefrontCheckoutTest extends TestCase
         $order = Order::query()->with('items')->firstOrFail();
 
         $this->assertSame('Ірина Клименко', $order->customer_name);
+        $this->assertSame('new', $order->status);
+        $this->assertSame('unpaid', $order->payment_status);
         $this->assertSame('+380931112233', $order->customer_phone);
         $this->assertSame(32500, $order->total_cents);
         $this->assertCount(1, $order->items);
@@ -117,6 +139,13 @@ class StorefrontCheckoutTest extends TestCase
             'orders_count' => 1,
             'total_spent_cents' => 32500,
         ]);
+
+        $this->get(route('checkout.thank-you', $order->order_number))
+            ->assertOk()
+            ->assertViewIs('storefront.checkout.thank-you')
+            ->assertSee('Дякуємо, замовлення прийнято')
+            ->assertSee($order->order_number)
+            ->assertSee('Домашні капці Welcome Home');
     }
 
     public function test_promocode_discount_is_carried_to_order(): void

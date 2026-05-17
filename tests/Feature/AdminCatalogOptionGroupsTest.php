@@ -58,7 +58,7 @@ class AdminCatalogOptionGroupsTest extends TestCase
 
         $response->assertRedirect(route('admin.size-charts.index'));
 
-        $chart = SizeChart::query()->firstOrFail();
+        $chart = SizeChart::query()->where('code', 'slippers_women')->firstOrFail();
 
         $this->assertSame('slippers_women', $chart->code);
         $this->assertSame(['Розмір', 'Довжина стопи, см'], $chart->content_json['columns']);
@@ -101,6 +101,7 @@ class AdminCatalogOptionGroupsTest extends TestCase
             'title' => 'Капці жіночі',
             'code' => 'slippers_women',
             'image_path' => 'size-charts/1/slippers-women-dommood-20260506-120000.png',
+            'sort_order' => -10,
         ]);
         Storage::disk('public')->put($chart->image_path, 'image');
 

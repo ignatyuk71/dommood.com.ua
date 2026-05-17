@@ -59,7 +59,7 @@ class ContentPageController extends Controller
         $page = ContentPage::query()->create($this->payload($request->validated()));
 
         return redirect()
-            ->route('admin.pages.edit', $page)
+            ->route('admin.pages.index')
             ->with('success', 'Сторінку створено');
     }
 
@@ -77,7 +77,7 @@ class ContentPageController extends Controller
         $page->update($this->payload($request->validated(), $page->id));
 
         return redirect()
-            ->route('admin.pages.edit', $page)
+            ->route('admin.pages.index')
             ->with('success', 'Сторінку оновлено');
     }
 

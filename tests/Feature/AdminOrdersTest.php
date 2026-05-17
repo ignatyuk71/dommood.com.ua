@@ -8,6 +8,7 @@ use App\Models\OrderStatusHistory;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -45,6 +46,9 @@ class AdminOrdersTest extends TestCase
             'delivery_price_cents' => 7000,
             'total_cents' => 86900,
         ]);
+        $order->forceFill([
+            'created_at' => CarbonImmutable::parse('2026-05-15 03:43:00', 'UTC'),
+        ])->save();
         OrderItem::query()->create([
             'order_id' => $order->id,
             'product_id' => $product->id,
@@ -62,6 +66,7 @@ class AdminOrdersTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Admin/Orders/Index', false)
                 ->where('orders.data.0.order_number', '1001')
+                ->where('orders.data.0.created_at', '15.05.2026 06:43')
                 ->where('orders.data.0.delivery_line', 'Відділення №1')
                 ->where('orders.data.0.delivery_price', '70.00 грн')
                 ->where('orders.data.0.total', '869.00 грн')
@@ -72,6 +77,41 @@ class AdminOrdersTest extends TestCase
                 ->where('orders.data.0.source.label', 'Meta')
                 ->where('orders.data.0.items.0.product_name', 'Жіночі тапочки')
                 ->where('orders.data.0.thumbs.0', Storage::disk('public')->url('products/1/main.webp')));
+    }
+
+    public function test_admin_orders_index_normalizes_legacy_new_status_and_custom_cash_payment_code(): void
+    {
+        $user = User::factory()->create();
+
+        $order = $this->makeOrder([
+            'order_number' => '5001',
+            'status' => 'awaiting_confirmation',
+            'payment_method' => 'test_cash_on_delivery',
+            'payment_status' => 'unpaid',
+            'subtotal_cents' => 131800,
+            'delivery_price_cents' => 0,
+            'total_cents' => 131800,
+            'delivery_snapshot' => [
+                'base_price_cents' => 7000,
+                'free_from_cents' => 120000,
+                'is_free' => true,
+            ],
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('admin.orders.index', ['status_group' => 'new']))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Orders/Index', false)
+                ->where('orders.data.0.id', $order->id)
+                ->where('orders.data.0.status', 'new')
+                ->where('orders.data.0.status_meta.label', 'Нове')
+                ->where('orders.data.0.has_free_delivery', true)
+                ->where('orders.data.0.payment_method_label', 'Оплата при отриманні')
+                ->where('orders.data.0.payment_ui.tone', 'cod')
+                ->where('orders.data.0.payment_ui.method_label', 'Післяплата')
+                ->where('orders.data.0.payment_ui.status_label', 'При отриманні')
+                ->where('orders.data.0.payment_ui.amount_label', 'До оплати: 1 318.00 грн'));
     }
 
     public function test_admin_can_update_order_status_and_history_is_created(): void
@@ -256,6 +296,7 @@ class AdminOrdersTest extends TestCase
             'delivery_address' => $overrides['delivery_address'] ?? null,
             'delivery_branch' => $overrides['delivery_branch'] ?? 'Відділення №7',
             'delivery_branch_ref' => $overrides['delivery_branch_ref'] ?? null,
+            'delivery_snapshot' => $overrides['delivery_snapshot'] ?? [],
             'delivery_recipient_name' => $overrides['delivery_recipient_name'] ?? 'Ірина Клименко',
             'delivery_recipient_phone' => $overrides['delivery_recipient_phone'] ?? '380931112233',
             'customer_name' => $overrides['customer_name'] ?? 'Ірина Клименко',

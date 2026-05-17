@@ -179,7 +179,7 @@ const paymentIconClass = (tone) => ({
     unpaid: 'text-slate-500',
 }[tone] ?? 'text-slate-500');
 
-const paymentIcon = (order) => ['cod', 'cash_on_delivery'].includes(order.payment_method) ? Banknote : CreditCard;
+const paymentIcon = (order) => order.payment_ui?.tone === 'cod' ? Banknote : CreditCard;
 
 const highlightOrderRow = (orderId) => {
     highlightedIds.value = {
@@ -388,13 +388,13 @@ const deliveryCopyText = (order) => [
                                     </div>
                                 </td>
 
-                                <td class="px-3 py-2.5 text-right">
-                                    <div class="text-sm font-bold text-[#343241]">{{ order.total }}</div>
-                                    <span class="mt-1 inline-flex items-center justify-end gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ring-1 ring-inset" :class="order.source.class">
-                                        <span class="h-2 w-2 rounded-full" :class="sourceDotFor(order.source)"></span>
-                                        {{ sourceLabelFor(order.source) }}
-                                    </span>
-                                </td>
+	                                <td class="px-3 py-2.5 text-right">
+	                                    <div class="text-sm font-bold text-[#343241]">{{ order.total }}</div>
+	                                    <span class="mt-1 inline-flex items-center justify-end gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ring-1 ring-inset" :class="order.source.class">
+	                                        <span class="h-2 w-2 rounded-full" :class="sourceDotFor(order.source)"></span>
+	                                        {{ sourceLabelFor(order.source) }}
+	                                    </span>
+	                                </td>
 
                                 <td class="px-3 py-2.5">
                                     <div class="flex items-center gap-2">
@@ -443,9 +443,12 @@ const deliveryCopyText = (order) => [
                                                     <span class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ring-inset" :class="paymentPillClass(order.payment_ui.tone)">
                                                         {{ order.payment_ui.status_label }}
                                                     </span>
-                                                </div>
-                                                <div class="mt-0.5 truncate text-xs font-medium text-slate-500" :title="order.payment_ui.amount_label">{{ order.payment_ui.amount_label }}</div>
-                                                <div v-if="order.payment_ui.paid_at || order.payment_ui.reference" class="mt-1 flex min-w-0 flex-wrap gap-x-2 gap-y-0.5 text-[11px] font-semibold text-slate-400">
+	                                                </div>
+	                                                <div class="mt-0.5 truncate text-xs font-medium text-slate-500" :title="order.payment_ui.amount_label">{{ order.payment_ui.amount_label }}</div>
+	                                                <div v-if="order.has_free_delivery" class="mt-0.5 truncate text-[11px] font-bold text-orange-600">
+	                                                    Безкоштовна доставка
+	                                                </div>
+	                                                <div v-if="order.payment_ui.paid_at || order.payment_ui.reference" class="mt-1 flex min-w-0 flex-wrap gap-x-2 gap-y-0.5 text-[11px] font-semibold text-slate-400">
                                                     <span v-if="order.payment_ui.paid_at">Опл. {{ order.payment_ui.paid_at }}</span>
                                                     <span v-if="order.payment_ui.reference" class="truncate">ID {{ order.payment_ui.reference }}</span>
                                                 </div>

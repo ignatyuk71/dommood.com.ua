@@ -14,6 +14,8 @@ class SyncAdminRolesAndPermissions
 
     public function __invoke(bool $force = false): void
     {
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+
         if (self::$synced && ! $force && Role::query()->where('name', 'admin')->where('guard_name', 'web')->exists()) {
             return;
         }

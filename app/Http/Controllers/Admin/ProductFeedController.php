@@ -112,7 +112,7 @@ class ProductFeedController extends Controller
         }
 
         return redirect()
-            ->route('admin.product-feeds.edit', $product)
+            ->route('admin.product-feeds.index')
             ->with('success', 'Налаштування Product Feeds оновлено');
     }
 

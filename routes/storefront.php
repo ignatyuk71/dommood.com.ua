@@ -24,6 +24,9 @@ Route::get('/catalog/{categorySlug}/filter/{filterSegments?}', [CatalogControlle
     ->where('filterSegments', '.*')
     ->name('catalog.category.filter');
 Route::get('/catalog/{categorySlug}', [CatalogController::class, 'index'])->name('catalog.category');
+Route::post('/catalog/{categorySlug}/{productSlug}/reviews', [CatalogController::class, 'storeReview'])
+    ->middleware('throttle:10,1')
+    ->name('catalog.product.reviews.store');
 Route::get('/catalog/{categorySlug}/{productSlug}', [CatalogController::class, 'show'])->name('catalog.product');
 
 Route::get('/cart', [CartController::class, 'show'])->name('cart.show');

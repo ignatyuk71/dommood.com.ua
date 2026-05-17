@@ -65,7 +65,7 @@ class AdminProductFeedsTest extends TestCase
         ]);
 
         $response
-            ->assertRedirect(route('admin.product-feeds.edit', $product))
+            ->assertRedirect(route('admin.product-feeds.index'))
             ->assertSessionHas('success', 'Налаштування Product Feeds оновлено');
 
         $this->assertDatabaseHas('product_feed_configs', [

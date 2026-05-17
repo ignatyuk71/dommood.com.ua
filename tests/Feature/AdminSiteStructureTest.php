@@ -27,8 +27,9 @@ class AdminSiteStructureTest extends TestCase
                 ->where('menu.key', 'footer')
                 ->where('menu.name', 'Footer')
                 ->where('menus.0.key', 'main')
-                ->where('menus.1.key', 'footer')
-                ->where('menus.2.key', 'mobile'));
+                ->where('menus.1.key', 'utility')
+                ->where('menus.2.key', 'footer')
+                ->where('menus.3.key', 'mobile'));
 
         $this->assertDatabaseHas('menus', [
             'slug' => 'footer',
@@ -254,7 +255,7 @@ class AdminSiteStructureTest extends TestCase
         $this->actingAs($user)->put(route('admin.site-structure.items.update', ['main', $created->id]), [
             'title' => 'Оплата і доставка',
             'type' => 'custom_url',
-            'url' => '/payment-delivery',
+            'url' => '/oplata-i-dostavka',
             'target' => '_self',
             'is_active' => true,
         ])->assertRedirect(route('admin.site-structure.show', 'main'));
@@ -267,7 +268,7 @@ class AdminSiteStructureTest extends TestCase
         $this->assertSame('Доставка', $updateLog->old_values['title']);
         $this->assertSame('Оплата і доставка', $updateLog->new_values['title']);
         $this->assertSame('/delivery', $updateLog->old_values['url']);
-        $this->assertSame('/payment-delivery', $updateLog->new_values['url']);
+        $this->assertSame('/oplata-i-dostavka', $updateLog->new_values['url']);
 
         $this->actingAs($user)->postJson(route('admin.site-structure.reorder', 'main'), [
             'tree' => [

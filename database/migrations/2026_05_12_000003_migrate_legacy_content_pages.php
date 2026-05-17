@@ -116,7 +116,7 @@ return new class extends Migration
                 'menu_title' => 'Оплата і доставка',
                 'slug' => 'oplata-i-dostavka',
                 'legacy_slugs' => [],
-                'meta_description' => 'Умови оплати і доставки DomMood: Нова пошта, безкоштовна доставка від 1200 грн та способи оплати.',
+                'meta_description' => 'Умови оплати і доставки DomMood: Нова пошта, безкоштовна доставка від 1 200 грн та способи оплати.',
                 'content' => $this->paymentAndDeliveryContent(),
             ],
             [
@@ -137,7 +137,7 @@ return new class extends Migration
     <section class="info-page__section">
         <h2>Доставка</h2>
         <p>Інтернет-магазин <strong>DomMood</strong> здійснює доставку товарів по всій Україні та за кордон.</p>
-        <p><strong>Безкоштовна доставка від 1200 грн.</strong></p>
+        <p><strong>Безкоштовна доставка від 1 200 грн.</strong></p>
     </section>
 
     <section class="info-page__section">

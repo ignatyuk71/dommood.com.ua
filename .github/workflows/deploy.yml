@@ -1,0 +1,56 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build assets
+        run: npm run build
+
+      - name: Setup SSH
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          # Ключ зберігаємо в GitHub Secrets у base64, щоб не ламати формат переносами рядків.
+          printf '%s' "${{ secrets.SERVER_SSH_KEY_B64 }}" | tr -d '\r\n ' | base64 -d > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p ${{ secrets.SERVER_PORT }} -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Upload deploy script
+        run: |
+          scp -P ${{ secrets.SERVER_PORT }} deploy/server-deploy.sh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/dommood.com.ua/deploy.sh
+          ssh -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} 'chmod +x /var/www/dommood.com.ua/deploy.sh'
+
+      - name: Upload build to server
+        run: |
+          ssh -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} 'rm -rf /var/www/dommood.com.ua/shared/build'
+          scp -r -P ${{ secrets.SERVER_PORT }} public/build ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/dommood.com.ua/shared/
+
+      - name: Deploy via SSH
+        run: |
+          ssh -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} 'bash /var/www/dommood.com.ua/deploy.sh'
