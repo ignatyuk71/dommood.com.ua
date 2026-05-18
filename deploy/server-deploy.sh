@@ -7,7 +7,6 @@ BRANCH="main"
 TS="$(date +%F_%H%M%S)"
 KEEP_RELEASES="${KEEP_RELEASES:-5}"
 RELEASE_DIR="$APP_DIR/releases/$TS"
-PREVIOUS_CURRENT="$(readlink -f "$APP_DIR/current" 2>/dev/null || true)"
 DEPLOY_UID="$(id -u)"
 
 make_writable_for_deploy() {
@@ -52,9 +51,6 @@ fi
 
 rm -rf "$RELEASE_DIR/public/build"
 mkdir -p "$RELEASE_DIR/public/build"
-if [ -n "$PREVIOUS_CURRENT" ] && [ -d "$PREVIOUS_CURRENT/public/build" ]; then
-  cp -a "$PREVIOUS_CURRENT/public/build/." "$RELEASE_DIR/public/build/"
-fi
 cp -a "$APP_DIR/shared/build/." "$RELEASE_DIR/public/build/"
 chmod -R a+rX "$RELEASE_DIR/public/build"
 rm -rf "$APP_DIR/shared/build"
@@ -63,10 +59,9 @@ make_writable_for_deploy "$APP_DIR/shared/storage" "$APP_DIR/shared/bootstrap/ca
 
 ln -sfn "$RELEASE_DIR" "$APP_DIR/current"
 
-if command -v systemctl >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
-  sudo -n /usr/bin/systemctl reload php8.4-fpm
-else
-  echo "DEPLOY_WARN: php-fpm reload пропущено, бо deploy не має passwordless sudo"
+if ! sudo -n /usr/bin/systemctl reload php8.4-fpm; then
+  echo "DEPLOY_FAILED: php-fpm reload не виконано, opcache може віддавати старий release"
+  exit 1
 fi
 
 cd "$APP_DIR/releases"
