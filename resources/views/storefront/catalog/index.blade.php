@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        @include('partials.site-noindex')
         <title>{{ $seo['title'] ?? ($category?->name ? $category->name.' - '.$storeName : 'Каталог - '.$storeName) }}</title>
         <meta name="description" content="{{ $seo['meta_description'] ?? ($category?->description ?: 'Каталог товарів '.$storeName) }}">
         @if ($metaRobots)

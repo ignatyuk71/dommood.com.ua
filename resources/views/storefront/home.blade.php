@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        @include('partials.site-noindex')
         <title>{{ $storeName }} - товари для дому та щоденного затишку</title>
         <meta name="description" content="{{ $storeName }}: категорії, новинки, актуальні ціни та наявність для швидкої покупки онлайн.">
         <link rel="canonical" href="{{ url('/') }}">

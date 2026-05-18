@@ -12,6 +12,27 @@ use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\PageController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/robots.txt', function () {
+    $lines = config('seo.noindex_site')
+        ? [
+            'User-agent: *',
+            'Disallow: /',
+        ]
+        : [
+            'User-agent: *',
+            'Disallow: /admin',
+            'Disallow: /login',
+            'Disallow: /register',
+            'Disallow: /cart',
+            'Disallow: /checkout',
+            'Sitemap: '.url('/sitemap.xml'),
+        ];
+
+    return response(implode("\n", $lines)."\n", 200, [
+        'Content-Type' => 'text/plain; charset=UTF-8',
+    ]);
+})->name('robots');
+
 Route::get('/', HomeController::class)->name('home');
 Route::redirect('/bezkoshtovne-povernennia', '/bezkoshtovne-povernennia-novoiu-poshtoiu', 301);
 Route::redirect('/bezkoshtovne-povernennia/', '/bezkoshtovne-povernennia-novoiu-poshtoiu', 301);

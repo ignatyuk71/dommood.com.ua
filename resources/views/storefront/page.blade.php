@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        @include('partials.site-noindex')
         <title>{{ $seo['title'] ?? $page->title }}</title>
         <meta name="description" content="{{ $seo['meta_description'] ?? ($page->meta_description ?: $page->title) }}">
         <link rel="canonical" href="{{ $seo['canonical_url'] ?? url('/'.$page->slug) }}">
