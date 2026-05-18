@@ -305,6 +305,12 @@
     margin-left: 0.35rem;
 }
 
+.product-sku {
+    margin-left: auto;
+    text-align: right;
+    white-space: nowrap;
+}
+
 .product-sku b {
     color: #666;
     font-weight: 500;
