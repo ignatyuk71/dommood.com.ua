@@ -150,7 +150,7 @@ const fillEmptyFields = () => {
             </button>
         </div>
 
-        <div class="mt-5 grid gap-5" :class="compact ? 'xl:grid-cols-1' : 'xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.86fr)]'">
+        <div class="mt-5 grid gap-5">
             <div class="space-y-5">
                 <div>
                     <label class="flex items-center justify-between gap-3 text-sm font-bold text-slate-700" :for="`${fieldIdPrefix}_meta_title`">
@@ -225,46 +225,48 @@ const fillEmptyFields = () => {
                     </span>
                 </div>
 
-                <div class="mt-5 rounded-xl border border-slate-100 bg-[#fbfcff] p-4">
-                    <div class="flex items-start gap-3">
-                        <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eef2ff] text-xs font-black text-[#4c51bf]">
-                            DM
+                <div class="mt-5 grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(220px,3fr)]">
+                    <div class="rounded-xl border border-slate-100 bg-[#fbfcff] p-4">
+                        <div class="flex items-start gap-3">
+                            <div class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eef2ff] text-xs font-black text-[#4c51bf]">
+                                DM
+                            </div>
+                            <div class="min-w-0">
+                                <div class="truncate text-sm font-semibold text-slate-700">{{ entityName }}</div>
+                                <div class="truncate text-xs font-medium text-slate-500">{{ previewDisplayUrl }}</div>
+                            </div>
                         </div>
-                        <div class="min-w-0">
-                            <div class="truncate text-sm font-semibold text-slate-700">{{ entityName }}</div>
-                            <div class="truncate text-xs font-medium text-slate-500">{{ previewDisplayUrl }}</div>
+
+                        <div class="mt-4">
+                            <div class="break-words text-xl font-medium leading-6 text-[#1a0dab]">
+                                {{ previewTitle }}
+                            </div>
+                            <div class="mt-1 break-words text-sm font-medium leading-6 text-[#12823b]">
+                                {{ previewDisplayUrl }}
+                            </div>
+                            <p class="mt-2 text-sm font-medium leading-6 text-slate-600">
+                                {{ previewDescription }}
+                            </p>
                         </div>
                     </div>
 
-                    <div class="mt-4">
-                        <div class="break-words text-xl font-medium leading-6 text-[#1a0dab]">
-                            {{ previewTitle }}
+                    <div class="grid content-start gap-2 text-xs font-bold text-slate-500">
+                        <div class="rounded-lg bg-slate-50 px-3 py-2">
+                            Title:
+                            <span :class="stateClass(titleState)">
+                                {{ titleState === 'empty' ? 'fallback' : 'ok' }}
+                            </span>
                         </div>
-                        <div class="mt-1 break-words text-sm font-medium leading-6 text-[#12823b]">
-                            {{ previewDisplayUrl }}
+                        <div class="rounded-lg bg-slate-50 px-3 py-2">
+                            Description:
+                            <span :class="stateClass(descriptionState)">
+                                {{ descriptionState === 'empty' ? 'fallback' : 'ok' }}
+                            </span>
                         </div>
-                        <p class="mt-2 text-sm font-medium leading-6 text-slate-600">
-                            {{ previewDescription }}
-                        </p>
-                    </div>
-                </div>
-
-                <div class="mt-4 grid gap-2 text-xs font-bold text-slate-500 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
-                    <div class="rounded-lg bg-slate-50 px-3 py-2">
-                        Title:
-                        <span :class="stateClass(titleState)">
-                            {{ titleState === 'empty' ? 'fallback' : 'ok' }}
-                        </span>
-                    </div>
-                    <div class="rounded-lg bg-slate-50 px-3 py-2">
-                        Description:
-                        <span :class="stateClass(descriptionState)">
-                            {{ descriptionState === 'empty' ? 'fallback' : 'ok' }}
-                        </span>
-                    </div>
-                    <div class="rounded-lg bg-slate-50 px-3 py-2">
-                        URL:
-                        <span class="text-emerald-600">canonical</span>
+                        <div class="rounded-lg bg-slate-50 px-3 py-2">
+                            URL:
+                            <span class="text-emerald-600">canonical</span>
+                        </div>
                     </div>
                 </div>
             </div>

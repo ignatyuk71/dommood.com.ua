@@ -84,33 +84,51 @@ const submit = () => {
         </template>
 
         <form class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]" @submit.prevent="submit">
-            <section class="rounded-lg bg-white p-4 shadow-[0_16px_45px_rgba(61,58,101,0.08)]">
-                <div class="grid gap-4">
-                    <div>
-                        <label class="text-sm font-bold text-slate-700" for="title">Назва</label>
-                        <input
-                            id="title"
-                            v-model="form.title"
-                            type="text"
-                            class="mt-1 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
-                            placeholder="Напр., Оплата і доставка"
-                        />
-                        <InputError class="mt-1" :message="form.errors.title" />
-                    </div>
+            <section class="space-y-4">
+                <div class="rounded-lg bg-white p-4 shadow-[0_16px_45px_rgba(61,58,101,0.08)]">
+                    <div class="grid gap-4">
+                        <div>
+                            <label class="text-sm font-bold text-slate-700" for="title">Назва</label>
+                            <input
+                                id="title"
+                                v-model="form.title"
+                                type="text"
+                                class="mt-1 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
+                                placeholder="Напр., Оплата і доставка"
+                            />
+                            <InputError class="mt-1" :message="form.errors.title" />
+                        </div>
 
-                    <div>
-                        <label class="text-sm font-bold text-slate-700" for="content">Контент</label>
-                        <textarea
-                            id="content"
-                            v-model="form.content"
-                            rows="18"
-                            class="mt-1 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
-                            placeholder="<h2>Доставка</h2><p>Текст сторінки...</p>"
-                        />
-                        <p class="mt-1 text-xs font-medium text-slate-500">Можна вводити HTML для заголовків, списків і посилань.</p>
-                        <InputError class="mt-1" :message="form.errors.content" />
+                        <div>
+                            <label class="text-sm font-bold text-slate-700" for="content">Контент</label>
+                            <textarea
+                                id="content"
+                                v-model="form.content"
+                                rows="18"
+                                class="mt-1 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
+                                placeholder="<h2>Доставка</h2><p>Текст сторінки...</p>"
+                            />
+                            <p class="mt-1 text-xs font-medium text-slate-500">Можна вводити HTML для заголовків, списків і посилань.</p>
+                            <InputError class="mt-1" :message="form.errors.content" />
+                        </div>
                     </div>
                 </div>
+
+                <SeoSnippetEditor
+                    v-model:title="form.meta_title"
+                    v-model:description="form.meta_description"
+                    v-model:canonical-url="form.canonical_url"
+                    :show-seo-text="false"
+                    :title-fallback="pageTitleFallback"
+                    :description-fallback="pageDescriptionFallback"
+                    :url-fallback="pageUrlPreview"
+                    field-id-prefix="content_page_seo"
+                    title-placeholder="Оплата і доставка | DomMood"
+                    description-placeholder="Короткий опис сторінки для Google"
+                    canonical-placeholder="/oplata-i-dostavka"
+                    intro="SEO для контентних сторінок допомагає Google, рекламі й користувачам правильно бачити службові сторінки магазину."
+                    :errors="form.errors"
+                />
             </section>
 
             <aside class="space-y-4">
@@ -167,22 +185,6 @@ const submit = () => {
                     </div>
                 </section>
 
-                <SeoSnippetEditor
-                    v-model:title="form.meta_title"
-                    v-model:description="form.meta_description"
-                    v-model:canonical-url="form.canonical_url"
-                    :show-seo-text="false"
-                    :title-fallback="pageTitleFallback"
-                    :description-fallback="pageDescriptionFallback"
-                    :url-fallback="pageUrlPreview"
-                    field-id-prefix="content_page_seo"
-                    title-placeholder="Оплата і доставка | DomMood"
-                    description-placeholder="Короткий опис сторінки для Google"
-                    canonical-placeholder="/oplata-i-dostavka"
-                    intro="SEO для контентних сторінок допомагає Google, рекламі й користувачам правильно бачити службові сторінки магазину."
-                    compact
-                    :errors="form.errors"
-                />
             </aside>
         </form>
     </AuthenticatedLayout>
