@@ -79,7 +79,7 @@
 
 .product-gallery__item {
     align-items: center;
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 1 / 1;
     background: var(--product-photo);
     border-radius: 0;
     cursor: zoom-in;
@@ -97,7 +97,8 @@
 
 .product-gallery__item img {
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
+    object-position: center;
     width: 100%;
 }
 
@@ -2019,7 +2020,7 @@
 
     .product-gallery__item,
     .product-gallery__item:first-child {
-        aspect-ratio: 4 / 5;
+        aspect-ratio: 1 / 1;
         flex: 0 0 min(84vw, 420px);
         grid-column: auto;
     }
