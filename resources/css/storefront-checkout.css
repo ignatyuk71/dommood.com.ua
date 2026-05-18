@@ -868,3 +868,126 @@
 .storefront-thankyou-actions .storefront-checkout-btn {
     width: 100%;
 }
+
+@media (max-width: 991.98px) {
+    .storefront-checkout-shell,
+    .storefront-checkout-layout,
+    .storefront-thankyou-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .storefront-checkout-summary,
+    .storefront-thankyou-summary {
+        position: static;
+        top: auto;
+        width: 100%;
+    }
+
+    .storefront-checkout-delivery-options {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .storefront-checkout-shell {
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .storefront-checkout-main-page,
+    .storefront-thankyou-page {
+        padding-top: 0.85rem;
+    }
+
+    .storefront-checkout-layout,
+    .storefront-checkout-flow {
+        gap: 1rem;
+    }
+
+    .storefront-checkout-title h1 {
+        font-size: clamp(1.72rem, 9vw, 2.2rem);
+    }
+
+    .storefront-checkout-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .storefront-checkout-notice,
+    .storefront-checkout-card__head {
+        grid-template-columns: 32px minmax(0, 1fr);
+    }
+
+    .storefront-checkout-card__head > span,
+    .storefront-checkout-notice__icon {
+        height: 32px;
+        width: 32px;
+    }
+
+    .storefront-checkout-option {
+        grid-template-columns: 20px minmax(0, 1fr);
+    }
+
+    .storefront-checkout-option b {
+        font-size: 1.12rem;
+        grid-column: 2;
+        justify-self: start;
+    }
+
+    .storefront-checkout-comment-toggle {
+        display: inline-flex;
+    }
+
+    .storefront-checkout-summary {
+        order: 2;
+    }
+
+    .storefront-checkout-summary__card {
+        padding: 1rem;
+    }
+
+    .storefront-checkout-summary__line,
+    .storefront-checkout-totals,
+    .storefront-checkout-summary .storefront-checkout-terms {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .storefront-checkout-totals > div {
+        gap: 1rem;
+    }
+
+    .storefront-checkout-totals strong {
+        font-size: 1.2rem;
+        overflow-wrap: anywhere;
+        text-align: right;
+    }
+
+    .storefront-checkout-totals .is-grand strong {
+        font-size: 1.34rem;
+    }
+
+    .storefront-checkout-order-item {
+        align-items: start;
+        gap: 0.75rem;
+        grid-template-columns: 58px minmax(0, 1fr);
+    }
+
+    .storefront-checkout-order-item__actions,
+    .storefront-checkout-order-item__meta {
+        grid-column: 2;
+        justify-self: start;
+    }
+
+    .storefront-checkout-order-item__meta {
+        justify-items: start;
+        white-space: normal;
+    }
+
+    .storefront-checkout-order-item__meta strong {
+        font-size: 0.96rem;
+    }
+
+    .storefront-thankyou-hero {
+        grid-template-columns: 44px minmax(0, 1fr);
+    }
+}
