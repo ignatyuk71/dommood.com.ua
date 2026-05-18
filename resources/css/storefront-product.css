@@ -97,7 +97,7 @@
 
 .product-gallery__item img {
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     width: 100%;
 }
 
@@ -2019,7 +2019,7 @@
 
     .product-gallery__item,
     .product-gallery__item:first-child {
-        aspect-ratio: 1 / 1.16;
+        aspect-ratio: 4 / 5;
         flex: 0 0 min(84vw, 420px);
         grid-column: auto;
     }
