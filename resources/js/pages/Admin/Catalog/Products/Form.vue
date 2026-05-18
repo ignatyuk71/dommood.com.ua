@@ -6,6 +6,7 @@ import {
     ArrowLeft,
     GripVertical,
     ImagePlus,
+    Pencil,
     Plus,
     Save,
     Search,
@@ -836,30 +837,37 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div class="rounded-lg bg-white p-5 shadow-[0_16px_45px_rgba(61,58,101,0.08)]">
-                    <div class="border-b border-slate-100 pb-4">
-                        <h2 class="text-lg font-bold text-[#343241]">Характеристики</h2>
-                        <p class="mt-1 text-sm text-slate-500">Ці значення потрапляють у фільтри й SEO URL категорій.</p>
+                    <div class="flex flex-col gap-2 border-b border-slate-100 pb-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <h2 class="text-lg font-bold text-[#343241]">Характеристики</h2>
+                            <p class="mt-1 text-sm text-slate-500">Ці значення потрапляють у фільтри й SEO URL категорій.</p>
+                        </div>
+                        <span class="inline-flex h-8 items-center rounded-lg bg-slate-50 px-3 text-xs font-black text-slate-500">
+                            {{ attributeRows.length }} вибрано
+                        </span>
                     </div>
 
-                    <div class="mt-5 grid gap-5 lg:grid-cols-[minmax(260px,0.8fr)_minmax(0,1.2fr)]">
-                        <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                            <label class="text-sm font-bold text-slate-700">Характеристика</label>
-                            <select
-                                v-model="attributeDraft.attribute_id"
-                                class="mt-2 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
-                                @change="attributeDraft.attribute_value_id = ''"
-                            >
-                                <option value="">Оберіть характеристику</option>
-                                <option v-for="attribute in availableAttributesFor()" :key="attribute.id" :value="attribute.id">
-                                    {{ attribute.name }}
-                                </option>
-                            </select>
+                    <div class="mt-5 rounded-xl border border-slate-100 bg-slate-50 p-3">
+                        <div class="grid gap-3 lg:grid-cols-[minmax(180px,1fr)_minmax(180px,1fr)_auto_auto] lg:items-end">
+                            <div>
+                                <label class="text-xs font-black uppercase tracking-wide text-slate-500">Характеристика</label>
+                                <select
+                                    v-model="attributeDraft.attribute_id"
+                                    class="mt-1 h-10 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
+                                    @change="attributeDraft.attribute_value_id = ''"
+                                >
+                                    <option value="">Оберіть характеристику</option>
+                                    <option v-for="attribute in availableAttributesFor()" :key="attribute.id" :value="attribute.id">
+                                        {{ attribute.name }}
+                                    </option>
+                                </select>
+                            </div>
 
-                            <div class="mt-4">
-                                <label class="text-sm font-bold text-slate-700">Значення</label>
+                            <div>
+                                <label class="text-xs font-black uppercase tracking-wide text-slate-500">Значення</label>
                                 <select
                                     v-model="attributeDraft.attribute_value_id"
-                                    class="mt-2 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
+                                    class="mt-1 h-10 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
                                     :disabled="!attributeDraft.attribute_id"
                                 >
                                     <option value="">—</option>
@@ -869,73 +877,109 @@ onBeforeUnmount(() => {
                                 </select>
                             </div>
 
-                            <div class="mt-5 flex gap-2">
-                                <button
-                                    type="button"
-                                    class="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#7561f7] px-4 text-sm font-bold text-white disabled:opacity-50"
-                                    :disabled="!attributeDraft.attribute_id || !attributeDraft.attribute_value_id"
-                                    @click="addAttribute"
-                                >
-                                    <Plus class="h-4 w-4" />
-                                    Додати
-                                </button>
-                                <button type="button" class="rounded-lg border border-slate-200 px-4 text-sm font-bold text-slate-600" @click="resetAttributeDraft">
-                                    Скасувати
-                                </button>
-                            </div>
+                            <button
+                                type="button"
+                                class="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#7561f7] px-4 text-sm font-bold text-white disabled:opacity-50"
+                                :disabled="!attributeDraft.attribute_id || !attributeDraft.attribute_value_id"
+                                @click="addAttribute"
+                            >
+                                <Plus class="h-4 w-4" />
+                                Додати
+                            </button>
+
+                            <button
+                                type="button"
+                                class="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-bold text-slate-600 transition hover:border-[#7561f7] hover:text-[#7561f7]"
+                                @click="resetAttributeDraft"
+                            >
+                                Очистити
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <div v-if="!attributeRows.length" class="rounded-xl border border-dashed border-slate-200 px-4 py-6 text-center text-sm font-semibold text-slate-500">
+                            Характеристик ще немає.
                         </div>
 
-                        <div>
-                            <div v-if="!attributeRows.length" class="rounded-xl border border-dashed border-slate-200 px-4 py-8 text-center text-sm font-semibold text-slate-500">
-                                Характеристик ще немає.
+                        <div v-else class="overflow-hidden rounded-xl border border-slate-100">
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-slate-100 text-left text-sm">
+                                    <thead class="bg-slate-50 text-xs font-black uppercase tracking-wide text-slate-500">
+                                        <tr>
+                                            <th class="w-10 px-3 py-2"></th>
+                                            <th class="px-3 py-2">Характеристика</th>
+                                            <th class="px-3 py-2">Значення</th>
+                                            <th class="w-24 px-3 py-2 text-right">Дії</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 bg-white">
+                                        <tr
+                                            v-for="(row, index) in attributeRows"
+                                            :key="row.uid"
+                                            draggable="true"
+                                            class="transition hover:bg-slate-50/80"
+                                            @dragstart="dragAttributeIndex = index"
+                                            @dragover.prevent
+                                            @drop="onAttributeDrop(index)"
+                                        >
+                                            <td class="px-3 py-2 align-middle">
+                                                <span class="inline-flex h-8 w-8 cursor-grab items-center justify-center rounded-lg text-slate-400 transition hover:bg-[#f3f2ff] hover:text-[#7561f7]">
+                                                    <GripVertical class="h-4 w-4" />
+                                                </span>
+                                            </td>
+                                            <td class="min-w-48 px-3 py-2 align-middle">
+                                                <select
+                                                    v-if="row.is_editing"
+                                                    v-model="row.attribute_id"
+                                                    class="h-9 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
+                                                    @change="row.attribute_value_id = ''"
+                                                >
+                                                    <option v-for="attribute in availableAttributesFor(row)" :key="attribute.id" :value="attribute.id">
+                                                        {{ attribute.name }}
+                                                    </option>
+                                                </select>
+                                                <span v-else class="font-bold text-[#343241]">{{ attributeName(row) }}</span>
+                                            </td>
+                                            <td class="min-w-48 px-3 py-2 align-middle">
+                                                <select
+                                                    v-if="row.is_editing"
+                                                    v-model="row.attribute_value_id"
+                                                    class="h-9 w-full rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
+                                                >
+                                                    <option v-for="value in attributeValuesFor(row.attribute_id)" :key="value.id" :value="value.id">
+                                                        {{ value.value }}
+                                                    </option>
+                                                </select>
+                                                <span v-else class="font-semibold text-slate-600">{{ attributeValueLabel(row) }}</span>
+                                            </td>
+                                            <td class="px-3 py-2 align-middle">
+                                                <div class="flex justify-end gap-1">
+                                                    <button
+                                                        type="button"
+                                                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:border-[#7561f7] hover:text-[#7561f7]"
+                                                        :aria-label="row.is_editing ? 'Закрити редагування характеристики' : 'Редагувати характеристику'"
+                                                        :title="row.is_editing ? 'Закрити' : 'Редагувати'"
+                                                        @click="row.is_editing = !row.is_editing"
+                                                    >
+                                                        <Save v-if="row.is_editing" class="h-4 w-4" />
+                                                        <Pencil v-else class="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        class="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-red-100 text-red-600 transition hover:bg-red-50"
+                                                        aria-label="Видалити характеристику"
+                                                        title="Видалити"
+                                                        @click="removeAttribute(index)"
+                                                    >
+                                                        <Trash2 class="h-4 w-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-                            <ul v-else class="space-y-3">
-                                <li
-                                    v-for="(row, index) in attributeRows"
-                                    :key="row.uid"
-                                    draggable="true"
-                                    class="flex items-start gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-[0_6px_16px_rgba(15,23,42,0.08)]"
-                                    @dragstart="dragAttributeIndex = index"
-                                    @dragover.prevent
-                                    @drop="onAttributeDrop(index)"
-                                >
-                                    <span class="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#f3f2ff] text-[#7561f7]">
-                                        <GripVertical class="h-4 w-4" />
-                                    </span>
-                                    <div class="min-w-0 flex-1">
-                                        <div class="font-bold text-[#343241]">{{ attributeName(row) }}</div>
-                                        <div class="mt-1 text-sm font-semibold text-slate-500">{{ attributeValueLabel(row) }}</div>
-
-                                        <div v-if="row.is_editing" class="mt-3 grid gap-3 md:grid-cols-2">
-                                            <select
-                                                v-model="row.attribute_id"
-                                                class="rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
-                                                @change="row.attribute_value_id = ''"
-                                            >
-                                                <option v-for="attribute in availableAttributesFor(row)" :key="attribute.id" :value="attribute.id">
-                                                    {{ attribute.name }}
-                                                </option>
-                                            </select>
-                                            <select
-                                                v-model="row.attribute_value_id"
-                                                class="rounded-lg border-slate-200 text-sm shadow-sm focus:border-[#7561f7] focus:ring-[#7561f7]"
-                                            >
-                                                <option v-for="value in attributeValuesFor(row.attribute_id)" :key="value.id" :value="value.id">
-                                                    {{ value.value }}
-                                                </option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="flex shrink-0 flex-col gap-2">
-                                        <button type="button" class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600" @click="row.is_editing = !row.is_editing">
-                                            {{ row.is_editing ? 'Закрити' : 'Редагувати' }}
-                                        </button>
-                                        <button type="button" class="rounded-lg border border-red-100 px-3 py-2 text-xs font-bold text-red-600" @click="removeAttribute(index)">
-                                            Видалити
-                                        </button>
-                                    </div>
-                                </li>
-                            </ul>
                         </div>
                     </div>
                     <InputError class="mt-2" :message="form.errors.attribute_value_ids" />
