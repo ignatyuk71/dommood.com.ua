@@ -3,7 +3,7 @@
     $cleanFooterPhone = preg_replace('/[^0-9+]/', '', $footerPhone);
     $messengerFooterPhone = ltrim($cleanFooterPhone, '+');
     $footerEmail = $supportEmail ?: 'dommood.com.ua@gmail.com';
-    $footerAddress = 'м.Костопіль, вул. Рівненська, 107, Рівненська область, Україна, 35000';
+    $footerAddress = 'с.Постійне вул. Б.Хмельницького ,5, Рівненська область, Україна,';
     $footerSocialLinks = [
         ['title' => 'Instagram', 'url' => 'https://www.instagram.com/dommood.store/', 'icon' => 'instagram'],
         ['title' => 'TikTok', 'url' => 'https://www.tiktok.com/@dommood.com.ua', 'icon' => 'tiktok'],

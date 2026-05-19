@@ -122,6 +122,25 @@
             }
 
             $schemas = collect($schemas ?? [])->filter()->values();
+            $faqItems = collect($faqItems ?? [])->filter(fn (array $item): bool => filled($item['question'] ?? null) && filled($item['answer'] ?? null))->values();
+
+            if ($faqItems->isNotEmpty()) {
+                $schemas->push([
+                    '@context' => 'https://schema.org',
+                    '@type' => 'FAQPage',
+                    'mainEntity' => $faqItems
+                        ->map(fn (array $item): array => [
+                            '@type' => 'Question',
+                            'name' => $item['question'],
+                            'acceptedAnswer' => [
+                                '@type' => 'Answer',
+                                'text' => $item['answer'],
+                            ],
+                        ])
+                        ->all(),
+                ]);
+            }
+
             $breadcrumbs = [
                 ['label' => 'Головна', 'url' => route('home')],
                 ['label' => 'Каталог', 'url' => url('/catalog')],
@@ -655,6 +674,30 @@
                         </div>
                     </div>
                 </section>
+
+                @if ($faqItems->isNotEmpty())
+                    <section class="product-faq" aria-labelledby="product-faq-title">
+                        <div class="container">
+                            <div class="storefront-section-heading">
+                                <div>
+                                    <h2 id="product-faq-title">Питання про товар</h2>
+                                    <p>Короткі відповіді про розмір, догляд, доставку та повернення.</p>
+                                </div>
+                            </div>
+                            <div class="product-faq__grid">
+                                @foreach ($faqItems as $faqItem)
+                                    <details class="product-faq__item">
+                                        <summary>
+                                            <span>{{ $faqItem['question'] }}</span>
+                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                                        </summary>
+                                        <p>{{ $faqItem['answer'] }}</p>
+                                    </details>
+                                @endforeach
+                            </div>
+                        </div>
+                    </section>
+                @endif
             </main>
 
             @include('storefront.partials.site-footer')
