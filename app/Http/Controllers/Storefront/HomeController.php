@@ -10,9 +10,9 @@ use App\Models\Menu;
 use App\Models\MenuItem;
 use App\Models\Product;
 use App\Models\ProductImage;
-use App\Models\ProductVariant;
 use App\Services\SiteSettingsService;
 use App\Services\Storefront\DeliveryPolicyService;
+use App\Services\Storefront\ProductAvailabilityService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -26,6 +26,7 @@ class HomeController extends Controller
     public function __construct(
         private readonly SiteSettingsService $settings,
         private readonly DeliveryPolicyService $deliveryPolicy,
+        private readonly ProductAvailabilityService $availability,
     ) {}
 
     public function __invoke(Request $request): View|SymfonyResponse
@@ -101,6 +102,7 @@ class HomeController extends Controller
                     ->orderBy('id'),
             ])
             ->withCount($this->variantAvailabilityCounts())
+            ->withSum($this->variantAvailabilitySums(), 'stock_quantity')
             ->active()
             ->where(fn ($query) => $this->published($query))
             ->orderByDesc('is_featured')
@@ -145,6 +147,7 @@ class HomeController extends Controller
                     ->orderBy('id'),
             ])
             ->withCount($this->variantAvailabilityCounts())
+            ->withSum($this->variantAvailabilitySums(), 'stock_quantity')
             ->active()
             ->where('is_new', true)
             ->where(fn ($query) => $this->published($query))
@@ -300,6 +303,7 @@ class HomeController extends Controller
                     ->orderBy('id'),
             ])
             ->withCount($this->variantAvailabilityCounts())
+            ->withSum($this->variantAvailabilitySums(), 'stock_quantity')
             ->active()
             ->where(fn ($query) => $this->published($query))
             ->where(function (Builder $query) use ($category): void {
@@ -418,6 +422,7 @@ class HomeController extends Controller
             'currency' => $product->currency ?: 'UAH',
             'stock_status' => $stockStatus,
             'stock_status_label' => $this->stockStatusLabel($stockStatus),
+            'availability_badge' => $this->availability->gridBadge($product),
             'is_featured' => $product->is_featured,
             'is_new' => $product->is_new,
             'is_bestseller' => $product->is_bestseller,
@@ -434,50 +439,17 @@ class HomeController extends Controller
 
     private function variantAvailabilityCounts(): array
     {
-        return [
-            'variants as active_variants_count' => fn ($query) => $query->where('is_active', true),
-            'variants as available_variants_count' => fn ($query) => $query
-                ->where('is_active', true)
-                ->where('stock_quantity', '>', 0),
-        ];
+        return $this->availability->variantAvailabilityCounts();
+    }
+
+    private function variantAvailabilitySums(): array
+    {
+        return $this->availability->variantAvailabilitySums();
     }
 
     private function resolvedStockStatus(Product $product): string
     {
-        if ($this->productHasActiveVariants($product) && ! $this->productHasAvailableVariant($product)) {
-            return Product::STOCK_OUT_OF_STOCK;
-        }
-
-        return $product->stock_status;
-    }
-
-    private function productHasActiveVariants(Product $product): bool
-    {
-        if ($product->relationLoaded('variants')) {
-            return $product->variants->isNotEmpty();
-        }
-
-        return array_key_exists('active_variants_count', $product->getAttributes())
-            && (int) $product->getAttribute('active_variants_count') > 0;
-    }
-
-    private function productHasAvailableVariant(Product $product): bool
-    {
-        if ($product->stock_status === Product::STOCK_OUT_OF_STOCK) {
-            return false;
-        }
-
-        if ($product->relationLoaded('variants')) {
-            return $product->variants->contains(
-                fn (ProductVariant $variant): bool => (bool) $variant->is_active && (int) $variant->stock_quantity > 0
-            );
-        }
-
-        if (array_key_exists('available_variants_count', $product->getAttributes())) {
-            return (int) $product->getAttribute('available_variants_count') > 0;
-        }
-
-        return $product->stock_status !== Product::STOCK_OUT_OF_STOCK;
+        return $this->availability->resolvedStockStatus($product);
     }
 
     private function serializePromoProduct(Product $product, Category $category): array

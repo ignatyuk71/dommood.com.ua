@@ -1,6 +1,7 @@
 @php
     $hasDiscount = (int) ($product['old_price_cents'] ?? 0) > (int) ($product['price_cents'] ?? 0);
     $cardDescription = trim((string) ($product['short_description'] ?? ''));
+    $availabilityBadge = $product['availability_badge'] ?? null;
 
     if ($cardDescription === '') {
         $cardDescription = trim(strip_tags((string) ($product['description'] ?? '')));
@@ -9,7 +10,15 @@
     $cardDescription = \Illuminate\Support\Str::limit($cardDescription, 130);
 @endphp
 
-<article class="storefront-product-card" data-product-id="{{ $product['id'] }}">
+<article
+    @class([
+        'storefront-product-card',
+        'is-out-of-stock' => ($availabilityBadge['status'] ?? null) === 'out_of_stock',
+        'is-limited-stock' => in_array(($availabilityBadge['status'] ?? null), ['limited_stock', 'partial_stock'], true),
+        'is-preorder' => ($availabilityBadge['status'] ?? null) === 'preorder',
+    ])
+    data-product-id="{{ $product['id'] }}"
+>
     <a href="{{ $productUrl($product) }}" class="storefront-product-card__media">
         @if ($product['image_url'])
             <img src="{{ $product['image_url'] }}" alt="{{ $product['image_alt'] ?: $product['name'] }}" loading="lazy">
@@ -26,6 +35,9 @@
             @endif
             @if ($product['is_featured'])
                 <span class="is-top">Топ</span>
+            @endif
+            @if ($availabilityBadge)
+                <span class="is-availability is-{{ $availabilityBadge['tone'] ?? 'info' }}">{{ $availabilityBadge['label'] }}</span>
             @endif
         </span>
     </a>

@@ -17,6 +17,7 @@ use App\Models\Review;
 use App\Services\Seo\SeoResolver;
 use App\Services\SiteSettingsService;
 use App\Services\Storefront\DeliveryPolicyService;
+use App\Services\Storefront\ProductAvailabilityService;
 use App\Support\Catalog\FilterUrlBuilder;
 use App\Support\Catalog\ProductFilterQuery;
 use Illuminate\Contracts\View\View;
@@ -35,6 +36,7 @@ class CatalogController extends Controller
         private readonly ProductFilterQuery $productFilterQuery,
         private readonly FilterUrlBuilder $filterUrlBuilder,
         private readonly DeliveryPolicyService $deliveryPolicy,
+        private readonly ProductAvailabilityService $availability,
     ) {}
 
     public function index(Request $request, ?string $categorySlug = null, ?string $filterSegments = null): View
@@ -172,6 +174,7 @@ class CatalogController extends Controller
                             'products.created_at',
                         ])
                         ->withCount($this->variantAvailabilityCounts())
+                        ->withSum($this->variantAvailabilitySums(), 'stock_quantity')
                         ->active()
                         ->where(fn (Builder $query) => $this->published($query))
                         ->orderBy('product_relations.sort_order')
@@ -322,6 +325,7 @@ class CatalogController extends Controller
                     ->orderBy('id'),
             ])
             ->withCount($this->variantAvailabilityCounts())
+            ->withSum($this->variantAvailabilitySums(), 'stock_quantity')
             ->active()
             ->where(fn ($query) => $this->published($query))
             ->when($categoryIds !== [], fn (Builder $query) => $this->whereInCategories($query, $categoryIds))
@@ -916,6 +920,7 @@ class CatalogController extends Controller
             'currency' => $product->currency ?: 'UAH',
             'stock_status' => $stockStatus,
             'stock_status_label' => $this->stockStatusLabel($stockStatus),
+            'availability_badge' => $this->availability->gridBadge($product),
             'is_featured' => $product->is_featured,
             'is_new' => $product->is_new,
             'is_bestseller' => $product->is_bestseller,
@@ -952,50 +957,17 @@ class CatalogController extends Controller
 
     private function variantAvailabilityCounts(): array
     {
-        return [
-            'variants as active_variants_count' => fn ($query) => $query->where('is_active', true),
-            'variants as available_variants_count' => fn ($query) => $query
-                ->where('is_active', true)
-                ->where('stock_quantity', '>', 0),
-        ];
+        return $this->availability->variantAvailabilityCounts();
+    }
+
+    private function variantAvailabilitySums(): array
+    {
+        return $this->availability->variantAvailabilitySums();
     }
 
     private function resolvedStockStatus(Product $product): string
     {
-        if ($this->productHasActiveVariants($product) && ! $this->productHasAvailableVariant($product)) {
-            return Product::STOCK_OUT_OF_STOCK;
-        }
-
-        return $product->stock_status;
-    }
-
-    private function productHasActiveVariants(Product $product): bool
-    {
-        if ($product->relationLoaded('variants')) {
-            return $product->variants->isNotEmpty();
-        }
-
-        return array_key_exists('active_variants_count', $product->getAttributes())
-            && (int) $product->getAttribute('active_variants_count') > 0;
-    }
-
-    private function productHasAvailableVariant(Product $product): bool
-    {
-        if ($product->stock_status === Product::STOCK_OUT_OF_STOCK) {
-            return false;
-        }
-
-        if ($product->relationLoaded('variants')) {
-            return $product->variants->contains(
-                fn (ProductVariant $variant): bool => (bool) $variant->is_active && (int) $variant->stock_quantity > 0
-            );
-        }
-
-        if (array_key_exists('available_variants_count', $product->getAttributes())) {
-            return (int) $product->getAttribute('available_variants_count') > 0;
-        }
-
-        return $product->stock_status !== Product::STOCK_OUT_OF_STOCK;
+        return $this->availability->resolvedStockStatus($product);
     }
 
     private function serializeImage(ProductImage $image, Product $product): array
@@ -1231,6 +1203,7 @@ class CatalogController extends Controller
                         ->orderBy('id'),
                 ])
                 ->withCount($this->variantAvailabilityCounts())
+                ->withSum($this->variantAvailabilitySums(), 'stock_quantity')
                 ->active()
                 ->where(fn (Builder $query) => $this->published($query))
                 ->where('id', '!=', $product->id)
