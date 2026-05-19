@@ -471,8 +471,7 @@
 }
 
 .storefront-checkout-order-variant {
-    max-width: 420px;
-    width: 100%;
+    width: min(100%, 310px);
 }
 
 .storefront-checkout-order-variant label {
@@ -1019,6 +1018,10 @@
         white-space: normal;
         grid-column: 2;
         justify-self: start;
+        width: 100%;
+    }
+
+    .storefront-checkout-order-variant {
         width: 100%;
     }
 
