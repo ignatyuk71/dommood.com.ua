@@ -721,7 +721,72 @@
 .product-unavailable {
     border-top: 1px solid var(--product-line);
     color: #5b342b;
+    display: grid;
+    gap: 0.85rem;
     padding-top: 1rem;
+}
+
+.product-unavailable strong {
+    color: #5b342b;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.product-unavailable p {
+    color: #6c4a42;
+    font-size: 15px;
+    line-height: 1.45;
+    margin: 0;
+}
+
+.product-unavailable__actions {
+    display: grid;
+    gap: 0.65rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.product-unavailable__button {
+    align-items: center;
+    background: var(--product-accent);
+    border: 1px solid var(--product-accent);
+    border-radius: 8px;
+    color: #fff;
+    display: inline-flex;
+    font-size: 15px;
+    font-weight: 600;
+    gap: 0.5rem;
+    justify-content: center;
+    line-height: 1.2;
+    min-height: 48px;
+    padding: 0.75rem 0.95rem;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.product-unavailable__button:hover {
+    background: var(--product-accent-dark);
+    border-color: var(--product-accent-dark);
+    color: #fff;
+}
+
+.product-unavailable__button--secondary {
+    background: #fff;
+    border-color: #d8ccc8;
+    color: #5b342b;
+}
+
+.product-unavailable__button--secondary:hover {
+    background: #f7f0ed;
+    border-color: #c8b6b0;
+    color: #5b342b;
+}
+
+.product-unavailable__button svg {
+    flex: 0 0 auto;
+    height: 18px;
+    width: 18px;
 }
 
 .product-benefits {
@@ -2441,6 +2506,10 @@
 }
 
 @media (max-width: 420px) {
+    .product-unavailable__actions {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
     .product-attributes-list__row {
         align-items: center;
         gap: 0.75rem;

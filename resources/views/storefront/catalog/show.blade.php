@@ -47,6 +47,15 @@
             $hasDiscount = $currentOldPrice > $currentPrice && $currentPrice > 0;
             $discountPercent = $hasDiscount ? (int) round((1 - ($currentPrice / $currentOldPrice)) * 100) : 0;
             $isPurchasable = (int) ($product['id'] ?? 0) > 0 && ($product['stock_status'] ?? 'in_stock') !== \App\Models\Product::STOCK_OUT_OF_STOCK;
+            $cleanSupportPhone = preg_replace('/[^\d+]+/', '', (string) ($supportPhone ?? '')) ?: '';
+            $messengerPhone = ltrim($cleanSupportPhone, '+');
+            $outOfStockMessage = 'Вітаю! Повідомте, будь ласка, коли товар "'.$product['name'].'" буде в наявності.';
+            $notifyAvailabilityHref = $messengerPhone !== ''
+                ? 'https://wa.me/'.$messengerPhone.'?text='.rawurlencode($outOfStockMessage)
+                : 'https://www.instagram.com/dommood.com.ua/';
+            $managerContactHref = $messengerPhone !== ''
+                ? 'tg://resolve?phone='.$messengerPhone
+                : 'https://www.instagram.com/dommood.com.ua/';
             $galleryImages = collect($product['images'] ?? [])->filter(fn (array $image): bool => filled($image['url'] ?? null))->values();
 
             if ($galleryImages->isEmpty() && filled($product['image_url'] ?? null)) {
@@ -339,7 +348,29 @@
                                 @else
                                     <div class="product-unavailable">
                                         <strong>Товар тимчасово недоступний</strong>
-                                        <p>Напишіть нам у месенджер, і менеджер підбере найближчу альтернативу.</p>
+                                        <p>Залиште запит, і ми повідомимо, коли товар зʼявиться. Або менеджер підбере найближчу альтернативу.</p>
+                                        <div class="product-unavailable__actions">
+                                            <a
+                                                href="{{ $notifyAvailabilityHref }}"
+                                                class="product-unavailable__button"
+                                                data-product-unavailable-action="notify_availability"
+                                                target="_blank"
+                                                rel="noopener"
+                                            >
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                                                <span>Повідомити про наявність</span>
+                                            </a>
+                                            <a
+                                                href="{{ $managerContactHref }}"
+                                                class="product-unavailable__button product-unavailable__button--secondary"
+                                                data-product-unavailable-action="contact_manager"
+                                                target="_blank"
+                                                rel="noopener"
+                                            >
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/></svg>
+                                                <span>Написати менеджеру</span>
+                                            </a>
+                                        </div>
                                     </div>
                                 @endif
 

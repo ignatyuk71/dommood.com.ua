@@ -804,6 +804,18 @@
         }
     }, { capture: true });
 
+    page.querySelectorAll('[data-product-unavailable-action]').forEach((action) => {
+        action.addEventListener('click', () => {
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({
+                event: action.dataset.productUnavailableAction || 'out_of_stock_contact_click',
+                item_id: String(currentVariant()?.sku || product.sku || product.id || ''),
+                item_name: product.name || '',
+                item_variant: currentVariant()?.label || currentVariant()?.name || '',
+            });
+        });
+    });
+
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push({
         event: 'view_item',
