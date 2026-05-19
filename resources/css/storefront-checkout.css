@@ -434,13 +434,13 @@
 }
 
 .storefront-checkout-order-item {
-    align-items: center;
+    align-items: start;
     border-bottom: 1px solid rgba(23, 25, 31, 0.08);
     display: grid;
-    gap: 0.85rem;
-    grid-template-columns: 64px minmax(0, 1fr) auto;
+    gap: 1rem;
+    grid-template-columns: 72px minmax(0, 1fr) 150px;
     min-width: 0;
-    padding: 0.92rem 0;
+    padding: 1rem 0;
 }
 
 .storefront-checkout-order-item:last-child {
@@ -528,15 +528,15 @@
 .storefront-checkout-order-item__meta {
     display: grid;
     gap: 0.22rem;
-    justify-items: end;
+    justify-items: start;
     white-space: nowrap;
 }
 
 .storefront-checkout-order-item__actions {
-    align-items: center;
-    display: flex;
+    align-items: stretch;
+    display: grid;
     gap: 0.5rem;
-    justify-content: flex-end;
+    justify-items: stretch;
 }
 
 .storefront-checkout-order-item__actions form {
@@ -1008,6 +1008,8 @@
     }
 
     .storefront-checkout-order-item__actions {
+        align-items: center;
+        display: flex;
         grid-column: 2;
         justify-self: start;
         width: 100%;
