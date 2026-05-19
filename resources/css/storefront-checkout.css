@@ -608,6 +608,7 @@
 
 .storefront-checkout-delivery-fields {
     align-items: start;
+    grid-template-columns: 1fr;
 }
 
 .storefront-checkout-lookup {
