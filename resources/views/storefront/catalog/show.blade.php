@@ -121,6 +121,8 @@
                 $productSummaryIntro = \Illuminate\Support\Str::limit($productDescriptionText, 220);
             }
 
+            $productSummaryIntro = \Illuminate\Support\Str::limit($productSummaryIntro, 120, '...');
+
             $schemas = collect($schemas ?? [])->filter()->values();
             $faqItems = collect($faqItems ?? [])->filter(fn (array $item): bool => filled($item['question'] ?? null) && filled($item['answer'] ?? null))->values();
 
