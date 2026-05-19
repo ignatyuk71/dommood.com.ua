@@ -1977,15 +1977,6 @@ svg {
     background: rgba(43, 43, 43, 0.78);
 }
 
-.storefront-product-badges span.is-availability.is-info {
-    background: rgba(95, 102, 115, 0.9);
-}
-
-.storefront-product-badges span.is-availability.is-limited {
-    background: linear-gradient(135deg, #9f2332 0%, var(--dm-color-wine) 100%);
-    box-shadow: 0 10px 22px rgba(123, 26, 37, 0.16);
-}
-
 .storefront-product-badges span.is-availability.is-warning {
     background: linear-gradient(135deg, #c77c2d 0%, #9a5316 100%);
     box-shadow: 0 10px 22px rgba(154, 83, 22, 0.16);

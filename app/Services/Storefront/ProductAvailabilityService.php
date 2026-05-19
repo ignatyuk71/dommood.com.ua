@@ -7,8 +7,6 @@ use App\Models\ProductVariant;
 
 class ProductAvailabilityService
 {
-    private const LOW_STOCK_THRESHOLD = 3;
-
     public function gridBadge(Product $product): ?array
     {
         $metrics = $this->variantMetrics($product);
@@ -30,28 +28,6 @@ class ProductAvailabilityService
                 'status' => 'preorder',
                 'label' => 'Передзамовлення',
                 'tone' => 'warning',
-                'is_purchasable' => true,
-                'should_dim_image' => false,
-                ...$metrics,
-            ];
-        }
-
-        if ($metrics['active_variants_count'] > 0 && $metrics['available_variants_count'] < $metrics['active_variants_count']) {
-            return [
-                'status' => 'partial_stock',
-                'label' => 'Є інші варіанти',
-                'tone' => 'info',
-                'is_purchasable' => true,
-                'should_dim_image' => false,
-                ...$metrics,
-            ];
-        }
-
-        if ($metrics['available_stock_quantity'] > 0 && $metrics['available_stock_quantity'] <= self::LOW_STOCK_THRESHOLD) {
-            return [
-                'status' => 'limited_stock',
-                'label' => 'Обмежено',
-                'tone' => 'limited',
                 'is_purchasable' => true,
                 'should_dim_image' => false,
                 ...$metrics,

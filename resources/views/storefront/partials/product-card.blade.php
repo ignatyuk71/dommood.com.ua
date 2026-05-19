@@ -14,7 +14,6 @@
     @class([
         'storefront-product-card',
         'is-out-of-stock' => ($availabilityBadge['status'] ?? null) === 'out_of_stock',
-        'is-limited-stock' => in_array(($availabilityBadge['status'] ?? null), ['limited_stock', 'partial_stock'], true),
         'is-preorder' => ($availabilityBadge['status'] ?? null) === 'preorder',
     ])
     data-product-id="{{ $product['id'] }}"
