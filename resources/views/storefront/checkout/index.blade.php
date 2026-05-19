@@ -41,9 +41,11 @@
                 return $quantity.' товарів';
             };
 
-            $selectedDelivery = old('delivery_method', $deliveryMethods[0]['code'] ?? null);
+            $deliveryCollection = collect($deliveryMethods);
+            $defaultDelivery = $deliveryCollection->firstWhere('type', 'branch') ?? ($deliveryMethods[0] ?? null);
+            $selectedDelivery = old('delivery_method', $defaultDelivery['code'] ?? null);
             $selectedPayment = old('payment_method', $paymentMethods[0]['code'] ?? null);
-            $activeDelivery = collect($deliveryMethods)->firstWhere('code', $selectedDelivery) ?? ($deliveryMethods[0] ?? ['price_cents' => 0, 'type' => 'branch']);
+            $activeDelivery = $deliveryCollection->firstWhere('code', $selectedDelivery) ?? ($defaultDelivery ?? ['price_cents' => 0, 'type' => 'branch']);
             $activeDeliveryType = $activeDelivery['type'] ?? 'branch';
             $checkoutTotalCents = (int) $cart['total_cents'] + (int) ($activeDelivery['price_cents'] ?? 0);
             $breadcrumbs = [
@@ -244,10 +246,17 @@
                                         @error('delivery_city')<small>{{ $message }}</small>@enderror
                                     </label>
 
-                                    <label class="storefront-checkout-lookup" data-checkout-warehouse @if ($activeDeliveryType === 'courier') hidden @endif>
-                                        <span data-warehouse-label>{{ $activeDeliveryType === 'postomat' ? 'Поштомат' : 'Відділення' }}</span>
-                                        <input type="text" name="delivery_branch" value="{{ old('delivery_branch') }}" placeholder="Номер або адреса відділення">
-                                        <input type="hidden" name="delivery_branch_ref" value="{{ old('delivery_branch_ref') }}">
+                                    <label class="storefront-checkout-lookup" data-checkout-warehouse @if (! in_array($activeDeliveryType, ['branch', 'postomat'], true)) hidden @endif>
+                                        <span data-warehouse-label>{{ $activeDeliveryType === 'postomat' ? 'Поштомат Нової пошти' : 'Відділення Нової пошти' }}</span>
+                                        <input
+                                            type="text"
+                                            name="delivery_branch"
+                                            value="{{ old('delivery_branch') }}"
+                                            placeholder="{{ $activeDeliveryType === 'postomat' ? 'Номер або адреса поштомата' : 'Номер або адреса відділення' }}"
+                                            @if (in_array($activeDeliveryType, ['branch', 'postomat'], true)) required @endif
+                                            @disabled(! in_array($activeDeliveryType, ['branch', 'postomat'], true))
+                                        >
+                                        <input type="hidden" name="delivery_branch_ref" value="{{ old('delivery_branch_ref') }}" @disabled(! in_array($activeDeliveryType, ['branch', 'postomat'], true))>
                                         <div class="storefront-checkout-lookup__status" data-lookup-status hidden></div>
                                         <div class="storefront-checkout-lookup__results" data-lookup-results hidden></div>
                                         @error('delivery_branch')<small>{{ $message }}</small>@enderror
@@ -255,7 +264,15 @@
 
                                     <label class="is-wide" data-checkout-address @if ($activeDeliveryType !== 'courier') hidden @endif>
                                         <span>Адреса для курʼєра</span>
-                                        <input type="text" name="delivery_address" value="{{ old('delivery_address') }}" autocomplete="street-address" placeholder="Вулиця, будинок, квартира">
+                                        <input
+                                            type="text"
+                                            name="delivery_address"
+                                            value="{{ old('delivery_address') }}"
+                                            autocomplete="street-address"
+                                            placeholder="Вулиця, будинок, квартира"
+                                            @if ($activeDeliveryType === 'courier') required @endif
+                                            @disabled($activeDeliveryType !== 'courier')
+                                        >
                                         @error('delivery_address')<small>{{ $message }}</small>@enderror
                                     </label>
                                 </div>
@@ -632,13 +649,42 @@
                     setStatus(warehouseLookup);
                 };
 
+                const setFieldsetEnabled = (root, enabled) => {
+                    root?.querySelectorAll('input, select, textarea, button').forEach((control) => {
+                        control.disabled = !enabled;
+                    });
+                };
+
+                const warehouseCopy = (type) => {
+                    if (type === 'postomat') {
+                        return {
+                            label: 'Поштомат Нової пошти',
+                            placeholder: 'Номер або адреса поштомата',
+                            loading: 'Завантажуємо поштомати...',
+                            selected: 'Поштомат вибрано',
+                            empty: 'Для цього міста поштоматів не знайдено.',
+                            error: 'Не вдалося знайти поштомати.',
+                        };
+                    }
+
+                    return {
+                        label: 'Відділення Нової пошти',
+                        placeholder: 'Номер або адреса відділення',
+                        loading: 'Завантажуємо відділення...',
+                        selected: 'Відділення вибрано',
+                        empty: 'Для цього міста відділень не знайдено.',
+                        error: 'Не вдалося знайти відділення.',
+                    };
+                };
+
                 const loadWarehouses = async (query = '', page = 1, append = false) => {
                     const city = lookupParts(cityLookup);
                     const warehouse = lookupParts(warehouseLookup);
                     const type = selectedDelivery()?.dataset.deliveryType || 'branch';
                     const normalizedQuery = String(query || '').trim();
+                    const copy = warehouseCopy(type);
 
-                    if (!city.ref?.value || type === 'courier') {
+                    if (!city.ref?.value || !['branch', 'postomat'].includes(type)) {
                         clearResults(warehouseLookup);
                         return;
                     }
@@ -661,7 +707,7 @@
 
                     activeWarehouseRequest?.abort();
                     activeWarehouseRequest = new AbortController();
-                    setStatus(warehouseLookup, append ? 'Завантажуємо ще...' : (type === 'postomat' ? 'Завантажуємо поштомати...' : 'Завантажуємо відділення...'));
+                    setStatus(warehouseLookup, append ? 'Завантажуємо ще...' : copy.loading);
 
                     try {
                         const url = new URL(endpoints.warehouses, window.location.origin);
@@ -683,18 +729,18 @@
                             if (warehouse.ref) warehouse.ref.value = item.ref || '';
                             resetWarehouseState();
                             clearResults(warehouseLookup);
-                            setStatus(warehouseLookup, type === 'postomat' ? 'Поштомат вибрано' : 'Відділення вибрано');
+                            setStatus(warehouseLookup, copy.selected);
                         }, append);
 
                         warehouseState.page = page;
                         warehouseState.hasMore = (data.items || []).length >= warehouseLimit;
-                        setStatus(warehouseLookup, (data.items || []).length || append ? '' : 'Для цього міста нічого не знайдено.');
+                        setStatus(warehouseLookup, (data.items || []).length || append ? '' : copy.empty);
                     } catch (error) {
                         if (error.name !== 'AbortError') {
                             if (!append) {
                                 clearResults(warehouseLookup);
                             }
-                            setStatus(warehouseLookup, error.message || 'Не вдалося знайти відділення.', true);
+                            setStatus(warehouseLookup, error.message || copy.error, true);
                         }
                     } finally {
                         warehouseState.isLoading = false;
@@ -776,8 +822,11 @@
                     const type = option?.dataset.deliveryType || 'branch';
                     const priceCents = Number(option?.dataset.priceCents || 0);
                     const showAddress = type === 'courier';
+                    const showWarehouse = ['branch', 'postomat'].includes(type);
                     const warehouseInput = lookupParts(warehouseLookup).input;
+                    const warehouseRef = lookupParts(warehouseLookup).ref;
                     const addressInput = addressField?.querySelector('input');
+                    const copy = warehouseCopy(type);
 
                     if (deliveryTotal) {
                         deliveryTotal.textContent = priceCents > 0 ? formatMoney(priceCents) : 'За тарифом';
@@ -788,27 +837,34 @@
                     }
 
                     if (warehouseLookup) {
-                        warehouseLookup.hidden = showAddress;
+                        warehouseLookup.hidden = !showWarehouse;
+                        setFieldsetEnabled(warehouseLookup, showWarehouse);
                     }
 
                     if (addressField) {
                         addressField.hidden = !showAddress;
+                        setFieldsetEnabled(addressField, showAddress);
                     }
 
                     if (warehouseLabel) {
-                        warehouseLabel.textContent = type === 'postomat' ? 'Поштомат' : 'Відділення';
+                        warehouseLabel.textContent = copy.label;
                     }
 
                     if (warehouseInput) {
-                        warehouseInput.required = !showAddress;
-                        warehouseInput.placeholder = type === 'postomat' ? 'Номер або адреса поштомата' : 'Номер або адреса відділення';
+                        warehouseInput.required = showWarehouse;
+                        warehouseInput.placeholder = copy.placeholder;
+                    }
+
+                    if (warehouseRef) {
+                        warehouseRef.disabled = !showWarehouse;
                     }
 
                     if (addressInput) {
                         addressInput.required = showAddress;
+                        addressInput.disabled = !showAddress;
                     }
 
-                    if (showAddress) {
+                    if (!showWarehouse) {
                         resetWarehouse();
                     } else {
                         addressInput && (addressInput.value = '');

@@ -87,27 +87,36 @@ class CheckoutController extends Controller
         }
 
         $deliveryType = (string) ($deliveryMethod['type'] ?? 'branch');
+        $requiresWarehouse = in_array($deliveryType, ['branch', 'postomat'], true);
+        $requiresCourierAddress = $deliveryType === 'courier';
 
-        if (in_array($deliveryType, ['branch', 'postomat'], true) && ! $request->filled('delivery_branch')) {
-            throw ValidationException::withMessages(['delivery_branch' => 'Оберіть відділення або поштомат Нової пошти.']);
+        if ($requiresWarehouse && ! $request->filled('delivery_branch')) {
+            $message = $deliveryType === 'postomat'
+                ? 'Оберіть поштомат Нової пошти.'
+                : 'Оберіть відділення Нової пошти.';
+
+            throw ValidationException::withMessages(['delivery_branch' => $message]);
         }
 
-        if ($deliveryType === 'courier' && ! $request->filled('delivery_address')) {
+        if ($requiresCourierAddress && ! $request->filled('delivery_address')) {
             throw ValidationException::withMessages(['delivery_address' => 'Вкажіть адресу для курʼєрської доставки.']);
         }
 
-        $order = DB::transaction(function () use ($request, $cart, $cartPayload, $deliveryMethod, $paymentMethod): Order {
+        $order = DB::transaction(function () use ($request, $cart, $cartPayload, $deliveryMethod, $paymentMethod, $deliveryType, $requiresWarehouse, $requiresCourierAddress): Order {
             $customer = $this->upsertCustomer($request);
             $deliveryPriceCents = (int) $deliveryMethod['price_cents'];
             $totalCents = (int) $cartPayload['total_cents'] + $deliveryPriceCents;
             $customerName = trim($request->string('customer_first_name').' '.$request->string('customer_last_name'));
             $checkoutSettings = $this->settings->get('checkout');
+            $deliveryBranch = $requiresWarehouse ? $request->string('delivery_branch')->toString() : '';
+            $deliveryBranchRef = $requiresWarehouse ? $request->string('delivery_branch_ref')->toString() : '';
+            $deliveryAddress = $requiresCourierAddress ? $request->string('delivery_address')->toString() : '';
             $deliverySnapshot = array_merge($deliveryMethod, [
                 'city_ref' => $request->string('delivery_city_ref')->toString() ?: null,
-                'branch_ref' => $request->string('delivery_branch_ref')->toString() ?: null,
+                'branch_ref' => $deliveryBranchRef ?: null,
                 'city' => $request->string('delivery_city')->toString(),
-                'branch' => $request->string('delivery_branch')->toString() ?: null,
-                'address' => $request->string('delivery_address')->toString() ?: null,
+                'branch' => $deliveryBranch ?: null,
+                'address' => $deliveryAddress ?: null,
             ]);
 
             $order = Order::query()->create([
@@ -119,12 +128,12 @@ class CheckoutController extends Controller
                 'payment_provider' => ($paymentMethod['type'] ?? null) === 'liqpay' ? 'liqpay' : null,
                 'delivery_method' => $deliveryMethod['code'],
                 'delivery_provider' => $deliveryMethod['provider'] ?? null,
-                'delivery_type' => $deliveryMethod['type'] ?? null,
+                'delivery_type' => $deliveryType,
                 'delivery_city' => $request->string('delivery_city')->toString(),
                 'delivery_city_ref' => $request->string('delivery_city_ref')->toString() ?: null,
-                'delivery_address' => $request->string('delivery_address')->toString() ?: null,
-                'delivery_branch' => $request->string('delivery_branch')->toString() ?: null,
-                'delivery_branch_ref' => $request->string('delivery_branch_ref')->toString() ?: null,
+                'delivery_address' => $deliveryAddress ?: null,
+                'delivery_branch' => $deliveryBranch ?: null,
+                'delivery_branch_ref' => $deliveryBranchRef ?: null,
                 'delivery_recipient_name' => $customerName,
                 'delivery_recipient_phone' => $this->normalizePhone($request->string('customer_phone')->toString()),
                 'delivery_snapshot' => $deliverySnapshot,
