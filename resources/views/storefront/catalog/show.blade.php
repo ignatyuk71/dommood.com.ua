@@ -282,12 +282,21 @@
                                                     @foreach ($sizes as $variant)
                                                         @php
                                                             $sizeKey = mb_strtolower((string) $variant['size']);
+                                                            $sizeParts = preg_split('/\s*-\s*/u', (string) $variant['size'], 2);
                                                             $isVariantAvailable = (bool) ($variant['is_available'] ?? false);
                                                             $isActiveSize = $sizeKey !== '' && $sizeKey === $initialSizeKey;
                                                         @endphp
                                                         <label @class(['is-active' => $isActiveSize, 'is-disabled' => ! $isVariantAvailable]) data-product-size-option>
                                                             <input type="radio" name="product_size" value="{{ $sizeKey }}" @checked($isActiveSize) @disabled(! $isVariantAvailable)>
-                                                            <span>{{ $variant['size'] }}</span>
+                                                            <span>
+                                                                @if (count($sizeParts) === 2)
+                                                                    <span class="product-size-options__main">{{ trim($sizeParts[0]) }}</span>
+                                                                    <span class="product-size-options__separator">-</span>
+                                                                    <span class="product-size-options__meta">{{ trim($sizeParts[1]) }}</span>
+                                                                @else
+                                                                    {{ $variant['size'] }}
+                                                                @endif
+                                                            </span>
                                                         </label>
                                                     @endforeach
                                                 </div>
