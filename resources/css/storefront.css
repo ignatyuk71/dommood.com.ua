@@ -2736,6 +2736,10 @@ svg {
     margin: 0;
 }
 
+.storefront-footer__address p span {
+    display: block;
+}
+
 .storefront-footer__address a {
     display: inline-flex;
     font-size: 0.95rem;

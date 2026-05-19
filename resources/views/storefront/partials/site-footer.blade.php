@@ -3,7 +3,8 @@
     $cleanFooterPhone = preg_replace('/[^0-9+]/', '', $footerPhone);
     $messengerFooterPhone = ltrim($cleanFooterPhone, '+');
     $footerEmail = $supportEmail ?: 'dommood.com.ua@gmail.com';
-    $footerAddress = 'с.Постійне вул. Б.Хмельницького ,5, Рівненська область, Україна,';
+    $footerAddressLines = ['с.Постійне', 'вул. Б.Хмельницького, 5,', 'Рівненська область, Україна'];
+    $footerAddress = implode(', ', $footerAddressLines);
     $footerSocialLinks = [
         ['title' => 'Instagram', 'url' => 'https://www.instagram.com/dommood.store/', 'icon' => 'instagram'],
         ['title' => 'TikTok', 'url' => 'https://www.tiktok.com/@dommood.com.ua', 'icon' => 'tiktok'],
@@ -114,7 +115,11 @@
                     <svg viewBox="0 0 24 24"><path d="M12 22s7-6.1 7-13a7 7 0 1 0-14 0c0 6.9 7 13 7 13Z"/><circle cx="12" cy="9" r="2.4"/></svg>
                 </span>
                 <div>
-                    <p>{{ $footerAddress }}</p>
+                    <p>
+                        @foreach ($footerAddressLines as $addressLine)
+                            <span>{{ $addressLine }}</span>
+                        @endforeach
+                    </p>
                     <a href="https://www.google.com/maps/search/?api=1&query={{ rawurlencode($footerAddress) }}" target="_blank" rel="noopener">
                         Мапа проїзду
                     </a>
