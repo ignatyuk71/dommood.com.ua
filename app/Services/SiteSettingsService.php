@@ -62,6 +62,7 @@ class SiteSettingsService
             ],
             'checkout' => [
                 'guest_checkout' => true,
+                'notice_text' => 'Через навантаження перевізника окремі відправлення Новою поштою можуть їхати на 1-2 дні довше. Після оформлення менеджер підтвердить наявність, спосіб доставки та орієнтовну дату відправки.',
                 'account_creation_mode' => 'optional',
                 'require_phone' => true,
                 'require_email' => false,

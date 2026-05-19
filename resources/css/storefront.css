@@ -5190,14 +5190,16 @@ svg {
 }
 
 .storefront-checkout-btn--primary {
-    background: var(--dm-color-brand);
-    border: 1px solid var(--dm-color-brand);
+    background: var(--dm-color-wine);
+    border: 1px solid var(--dm-color-wine);
+    box-shadow: 0 12px 26px rgba(123, 26, 37, 0.18);
     color: #ffffff;
 }
 
 .storefront-checkout-btn--primary:hover {
-    background: #201e70;
-    border-color: #201e70;
+    background: #68131d;
+    border-color: #68131d;
+    box-shadow: 0 14px 30px rgba(123, 26, 37, 0.24);
     color: #ffffff;
     transform: translateY(-1px);
 }
@@ -5698,12 +5700,6 @@ svg {
     margin: 0;
 }
 
-.storefront-cart-variant {
-    flex: 0 1 190px;
-    max-width: 190px;
-    min-width: 0;
-}
-
 .storefront-cart-variant label {
     align-items: center;
     background: #f8f8fb;
@@ -5743,10 +5739,6 @@ svg {
 }
 
 .storefront-cart-item__meta {
-    align-items: center;
-    display: flex;
-    gap: 0.52rem;
-    justify-content: space-between;
     min-width: 0;
 }
 
@@ -5773,8 +5765,12 @@ svg {
     align-items: center;
     display: flex;
     gap: 0.48rem;
-    justify-content: space-between;
+    justify-content: flex-end;
     margin-top: 0.2rem;
+}
+
+.storefront-cart-item__controls .storefront-cart-item__price {
+    margin-right: auto;
 }
 
 .storefront-cart-qty {

@@ -109,12 +109,13 @@
                                 @elseif ($item['variant_name'])
                                     <p>{{ $item['variant_name'] }}</p>
                                 @endif
-                                <div class="storefront-cart-item__price">
-                                    <span>{{ $formatMoney($item['price_cents'], $item['currency']) }}</span>
-                                </div>
                             </div>
 
                             <div class="storefront-cart-item__controls">
+                                <div class="storefront-cart-item__price">
+                                    <span>{{ $formatMoney($item['price_cents'], $item['currency']) }}</span>
+                                </div>
+
                                 <form method="post" action="{{ route('cart.items.update', $item['id']) }}" class="storefront-cart-qty" aria-label="Кількість {{ $item['name'] }}" data-cart-action>
                                     @csrf
                                     @method('PATCH')

@@ -32,6 +32,7 @@ class UpdateSiteSettingsRequest extends FormRequest
             ],
             'checkout' => [
                 'guest_checkout' => ['boolean'],
+                'notice_text' => ['nullable', 'string', 'max:1000'],
                 'account_creation_mode' => ['required', Rule::in(['optional', 'after_order', 'required'])],
                 'require_phone' => ['boolean'],
                 'require_email' => ['boolean'],

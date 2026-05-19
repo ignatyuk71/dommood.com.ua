@@ -201,6 +201,7 @@ class SiteSettingsController extends Controller
                 'summary' => [
                     ['label' => 'Гостьовий checkout', 'value' => $this->settings->get($section)['guest_checkout'] ? 'Так' : 'Ні'],
                     ['label' => 'Мін. сума', 'value' => $this->settings->get($section)['min_order_amount'].' грн'],
+                    ['label' => 'Інфо-блок', 'value' => filled($this->settings->get($section)['notice_text'] ?? '') ? 'Показується' : 'Вимкнено'],
                     ['label' => '1 клік', 'value' => $this->settings->get($section)['one_click_enabled'] ? 'Увімкнено' : 'Вимкнено'],
                 ],
                 'groups' => [
@@ -208,6 +209,7 @@ class SiteSettingsController extends Controller
                         'title' => 'Правила checkout',
                         'fields' => [
                             ['name' => 'guest_checkout', 'label' => 'Дозволити замовлення без реєстрації', 'type' => 'toggle', 'span' => 2],
+                            ['name' => 'notice_text', 'label' => 'Важлива інформація в checkout', 'type' => 'textarea', 'placeholder' => 'Текст, який показується над формою оформлення. Залиши порожнім, щоб приховати блок.', 'span' => 2],
                             ['name' => 'account_creation_mode', 'label' => 'Створення акаунта', 'type' => 'select', 'options' => [
                                 ['value' => 'optional', 'label' => 'Опційно'],
                                 ['value' => 'after_order', 'label' => 'Після замовлення'],

@@ -69,6 +69,10 @@
                         <h1 id="checkout-title">Оформлення замовлення</h1>
                     </div>
 
+                    @php
+                        $checkoutNotice = trim((string) ($checkoutSettings['notice_text'] ?? ''));
+                    @endphp
+
                     @if ($errors->any())
                         <div class="storefront-cart-alert is-error" role="alert">
                             Перевірте поля форми: частина даних потребує уточнення.
@@ -77,15 +81,17 @@
 
                     <div class="storefront-checkout-layout" data-checkout-form>
                         <section class="storefront-checkout-flow" aria-labelledby="checkout-title">
-                            <section class="storefront-checkout-notice" aria-labelledby="checkout-notice-title">
-                                <div class="storefront-checkout-notice__icon" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 4.6 2.8 18a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.6a2 2 0 0 0-3.4 0Z"/></svg>
-                                </div>
-                                <div>
-                                    <h2 id="checkout-notice-title">Важлива інформація</h2>
-                                    <p>Через навантаження перевізника окремі відправлення Новою поштою можуть їхати на 1-2 дні довше. Після оформлення менеджер підтвердить наявність, спосіб доставки та орієнтовну дату відправки.</p>
-                                </div>
-                            </section>
+                            @if ($checkoutNotice !== '')
+                                <section class="storefront-checkout-notice" aria-labelledby="checkout-notice-title">
+                                    <div class="storefront-checkout-notice__icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 4.6 2.8 18a2 2 0 0 0 1.7 3h15a2 2 0 0 0 1.7-3L13.7 4.6a2 2 0 0 0-3.4 0Z"/></svg>
+                                    </div>
+                                    <div>
+                                        <h2 id="checkout-notice-title">Важлива інформація</h2>
+                                        <p>{{ $checkoutNotice }}</p>
+                                    </div>
+                                </section>
+                            @endif
 
                             <section class="storefront-checkout-card storefront-checkout-order-card" aria-labelledby="checkout-order-title">
                                 <div class="storefront-checkout-card__head">
