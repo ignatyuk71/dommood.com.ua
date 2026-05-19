@@ -562,46 +562,17 @@
 }
 
 .storefront-checkout-delivery-options {
-    gap: 0.55rem;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .storefront-checkout-delivery-options .storefront-checkout-option {
-    align-items: center;
-    gap: 0.7rem;
+    align-items: start;
     grid-template-columns: 20px minmax(0, 1fr);
-    padding: 0.72rem 0.85rem;
 }
 
-.storefront-checkout-delivery-copy {
-    display: grid;
-    gap: 0.2rem;
-    min-width: 0;
-}
-
-.storefront-checkout-delivery-title {
-    align-items: center;
-    display: flex;
-    gap: 0.75rem;
-    justify-content: space-between;
-    min-width: 0;
-}
-
-.storefront-checkout-delivery-title strong {
-    min-width: 0;
-}
-
-.storefront-checkout-delivery-title b {
-    font-size: 1rem;
-    font-weight: 500;
-    line-height: 1.1;
-    white-space: nowrap;
-}
-
-.storefront-checkout-delivery-options .storefront-checkout-option small {
-    font-size: 0.8rem;
-    line-height: 1.25;
-    margin-top: 0;
+.storefront-checkout-delivery-options .storefront-checkout-option b {
+    grid-column: 2;
+    font-size: 0.92rem;
 }
 
 .storefront-checkout-delivery-fields {
@@ -908,6 +879,9 @@
         width: 100%;
     }
 
+    .storefront-checkout-delivery-options {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 767.98px) {

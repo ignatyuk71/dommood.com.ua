@@ -41,20 +41,6 @@
                 return $quantity.' товарів';
             };
 
-            $deliveryOptionTitle = static fn (array $method): string => match ($method['type'] ?? null) {
-                'branch' => 'Відділення',
-                'postomat' => 'Поштомат',
-                'courier' => 'Курʼєр',
-                default => $method['name'] ?? 'Доставка',
-            };
-
-            $deliveryOptionDescription = static fn (array $method): string => match ($method['type'] ?? null) {
-                'branch' => 'Отримання у відділенні Нової пошти',
-                'postomat' => 'Отримання у поштоматі Нової пошти',
-                'courier' => 'Доставка за адресою клієнта',
-                default => $method['description'] ?? '',
-            };
-
             $deliveryCollection = collect($deliveryMethods);
             $defaultDelivery = $deliveryCollection->firstWhere('type', 'branch') ?? ($deliveryMethods[0] ?? null);
             $selectedDelivery = old('delivery_method', $defaultDelivery['code'] ?? null);
@@ -238,13 +224,13 @@
                                     @foreach ($deliveryMethods as $method)
                                         <label class="storefront-checkout-option" data-delivery-option data-delivery-type="{{ $method['type'] ?? 'branch' }}" data-provider="{{ $method['provider'] ?? 'manual' }}" data-price-cents="{{ (int) $method['price_cents'] }}">
                                             <input type="radio" name="delivery_method" value="{{ $method['code'] }}" @checked($selectedDelivery === $method['code'])>
-                                            <span class="storefront-checkout-delivery-copy">
-                                                <span class="storefront-checkout-delivery-title">
-                                                    <strong>{{ $deliveryOptionTitle($method) }}</strong>
-                                                    <b>{{ $method['price_cents'] > 0 ? $formatMoney($method['price_cents'], $cart['currency']) : 'За тарифом' }}</b>
-                                                </span>
-                                                <small>{{ $deliveryOptionDescription($method) }}</small>
+                                            <span>
+                                                <strong>{{ $method['name'] }}</strong>
+                                                @if ($method['description'])
+                                                    <small>{{ $method['description'] }}</small>
+                                                @endif
                                             </span>
+                                            <b>{{ $method['price_cents'] > 0 ? $formatMoney($method['price_cents'], $cart['currency']) : 'За тарифом' }}</b>
                                         </label>
                                     @endforeach
                                     @error('delivery_method')<small class="storefront-field-error">{{ $message }}</small>@enderror
