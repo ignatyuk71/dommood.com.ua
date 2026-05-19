@@ -304,6 +304,9 @@
                             </section>
 
                             <section class="storefront-checkout-card" aria-labelledby="checkout-comment-title">
+                                @php
+                                    $commentExpanded = old('comment') || $errors->has('comment');
+                                @endphp
                                 <div class="storefront-checkout-card__head">
                                     <span>5</span>
                                     <div>
@@ -313,15 +316,15 @@
                                             type="button"
                                             class="storefront-checkout-comment-toggle"
                                             data-checkout-comment-toggle
-                                            aria-expanded="true"
+                                            aria-expanded="{{ $commentExpanded ? 'true' : 'false' }}"
                                             aria-controls="checkout-comment-body"
                                         >
-                                            <span data-checkout-comment-toggle-text>Згорнути коментар</span>
+                                            <span data-checkout-comment-toggle-text>{{ $commentExpanded ? 'Згорнути коментар' : 'Додати коментар' }}</span>
                                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
                                         </button>
                                     </div>
                                 </div>
-                                <div id="checkout-comment-body" data-checkout-comment-body data-has-content="{{ old('comment') || $errors->has('comment') ? 'true' : 'false' }}">
+                                <div id="checkout-comment-body" data-checkout-comment-body data-has-content="{{ $commentExpanded ? 'true' : 'false' }}" @if (! $commentExpanded) hidden @endif>
                                     <label class="storefront-checkout-textarea">
                                         <span>Коментар до замовлення</span>
                                         <textarea name="comment" rows="4">{{ old('comment') }}</textarea>
@@ -506,11 +509,6 @@
 
                 const syncCommentVisibility = () => {
                     if (!commentBody || !commentToggle) {
-                        return;
-                    }
-
-                    if (!mobileCheckoutQuery.matches) {
-                        setCommentExpanded(true);
                         return;
                     }
 
@@ -911,7 +909,6 @@
                 commentToggle?.addEventListener('click', () => {
                     setCommentExpanded(commentBody?.hidden === true);
                 });
-                mobileCheckoutQuery.addEventListener?.('change', syncCommentVisibility);
                 document.addEventListener('submit', (event) => {
                     const cartForm = event.target.closest('form[data-checkout-cart-action]');
 

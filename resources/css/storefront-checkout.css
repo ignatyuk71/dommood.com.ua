@@ -163,7 +163,7 @@
     border: 1px solid rgba(23, 25, 31, 0.1);
     border-radius: 8px;
     color: var(--dm-color-brand);
-    display: none;
+    display: inline-flex;
     font-size: 0.86rem;
     font-weight: 500;
     gap: 0.45rem;
@@ -927,10 +927,6 @@
         font-size: 1.12rem;
         grid-column: 2;
         justify-self: start;
-    }
-
-    .storefront-checkout-comment-toggle {
-        display: inline-flex;
     }
 
     .storefront-checkout-summary {
