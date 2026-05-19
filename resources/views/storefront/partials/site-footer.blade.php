@@ -5,7 +5,7 @@
     $footerEmail = $supportEmail ?: 'dommood.com.ua@gmail.com';
     $footerAddress = 'м.Костопіль, вул. Рівненська, 107, Рівненська область, Україна, 35000';
     $footerSocialLinks = [
-        ['title' => 'Instagram', 'url' => 'https://www.instagram.com/dommood.com.ua/', 'icon' => 'instagram'],
+        ['title' => 'Instagram', 'url' => 'https://www.instagram.com/dommood.store/', 'icon' => 'instagram'],
         ['title' => 'TikTok', 'url' => 'https://www.tiktok.com/@dommood.com.ua', 'icon' => 'tiktok'],
     ];
     $footerClientLinks = [

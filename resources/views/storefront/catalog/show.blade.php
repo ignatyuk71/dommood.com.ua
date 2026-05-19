@@ -52,10 +52,10 @@
             $outOfStockMessage = 'Вітаю! Повідомте, будь ласка, коли товар "'.$product['name'].'" буде в наявності.';
             $notifyAvailabilityHref = $messengerPhone !== ''
                 ? 'https://wa.me/'.$messengerPhone.'?text='.rawurlencode($outOfStockMessage)
-                : 'https://www.instagram.com/dommood.com.ua/';
+                : 'https://www.instagram.com/dommood.store/';
             $managerContactHref = $messengerPhone !== ''
                 ? 'tg://resolve?phone='.$messengerPhone
-                : 'https://www.instagram.com/dommood.com.ua/';
+                : 'https://www.instagram.com/dommood.store/';
             $galleryImages = collect($product['images'] ?? [])->filter(fn (array $image): bool => filled($image['url'] ?? null))->values();
 
             if ($galleryImages->isEmpty() && filled($product['image_url'] ?? null)) {

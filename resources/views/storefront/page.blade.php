@@ -45,7 +45,7 @@
             ];
             $footerAddress = 'м.Костопіль, вул. Рівненська, 107, Рівненська область, Україна, 35000';
             $footerSocialLinks = [
-                ['title' => 'Instagram', 'url' => 'https://www.instagram.com/dommood.com.ua/', 'icon' => 'instagram'],
+                ['title' => 'Instagram', 'url' => 'https://www.instagram.com/dommood.store/', 'icon' => 'instagram'],
                 ['title' => 'TikTok', 'url' => 'https://www.tiktok.com/@dommood.com.ua', 'icon' => 'tiktok'],
             ];
             $footerClientLinks = [
@@ -116,7 +116,7 @@
                                             <a href="https://wa.me/{{ $messengerPhone }}" class="storefront-messenger-link is-whatsapp" aria-label="WhatsApp" title="WhatsApp">
                                                 <img src="{{ asset('brand/icons/whatsapp.svg') }}" alt="" width="24" height="24">
                                             </a>
-                                            <a href="https://www.instagram.com/dommood.com.ua/" class="storefront-messenger-link is-instagram" aria-label="Instagram" title="Instagram">
+                                            <a href="https://www.instagram.com/dommood.store/" class="storefront-messenger-link is-instagram" aria-label="Instagram" title="Instagram">
                                                 <img src="{{ asset('brand/icons/instagram.svg') }}" alt="" width="24" height="24">
                                             </a>
                                             <a href="https://www.facebook.com/dommood.com.ua" class="storefront-messenger-link is-facebook" aria-label="Facebook" title="Facebook">
