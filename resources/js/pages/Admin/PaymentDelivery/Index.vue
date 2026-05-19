@@ -358,6 +358,23 @@ const connectionStatusLabel = (connection) => {
                                     <code>{{ method.code }}</code>
                                 </div>
                                 <p v-if="method.description" class="mt-2 text-sm text-slate-500">{{ method.description }}</p>
+                                <div v-if="method.tariff_reference" class="mt-3 flex flex-wrap items-center gap-2">
+                                    <span class="rounded-lg bg-[#f5f4ff] px-2.5 py-1 text-xs font-bold text-[#7561f7]">
+                                        {{ method.tariff_weight_category }}
+                                    </span>
+                                    <span class="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
+                                        Орієнтир: {{ method.tariff_reference }}
+                                    </span>
+                                    <a
+                                        v-if="method.tariff_source_url"
+                                        :href="method.tariff_source_url"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="text-xs font-bold text-slate-500 underline decoration-slate-300 underline-offset-4 hover:text-[#7561f7]"
+                                    >
+                                        {{ method.tariff_source_label }}
+                                    </a>
+                                </div>
                             </div>
                             <div class="space-y-1 text-sm font-semibold text-slate-600">
                                 <div class="flex items-center justify-between gap-4 whitespace-nowrap">

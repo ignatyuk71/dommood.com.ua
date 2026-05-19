@@ -386,6 +386,7 @@ class PaymentDeliveryController extends Controller
     private function serializeDeliveryMethod(DeliveryMethod $method): array
     {
         $deliveryPolicy = app(DeliveryPolicyService::class);
+        $settings = $method->settings ?? [];
 
         return [
             'id' => $method->id,
@@ -399,6 +400,10 @@ class PaymentDeliveryController extends Controller
             'base_price' => $this->formatMoney($method->base_price_cents),
             'base_price_value' => $this->moneyValue($method->base_price_cents),
             'free_from_effective' => $deliveryPolicy->freeShippingThresholdLabel(),
+            'tariff_reference' => $settings['tariff_reference'] ?? null,
+            'tariff_source_label' => $settings['tariff_source_label'] ?? null,
+            'tariff_source_url' => $settings['tariff_source_url'] ?? null,
+            'tariff_weight_category' => $settings['tariff_weight_category'] ?? null,
             'is_active' => $method->is_active,
             'sort_order' => $method->sort_order,
             'tariffs_count' => $method->tariffs_count ?? 0,
