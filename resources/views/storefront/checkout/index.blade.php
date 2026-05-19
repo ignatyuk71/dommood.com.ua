@@ -224,13 +224,15 @@
                                     @foreach ($deliveryMethods as $method)
                                         <label class="storefront-checkout-option" data-delivery-option data-delivery-type="{{ $method['type'] ?? 'branch' }}" data-provider="{{ $method['provider'] ?? 'manual' }}" data-price-cents="{{ (int) $method['price_cents'] }}">
                                             <input type="radio" name="delivery_method" value="{{ $method['code'] }}" @checked($selectedDelivery === $method['code'])>
-                                            <span>
-                                                <strong>{{ $method['name'] }}</strong>
+                                            <span class="storefront-checkout-delivery-copy">
+                                                <span class="storefront-checkout-delivery-title">
+                                                    <strong>{{ $method['name'] }}</strong>
+                                                    <b>{{ $method['price_cents'] > 0 ? $formatMoney($method['price_cents'], $cart['currency']) : 'За тарифом' }}</b>
+                                                </span>
                                                 @if ($method['description'])
                                                     <small>{{ $method['description'] }}</small>
                                                 @endif
                                             </span>
-                                            <b>{{ $method['price_cents'] > 0 ? $formatMoney($method['price_cents'], $cart['currency']) : 'За тарифом' }}</b>
                                         </label>
                                     @endforeach
                                     @error('delivery_method')<small class="storefront-field-error">{{ $message }}</small>@enderror

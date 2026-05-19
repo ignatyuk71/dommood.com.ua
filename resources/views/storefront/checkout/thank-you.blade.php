@@ -83,27 +83,27 @@
                             <h2 id="thankyou-details-title">Деталі замовлення</h2>
 
                             <div class="storefront-thankyou-meta">
-                                <div>
+                                <div class="storefront-thankyou-meta__item">
                                     <span>Сума</span>
                                     <strong>{{ $formatMoney($order->total_cents, $order->currency) }}</strong>
                                 </div>
-                                <div>
+                                <div class="storefront-thankyou-meta__item">
                                     <span>Отримувач</span>
                                     <strong>{{ $order->customer_name }}</strong>
                                 </div>
-                                <div>
+                                <div class="storefront-thankyou-meta__item">
                                     <span>Телефон</span>
                                     <strong>{{ $order->customer_phone }}</strong>
                                 </div>
-                                <div>
+                                <div class="storefront-thankyou-meta__item storefront-thankyou-meta__item--wide">
                                     <span>Доставка</span>
                                     <strong>{{ $deliveryLabels[$order->delivery_method] ?? $order->delivery_method ?? 'Уточнюється' }}</strong>
                                 </div>
-                                <div>
+                                <div class="storefront-thankyou-meta__item storefront-thankyou-meta__item--wide">
                                     <span>Адреса</span>
                                     <strong>{{ $deliveryAddress !== '' ? $deliveryAddress : 'Уточнюється' }}</strong>
                                 </div>
-                                <div>
+                                <div class="storefront-thankyou-meta__item storefront-thankyou-meta__item--wide">
                                     <span>Оплата</span>
                                     <strong>{{ $paymentLabels[$order->payment_method] ?? $order->payment_method ?? 'Уточнюється' }}</strong>
                                 </div>
