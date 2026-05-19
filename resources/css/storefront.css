@@ -6239,19 +6239,19 @@ svg {
 
     .storefront-checkout-order-item {
         align-items: start;
-        grid-template-columns: 58px minmax(0, 1fr) auto;
+        grid-template-columns: 58px minmax(0, 1fr);
     }
 
     .storefront-checkout-order-item__actions {
         grid-column: 2;
         grid-row: 2;
         justify-self: start;
+        width: 100%;
     }
 
     .storefront-checkout-order-item__meta {
-        grid-column: 3;
-        grid-row: 2;
-        justify-items: end;
+        justify-items: start;
+        margin-right: auto;
     }
 
     .storefront-thankyou-page {

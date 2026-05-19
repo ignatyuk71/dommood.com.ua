@@ -124,8 +124,8 @@
                                                         @method('PATCH')
                                                         <input type="hidden" name="quantity" value="{{ $item['quantity'] }}">
                                                         <label>
-                                                            <span>Варіант</span>
-                                                            <select name="product_variant_id" aria-label="Вибрати варіант {{ $item['name'] }}" data-checkout-variant-select>
+                                                            <span>Розмір</span>
+                                                            <select name="product_variant_id" aria-label="Вибрати розмір {{ $item['name'] }}" data-checkout-variant-select>
                                                                 @unless ($hasCurrentVariantOption)
                                                                     <option value="" selected disabled>Оберіть</option>
                                                                 @endunless
@@ -142,17 +142,12 @@
                                                         </label>
                                                     </form>
                                                 @endif
-
-                                                <p>
-                                                    @if ($item['variant_name'])
-                                                        <span>{{ $item['variant_name'] }}</span>
-                                                    @endif
-                                                    @if ($item['sku'])
-                                                        <span>Арт. {{ $item['sku'] }}</span>
-                                                    @endif
-                                                </p>
                                             </div>
                                             <div class="storefront-checkout-order-item__actions">
+                                                <div class="storefront-checkout-order-item__meta">
+                                                    <strong>{{ $formatMoney($item['total_cents'], $item['currency']) }}</strong>
+                                                </div>
+
                                                 <form method="post" action="{{ route('cart.items.update', $item['id']) }}" class="storefront-cart-qty" aria-label="Кількість {{ $item['name'] }}" data-checkout-cart-action>
                                                     @csrf
                                                     @method('PATCH')
@@ -172,9 +167,6 @@
                                                         <svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5"/><path d="M14 11v5"/></svg>
                                                     </button>
                                                 </form>
-                                            </div>
-                                            <div class="storefront-checkout-order-item__meta">
-                                                <strong>{{ $formatMoney($item['total_cents'], $item['currency']) }}</strong>
                                             </div>
                                         </article>
                                     @endforeach
