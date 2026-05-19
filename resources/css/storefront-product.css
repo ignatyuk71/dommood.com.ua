@@ -2183,6 +2183,7 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
         overflow-x: visible;
         padding-bottom: 0.2rem;
+        width: min(100%, 620px);
     }
 
     .product-size-options label {
