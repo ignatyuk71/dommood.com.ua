@@ -117,6 +117,10 @@
     gap: 0.42rem;
 }
 
+.storefront-checkout-grid label[hidden] {
+    display: none !important;
+}
+
 .storefront-checkout-grid .is-wide {
     grid-column: 1 / -1;
 }
