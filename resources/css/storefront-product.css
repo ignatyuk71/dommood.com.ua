@@ -2140,7 +2140,7 @@
 
     .product-gallery__track {
         display: flex;
-        gap: 0;
+        gap: 5px;
         margin-left: -1rem;
         margin-right: -1rem;
         overflow-x: auto;
