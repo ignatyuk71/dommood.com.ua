@@ -3,10 +3,12 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Promocode;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -131,13 +133,14 @@ class StorefrontCheckoutTest extends TestCase
         $this->assertSame('new', $order->status);
         $this->assertSame('unpaid', $order->payment_status);
         $this->assertSame('+380931112233', $order->customer_phone);
-        $this->assertSame(32500, $order->total_cents);
+        $this->assertSame(9000, $order->delivery_price_cents);
+        $this->assertSame(41500, $order->total_cents);
         $this->assertCount(1, $order->items);
         $this->assertSame('Домашні капці Welcome Home', $order->items->first()->product_name);
         $this->assertDatabaseHas('customers', [
             'phone' => '+380931112233',
             'orders_count' => 1,
-            'total_spent_cents' => 32500,
+            'total_spent_cents' => 41500,
         ]);
 
         $this->get(route('checkout.thank-you', $order->order_number))
@@ -183,7 +186,51 @@ class StorefrontCheckoutTest extends TestCase
 
         $this->assertSame('WELCOME50', $order->promocode_code);
         $this->assertSame(5000, $order->discount_total_cents);
-        $this->assertSame(27500, $order->total_cents);
+        $this->assertSame(36500, $order->total_cents);
+    }
+
+    public function test_checkout_reuses_existing_customer_for_authenticated_user(): void
+    {
+        $product = $this->makeProduct();
+        $user = User::factory()->create([
+            'email' => 'buyer@example.com',
+        ]);
+        $customer = Customer::query()->create([
+            'user_id' => $user->id,
+            'first_name' => 'Покупець',
+            'email' => 'buyer@example.com',
+        ]);
+
+        $this->actingAs($user)
+            ->post(route('cart.items.store'), [
+                'product_id' => $product->id,
+                'quantity' => 1,
+            ])->assertRedirect(route('cart.show'));
+
+        $this->actingAs($user)
+            ->post(route('checkout.store'), [
+                'customer_first_name' => 'Ірина',
+                'customer_last_name' => 'Клименко',
+                'customer_phone' => '+38 (093) 111-22-33',
+                'customer_email' => 'buyer@example.com',
+                'delivery_method' => 'nova_poshta_branch',
+                'delivery_city' => 'Київ',
+                'delivery_branch' => 'Відділення 12',
+                'payment_method' => 'cod',
+                'terms_accepted' => '1',
+            ])->assertRedirect();
+
+        $order = Order::query()->firstOrFail();
+
+        $this->assertSame($customer->id, $order->customer_id);
+        $this->assertDatabaseCount('customers', 1);
+        $this->assertDatabaseHas('customers', [
+            'id' => $customer->id,
+            'user_id' => $user->id,
+            'phone' => '+380931112233',
+            'orders_count' => 1,
+            'total_spent_cents' => 41500,
+        ]);
     }
 
     private function makeProduct(): Product

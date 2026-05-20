@@ -347,18 +347,33 @@ class CheckoutController extends Controller
     {
         $phone = $this->normalizePhone($request->string('customer_phone')->toString());
         $email = $request->string('customer_email')->toString();
+        $userId = $request->user()?->id;
 
-        if ($phone === '' && $email === '') {
+        if (! $userId && $phone === '' && $email === '') {
             return null;
         }
 
-        $customer = Customer::query()
-            ->when($phone !== '', fn ($query) => $query->orWhere('phone', $phone))
-            ->when($email !== '', fn ($query) => $query->orWhere('email', $email))
-            ->first() ?? new Customer();
+        $customer = $userId
+            ? Customer::query()->where('user_id', $userId)->first()
+            : null;
+
+        if (! $customer && ($phone !== '' || $email !== '')) {
+            $customer = Customer::query()
+                ->where(function ($query) use ($phone, $email): void {
+                    $query
+                        ->when($phone !== '', fn ($query) => $query->orWhere('phone', $phone))
+                        ->when($email !== '', fn ($query) => $query->orWhere('email', $email));
+                })
+                ->when($userId, fn ($query) => $query->where(function ($query) use ($userId): void {
+                    $query->whereNull('user_id')->orWhere('user_id', $userId);
+                }))
+                ->first();
+        }
+
+        $customer ??= new Customer();
 
         $customer->fill([
-            'user_id' => $request->user()?->id,
+            'user_id' => $userId ?: $customer->user_id,
             'first_name' => $request->string('customer_first_name')->toString(),
             'last_name' => $request->string('customer_last_name')->toString() ?: null,
             'phone' => $phone ?: null,
