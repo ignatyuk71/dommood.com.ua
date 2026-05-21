@@ -496,17 +496,14 @@
 }
 
 .product-size-options {
-    flex-wrap: nowrap;
+    display: grid;
+    gap: 0.58rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
     max-width: 100%;
     min-width: 0;
-    overflow-x: auto;
+    overflow-x: visible;
     padding-bottom: 0.15rem;
-    scrollbar-width: none;
     width: 100%;
-}
-
-.product-size-options::-webkit-scrollbar {
-    display: none;
 }
 
 .product-color-options label,
@@ -517,10 +514,9 @@
 }
 
 .product-size-options label {
-    display: inline-flex;
-    flex: 0 0 max-content;
-    min-width: max-content;
-    width: max-content;
+    display: flex;
+    min-width: 0;
+    width: 100%;
 }
 
 .product-color-options label.is-disabled,
@@ -596,11 +592,13 @@
     justify-content: center;
     line-height: 1.15;
     min-height: 42px;
-    min-width: max-content;
+    min-width: 0;
     padding: 0.55rem 0.85rem;
     position: relative;
-    white-space: nowrap;
-    width: max-content;
+    text-align: center;
+    white-space: normal;
+    width: 100%;
+    word-break: break-word;
 }
 
 .product-size-options label.is-disabled > span {
