@@ -231,10 +231,6 @@ class HomeController extends Controller
                 $fallbackImageUrl = $fallbackImages->get($category->id);
                 $categoryImageUrl = $this->storageUrl($category->image_path);
 
-                if (! $this->isOptimizedCategoryImage($category->image_path)) {
-                    $categoryImageUrl = null;
-                }
-
                 return [
                     'id' => $category->id,
                     'name' => $category->name,
@@ -242,20 +238,11 @@ class HomeController extends Controller
                     'description' => $category->description,
                     'products_count' => (int) $category->active_products_count,
                     'url' => url('/catalog/'.$category->slug),
-                    'image_url' => $fallbackImageUrl ?: $categoryImageUrl,
+                    'image_url' => $categoryImageUrl ?: $fallbackImageUrl,
                 ];
             })
             ->values()
             ->all();
-    }
-
-    private function isOptimizedCategoryImage(?string $path): bool
-    {
-        if (! filled($path)) {
-            return false;
-        }
-
-        return Str::endsWith(Str::lower($path), ['.webp', '.avif']);
     }
 
     private function categoryBySlug(string $slug): ?Category
