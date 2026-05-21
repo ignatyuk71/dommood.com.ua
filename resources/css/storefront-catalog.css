@@ -449,6 +449,82 @@
     margin-top: 2rem;
 }
 
+.storefront-pagination {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}
+
+.storefront-pagination__desktop {
+    align-items: center;
+    display: flex;
+    gap: 0.35rem;
+}
+
+.storefront-pagination__mobile {
+    display: none;
+}
+
+.storefront-pagination__page,
+.storefront-pagination__icon,
+.storefront-pagination__control,
+.storefront-pagination__status,
+.storefront-pagination__dots {
+    align-items: center;
+    border-radius: 3px;
+    color: #34313a;
+    display: inline-flex;
+    font-size: 0.9rem;
+    font-weight: 550;
+    justify-content: center;
+    line-height: 1;
+    min-height: 38px;
+    text-decoration: none;
+}
+
+.storefront-pagination__page,
+.storefront-pagination__icon {
+    border: 1px solid #e7e1de;
+    min-width: 38px;
+    padding: 0.45rem 0.62rem;
+}
+
+.storefront-pagination__page:hover,
+.storefront-pagination__icon:hover,
+.storefront-pagination__control:hover {
+    border-color: rgba(123, 26, 37, 0.3);
+    color: var(--dm-color-wine);
+}
+
+.storefront-pagination__page.is-active {
+    background: var(--dm-color-wine);
+    border-color: var(--dm-color-wine);
+    color: #ffffff;
+}
+
+.storefront-pagination__icon svg {
+    fill: none;
+    height: 18px;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+    width: 18px;
+}
+
+.storefront-pagination__icon.is-disabled,
+.storefront-pagination__control.is-disabled {
+    color: #b5adb0;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.storefront-pagination__dots {
+    color: #958d90;
+    min-width: 24px;
+    padding: 0 0.15rem;
+}
+
 .storefront-catalog-empty {
     min-height: 280px;
 }
@@ -708,6 +784,38 @@
         font-size: 0.84rem;
         font-weight: 650;
         text-decoration: none;
+    }
+
+    .storefront-pagination {
+        justify-content: stretch;
+    }
+
+    .storefront-pagination__desktop {
+        display: none;
+    }
+
+    .storefront-pagination__mobile {
+        align-items: center;
+        display: grid;
+        gap: 0.5rem;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        width: 100%;
+    }
+
+    .storefront-pagination__control,
+    .storefront-pagination__status {
+        border: 1px solid #e7e1de;
+        min-height: 42px;
+        padding: 0.6rem 0.85rem;
+    }
+
+    .storefront-pagination__control:last-child {
+        justify-self: end;
+    }
+
+    .storefront-pagination__status {
+        color: #736b70;
+        min-width: 64px;
     }
 }
 

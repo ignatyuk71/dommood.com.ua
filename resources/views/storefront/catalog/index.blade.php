@@ -127,7 +127,7 @@
                                     </div>
 
                                     <div class="storefront-catalog-pagination">
-                                        {{ $products->links() }}
+                                        {{ $products->links('storefront.partials.pagination') }}
                                     </div>
                                 @else
                                     <div class="storefront-empty storefront-catalog-empty">
