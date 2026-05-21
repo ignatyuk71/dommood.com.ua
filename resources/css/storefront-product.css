@@ -3,7 +3,10 @@
     --product-accent-dark: #5f1515;
     --product-bg: #fdf9f6;
     --product-line: #eae4df;
-    --product-muted: #666;
+    --product-muted: #5f5a55;
+    --product-subtle: #6c625c;
+    --product-success: #13783f;
+    --product-warning: #855014;
     --product-photo: #f4f4f4;
     --product-text: #2b2b2b;
     background: var(--product-bg);
@@ -250,7 +253,7 @@
 }
 
 .product-summary__eyebrow {
-    color: #888;
+    color: var(--product-subtle);
     font-size: 15px;
     font-weight: 500;
     letter-spacing: 0.06em;
@@ -267,7 +270,7 @@
 }
 
 .product-summary__intro {
-    color: #666;
+    color: var(--product-muted);
     font-size: 15px;
     font-weight: 400;
     line-height: 1.55;
@@ -276,7 +279,7 @@
 
 .product-meta-row {
     align-items: center;
-    color: #888;
+    color: var(--product-subtle);
     display: flex;
     flex-wrap: wrap;
     font-size: 15px;
@@ -313,7 +316,7 @@
 }
 
 .product-sku b {
-    color: #666;
+    color: var(--product-text);
     font-weight: 500;
 }
 
@@ -340,14 +343,14 @@
 }
 
 .product-price del {
-    color: #999;
+    color: var(--product-subtle);
     font-size: 16px;
     font-weight: 400;
 }
 
 .product-stock {
     align-items: center;
-    color: #27a760;
+    color: var(--product-success);
     display: inline-flex;
     flex: 0 0 auto;
     font-size: 17px;
@@ -374,11 +377,11 @@
 }
 
 .product-stock.is-warning {
-    color: #a45a18;
+    color: var(--product-warning);
 }
 
 .product-stock.is-muted {
-    color: #888;
+    color: var(--product-subtle);
 }
 
 .product-buybox {
@@ -400,7 +403,7 @@
 }
 
 .product-color-gallery h2 span {
-    color: #666;
+    color: var(--product-muted);
     display: inline-block;
     font-size: 15px;
     font-weight: 500;
@@ -454,7 +457,7 @@
 
 .product-option-group legend {
     align-items: center;
-    color: #666;
+    color: var(--product-muted);
     display: flex;
     font-size: 15px;
     font-weight: 500;
@@ -580,7 +583,7 @@
     border: 1px solid #e0e0e0;
     border-radius: 6px;
     box-sizing: border-box;
-    color: #666;
+    color: var(--product-muted);
     display: inline-flex;
     flex: 0 0 auto;
     font-size: 15px;
@@ -600,13 +603,13 @@
         linear-gradient(
             160deg,
             transparent calc(50% - 0.75px),
-            rgba(145, 145, 145, 0.48) calc(50% - 0.75px),
-            rgba(145, 145, 145, 0.48) calc(50% + 0.75px),
+            rgba(111, 106, 101, 0.48) calc(50% - 0.75px),
+            rgba(111, 106, 101, 0.48) calc(50% + 0.75px),
             transparent calc(50% + 0.75px)
         ),
         rgba(255, 255, 255, 0.42);
     border-color: #e3ded9;
-    color: #9b9b9b;
+    color: var(--product-subtle);
 }
 
 .product-size-options label:hover > span,
@@ -623,14 +626,14 @@
         linear-gradient(
             160deg,
             transparent calc(50% - 0.75px),
-            rgba(145, 145, 145, 0.48) calc(50% - 0.75px),
-            rgba(145, 145, 145, 0.48) calc(50% + 0.75px),
+            rgba(111, 106, 101, 0.48) calc(50% - 0.75px),
+            rgba(111, 106, 101, 0.48) calc(50% + 0.75px),
             transparent calc(50% + 0.75px)
         ),
         rgba(255, 255, 255, 0.42);
     border-color: #e3ded9;
     box-shadow: none;
-    color: #9b9b9b;
+    color: var(--product-subtle);
 }
 
 .product-buy-actions {
@@ -653,7 +656,7 @@
 .product-quantity button {
     background: transparent;
     border: 0;
-    color: #888;
+    color: var(--product-subtle);
     cursor: pointer;
     font: inherit;
     height: 100%;
@@ -1008,7 +1011,7 @@
 
 .product-benefit {
     align-items: flex-start;
-    color: #666;
+    color: var(--product-muted);
     display: flex;
     font-size: 15px;
     gap: 0.5rem;
@@ -1658,7 +1661,7 @@
 }
 
 .product-review-form p {
-    color: #666;
+    color: var(--product-muted);
     font-size: 15px;
     line-height: 1.45;
     margin: 0;
@@ -1934,7 +1937,7 @@
 }
 
 .product-dialog p {
-    color: #666;
+    color: var(--product-muted);
     line-height: 1.6;
     margin: 0;
     padding: 1.25rem clamp(1.5rem, 3vw, 2rem) 0;
@@ -2164,22 +2167,43 @@
     .product-gallery__dots {
         align-items: center;
         display: flex;
-        gap: 0.42rem;
+        flex-wrap: wrap;
+        gap: 0;
         justify-content: center;
-        margin-top: 0.55rem;
+        margin: 0.3rem auto 0;
+        max-width: min(100%, 34rem);
     }
 
     .product-gallery__dots button {
-        background: #cfc7c1;
+        align-items: center;
+        background: transparent;
         border: 0;
-        border-radius: 50%;
-        height: 7px;
+        display: inline-flex;
+        flex: 0 0 48px;
+        height: 48px;
+        justify-content: center;
         padding: 0;
-        width: 7px;
+        width: 48px;
     }
 
-    .product-gallery__dots button.is-active {
+    .product-gallery__dots button::before {
+        background: #6f655f;
+        border-radius: 50%;
+        content: "";
+        display: block;
+        height: 9px;
+        transition: background-color 0.16s ease, transform 0.16s ease;
+        width: 9px;
+    }
+
+    .product-gallery__dots button.is-active::before {
         background: var(--product-accent);
+        transform: scale(1.18);
+    }
+
+    .product-gallery__dots button:focus-visible {
+        outline: 2px solid var(--product-accent);
+        outline-offset: -8px;
     }
 
     .product-gallery-lightbox__image {
