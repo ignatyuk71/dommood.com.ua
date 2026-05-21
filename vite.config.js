@@ -8,6 +8,9 @@ export default defineConfig({
             input: [
                 'resources/js/app.js',
                 'resources/css/storefront.css',
+                'resources/css/storefront-home.css',
+                'resources/css/storefront-catalog.css',
+                'resources/css/storefront-page.css',
                 'resources/css/storefront-checkout.css',
                 'resources/css/storefront-product.css',
                 'resources/js/storefront-product.js',

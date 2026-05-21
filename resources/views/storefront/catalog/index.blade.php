@@ -20,9 +20,10 @@
         <meta property="og:url" content="{{ $seo['canonical_url'] ?? url()->current() }}">
         <meta property="og:type" content="website">
         @if (file_exists(public_path('hot')))
-            @vite('resources/css/storefront.css')
+            @vite(['resources/css/storefront.css', 'resources/css/storefront-catalog.css'])
         @else
             @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront.css')])
+            @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront-catalog.css')])
         @endif
     </head>
     <body>

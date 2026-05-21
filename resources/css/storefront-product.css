@@ -62,6 +62,11 @@
     font-size: 15px;
 }
 
+.storefront-product-page .storefront-catalog-seo {
+    background: #fff;
+    padding: clamp(0.7rem, 2vw, 1.2rem) 0 clamp(3rem, 6vw, 4.5rem);
+}
+
 .product-pdp {
     background: var(--product-bg);
     padding: var(--dm-breadcrumb-top-space) 0 clamp(2.8rem, 5vw, 4.8rem);

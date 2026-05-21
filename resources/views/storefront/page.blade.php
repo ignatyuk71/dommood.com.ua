@@ -13,9 +13,10 @@
         <link rel="manifest" href="/site.webmanifest">
         <meta name="theme-color" content="#29277f">
         @if (file_exists(public_path('hot')))
-            @vite('resources/css/storefront.css')
+            @vite(['resources/css/storefront.css', 'resources/css/storefront-page.css'])
         @else
             @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront.css')])
+            @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront-page.css')])
         @endif
     </head>
     <body>
