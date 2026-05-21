@@ -12,12 +12,14 @@ DEPLOY_UID="$(id -u)"
 make_writable_for_deploy() {
   for path in "$@"; do
     [ -e "$path" ] || continue
-    find "$path" -user "$DEPLOY_UID" -exec chmod ug+rwX {} + 2>/dev/null || true
+    find "$path" -type d -user "$DEPLOY_UID" -exec chmod 2775 {} + 2>/dev/null || true
+    find "$path" -type f -user "$DEPLOY_UID" -exec chmod ug+rw {} + 2>/dev/null || true
   done
 }
 
 mkdir -p "$APP_DIR/releases" "$APP_DIR/shared"
 mkdir -p "$APP_DIR/shared/storage/app/public"
+mkdir -p "$APP_DIR/shared/storage/app/public/products"
 mkdir -p "$APP_DIR/shared/storage/framework/cache/data"
 mkdir -p "$APP_DIR/shared/storage/framework/sessions"
 mkdir -p "$APP_DIR/shared/storage/framework/views"
