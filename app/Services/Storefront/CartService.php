@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Models\Promocode;
+use App\Support\Marketing\MarketingSourceRouter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -27,26 +28,72 @@ class CartService
         $cart = $this->findCurrent($request);
 
         if ($cart) {
+            $this->syncAttribution($request, $cart);
+
             return $cart;
         }
+
+        $attribution = app(MarketingSourceRouter::class)->capture($request);
+        $utm = $attribution['utm'] ?? [];
+        $touch = $attribution['touch'] ?? [];
 
         $cart = Cart::query()->create([
             'token' => (string) Str::uuid(),
             'customer_id' => $request->user()?->customer?->id,
             'session_id' => $request->session()->getId(),
             'status' => 'active',
+            'source' => $attribution['source'] ?? null,
+            'channel' => $attribution['channel'] ?? null,
             'currency' => 'UAH',
-            'utm_source' => $request->query('utm_source'),
-            'utm_medium' => $request->query('utm_medium'),
-            'utm_campaign' => $request->query('utm_campaign'),
-            'utm_content' => $request->query('utm_content'),
-            'utm_term' => $request->query('utm_term'),
+            'utm_source' => $utm['utm_source'] ?? null,
+            'utm_medium' => $utm['utm_medium'] ?? null,
+            'utm_campaign' => $utm['utm_campaign'] ?? null,
+            'utm_content' => $utm['utm_content'] ?? null,
+            'utm_term' => $utm['utm_term'] ?? null,
+            'click_ids' => $attribution['click_ids'] ?? [],
+            'landing_page_url' => $touch['entry_url'] ?? $request->fullUrl(),
+            'referrer_url' => $touch['entry_referrer'] ?? $request->headers->get('referer'),
             'expires_at' => now()->addDays(30),
         ]);
 
         $request->session()->put(self::SESSION_KEY, $cart->token);
 
         return $cart;
+    }
+
+    private function syncAttribution(Request $request, Cart $cart): void
+    {
+        $router = app(MarketingSourceRouter::class);
+        $attribution = $router->capture($request);
+        $utm = $attribution['utm'] ?? [];
+        $touch = $attribution['touch'] ?? [];
+        $updates = [];
+
+        foreach ([
+            'source' => $attribution['source'] ?? null,
+            'channel' => $attribution['channel'] ?? null,
+            'utm_source' => $utm['utm_source'] ?? null,
+            'utm_medium' => $utm['utm_medium'] ?? null,
+            'utm_campaign' => $utm['utm_campaign'] ?? null,
+            'utm_content' => $utm['utm_content'] ?? null,
+            'utm_term' => $utm['utm_term'] ?? null,
+            'landing_page_url' => $cart->landing_page_url ?: ($touch['entry_url'] ?? null),
+            'referrer_url' => $cart->referrer_url ?: ($touch['entry_referrer'] ?? null),
+        ] as $key => $value) {
+            if ($value !== null && $value !== '' && $cart->{$key} !== $value) {
+                $updates[$key] = $value;
+            }
+        }
+
+        $clickIds = $attribution['click_ids'] ?? [];
+        if ($clickIds !== [] && $cart->click_ids !== $clickIds) {
+            $updates['click_ids'] = $clickIds;
+        }
+
+        if ($updates !== []) {
+            $cart->forceFill($updates)->save();
+            $cart->refresh();
+        }
     }
 
     public function findCurrent(Request $request): ?Cart

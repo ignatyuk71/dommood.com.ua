@@ -170,7 +170,25 @@
         @include('storefront.partials.cart-drawer-scripts')
 
         <script>
-            window.StorefrontAnalytics?.pushEcommerce?.('purchase', @json($purchaseAnalytics));
+            (() => {
+                const payload = @json($purchaseAnalytics);
+                const eventId = payload.event_id || payload.transaction_id || '';
+                const storageKey = eventId ? `dommood_purchase_${eventId}` : '';
+
+                try {
+                    if (storageKey && window.sessionStorage?.getItem(storageKey)) {
+                        return;
+                    }
+                } catch (error) {}
+
+                window.StorefrontAnalytics?.pushEcommerce?.('purchase', payload);
+
+                try {
+                    if (storageKey) {
+                        window.sessionStorage?.setItem(storageKey, '1');
+                    }
+                } catch (error) {}
+            })();
         </script>
     </body>
 </html>

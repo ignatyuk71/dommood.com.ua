@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Storefront\StoreCheckoutRequest;
+use App\Models\Cart;
 use App\Models\Category;
 use App\Models\ContentPage;
 use App\Models\Customer;
@@ -12,17 +13,20 @@ use App\Models\Menu;
 use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\PaymentMethod;
+use App\Services\Marketing\MarketingEventService;
 use App\Services\Payments\LiqPayService;
 use App\Services\SiteSettingsService;
 use App\Services\Storefront\CartService;
 use App\Services\Storefront\DeliveryPolicyService;
+use App\Support\Marketing\MarketingSourceRouter;
+use App\Support\Storefront\EcommerceAnalytics;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class CheckoutController extends Controller
 {
@@ -30,6 +34,8 @@ class CheckoutController extends Controller
         private readonly CartService $carts,
         private readonly SiteSettingsService $settings,
         private readonly DeliveryPolicyService $deliveryPolicy,
+        private readonly MarketingSourceRouter $sourceRouter,
+        private readonly MarketingEventService $marketingEvents,
     ) {}
 
     public function index(Request $request): View|RedirectResponse
@@ -42,12 +48,15 @@ class CheckoutController extends Controller
         }
 
         $storeSettings = $this->settings->get('store');
+        $checkoutAnalytics = EcommerceAnalytics::cart($cartPayload);
+        $beginCheckoutEventId = $this->marketingEvents->trackBeginCheckout($request, $checkoutAnalytics);
 
         return view('storefront.checkout.index', [
             'storeName' => $storeSettings['store_name'] ?? 'DomMood',
             'supportEmail' => $storeSettings['support_email'] ?? null,
             'supportPhone' => $storeSettings['support_phone'] ?? null,
             'cart' => $cartPayload,
+            'beginCheckoutEventId' => $beginCheckoutEventId,
             'deliveryMethods' => $this->deliveryMethods($cartPayload),
             'paymentMethods' => $this->paymentMethods(),
             'checkoutSettings' => $this->settings->get('checkout'),
@@ -102,7 +111,9 @@ class CheckoutController extends Controller
             throw ValidationException::withMessages(['delivery_address' => 'Вкажіть адресу для курʼєрської доставки.']);
         }
 
-        $order = DB::transaction(function () use ($request, $cart, $cartPayload, $deliveryMethod, $paymentMethod, $deliveryType, $requiresWarehouse, $requiresCourierAddress): Order {
+        $orderAttribution = $this->cartAttribution($request, $cart);
+
+        $order = DB::transaction(function () use ($request, $cart, $cartPayload, $deliveryMethod, $paymentMethod, $deliveryType, $requiresWarehouse, $requiresCourierAddress, $orderAttribution): Order {
             $customer = $this->upsertCustomer($request);
             $deliveryPriceCents = (int) $deliveryMethod['price_cents'];
             $totalCents = (int) $cartPayload['total_cents'] + $deliveryPriceCents;
@@ -147,14 +158,17 @@ class CheckoutController extends Controller
                 'total_cents' => $totalCents,
                 'promocode_code' => $cartPayload['promocode_code'],
                 'comment' => $request->string('comment')->toString() ?: null,
-                'source' => $cart->utm_source ?: $request->headers->get('referer'),
-                'utm_source' => $cart->utm_source,
-                'utm_medium' => $cart->utm_medium,
-                'utm_campaign' => $cart->utm_campaign,
-                'utm_content' => $cart->utm_content,
-                'utm_term' => $cart->utm_term,
-                'landing_page_url' => $request->headers->get('referer'),
-                'referrer_url' => $request->headers->get('referer'),
+                'source' => $orderAttribution['source'] ?? null,
+                'channel' => $orderAttribution['channel'] ?? null,
+                'utm_source' => $orderAttribution['utm']['utm_source'] ?? null,
+                'utm_medium' => $orderAttribution['utm']['utm_medium'] ?? null,
+                'utm_campaign' => $orderAttribution['utm']['utm_campaign'] ?? null,
+                'utm_content' => $orderAttribution['utm']['utm_content'] ?? null,
+                'utm_term' => $orderAttribution['utm']['utm_term'] ?? null,
+                'click_ids' => $orderAttribution['click_ids'] ?? [],
+                'attribution' => $orderAttribution,
+                'landing_page_url' => $orderAttribution['touch']['entry_url'] ?? $cart->landing_page_url ?? $request->fullUrl(),
+                'referrer_url' => $orderAttribution['touch']['entry_referrer'] ?? $cart->referrer_url ?? $request->headers->get('referer'),
                 'ip_address' => $request->ip(),
                 'user_agent' => (string) $request->userAgent(),
             ]);
@@ -178,6 +192,8 @@ class CheckoutController extends Controller
 
             return $order;
         });
+
+        $this->marketingEvents->trackPurchase($request, $order->load('items'));
 
         $request->session()->put('last_order_number', $order->order_number);
 
@@ -241,6 +257,31 @@ class CheckoutController extends Controller
         }
 
         return $this->defaultNovaPoshtaDeliveryMethods();
+    }
+
+    private function cartAttribution(Request $request, Cart $cart): array
+    {
+        $captured = $this->sourceRouter->capture($request);
+        $utm = array_filter([
+            'utm_source' => $cart->utm_source,
+            'utm_medium' => $cart->utm_medium,
+            'utm_campaign' => $cart->utm_campaign,
+            'utm_content' => $cart->utm_content,
+            'utm_term' => $cart->utm_term,
+        ], static fn ($value): bool => $value !== null && $value !== '');
+
+        return [
+            'source' => $cart->source ?: ($captured['source'] ?? null),
+            'channel' => $cart->channel ?: ($captured['channel'] ?? null),
+            'utm' => $utm ?: ($captured['utm'] ?? []),
+            'click_ids' => $cart->click_ids ?: ($captured['click_ids'] ?? []),
+            'touch' => array_filter([
+                'entry_url' => $cart->landing_page_url ?: ($captured['touch']['entry_url'] ?? null),
+                'entry_referrer' => $cart->referrer_url ?: ($captured['touch']['entry_referrer'] ?? null),
+                'last_attributed_url' => $captured['touch']['last_attributed_url'] ?? null,
+                'last_attributed_referrer' => $captured['touch']['last_attributed_referrer'] ?? null,
+            ], static fn ($value): bool => $value !== null && $value !== ''),
+        ];
     }
 
     private function defaultNovaPoshtaDeliveryMethods(): array
@@ -370,7 +411,7 @@ class CheckoutController extends Controller
                 ->first();
         }
 
-        $customer ??= new Customer();
+        $customer ??= new Customer;
 
         $customer->fill([
             'user_id' => $userId ?: $customer->user_id,

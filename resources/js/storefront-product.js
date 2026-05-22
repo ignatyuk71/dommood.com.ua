@@ -841,6 +841,7 @@
     trackEcommerce('view_item', {
         currency,
         value: Number((Number(currentVariant()?.price_cents || product.base_price_cents || 0) / 100).toFixed(2)),
+        event_id: product.view_item_event_id || undefined,
         items: [analyticsItem(currentVariant(), 1)],
     });
 })();

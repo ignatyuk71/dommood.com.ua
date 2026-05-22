@@ -68,10 +68,12 @@ class EcommerceAnalytics
         $order->loadMissing('items');
         $itemsValueCents = max(0, (int) $order->total_cents - (int) $order->delivery_price_cents);
         $payload = [
+            'event_id' => 'order_'.$order->order_number,
             'transaction_id' => (string) $order->order_number,
             'value' => self::money($itemsValueCents),
             'shipping' => self::money((int) $order->delivery_price_cents),
             'currency' => self::currency($order->currency ?: 'UAH'),
+            'source_channel' => $order->channel,
             'items' => $order->items
                 ->values()
                 ->map(fn (OrderItem $item, int $index): array => self::orderItem($item, $index))

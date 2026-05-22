@@ -172,6 +172,7 @@
                 'base_price_cents' => $product['price_cents'],
                 'base_old_price_cents' => $product['old_price_cents'],
                 'sku' => $product['sku'],
+                'view_item_event_id' => $viewItemEventId ?? null,
                 'brand' => $product['brand']['name'] ?? null,
                 'category' => $product['category']['name'] ?? $category->name,
                 'stock_status' => $product['stock_status'],

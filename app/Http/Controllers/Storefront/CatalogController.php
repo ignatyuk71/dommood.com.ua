@@ -14,12 +14,14 @@ use App\Models\ProductAttribute;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
 use App\Models\Review;
+use App\Services\Marketing\MarketingEventService;
 use App\Services\Seo\SeoResolver;
 use App\Services\SiteSettingsService;
 use App\Services\Storefront\DeliveryPolicyService;
 use App\Services\Storefront\ProductAvailabilityService;
 use App\Support\Catalog\FilterUrlBuilder;
 use App\Support\Catalog\ProductFilterQuery;
+use App\Support\Storefront\EcommerceAnalytics;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -37,6 +39,7 @@ class CatalogController extends Controller
         private readonly FilterUrlBuilder $filterUrlBuilder,
         private readonly DeliveryPolicyService $deliveryPolicy,
         private readonly ProductAvailabilityService $availability,
+        private readonly MarketingEventService $marketingEvents,
     ) {}
 
     public function index(Request $request, ?string $categorySlug = null, ?string $filterSegments = null): View
@@ -114,7 +117,7 @@ class CatalogController extends Controller
         ]);
     }
 
-    public function show(string $categorySlug, string $productSlug): View
+    public function show(Request $request, string $categorySlug, string $productSlug): View
     {
         $storeSettings = $this->settings->get('store');
         $storeName = $storeSettings['store_name'] ?? 'DomMood';
@@ -231,6 +234,13 @@ class CatalogController extends Controller
         $serializedProduct['color_options'] = $this->colorOptions($product, $category);
         $seo = $this->seo->metaForProduct($product);
         $canonicalUrl = $seo['canonical_url'] ?? url('/catalog/'.$category->slug.'/'.$product->slug);
+        $viewItemPayload = [
+            'currency' => $serializedProduct['currency'] ?? 'UAH',
+            'value' => round(((int) ($serializedProduct['price_cents'] ?? 0)) / 100, 2),
+            'items' => [EcommerceAnalytics::productCard($serializedProduct)],
+            'product_id' => $serializedProduct['id'] ?? null,
+        ];
+        $viewItemEventId = $this->marketingEvents->trackViewItem($request, $viewItemPayload, (int) $product->id);
 
         return view('storefront.catalog.show', [
             'storeName' => $storeName,
@@ -243,6 +253,7 @@ class CatalogController extends Controller
             'footerMenuItems' => $this->menuItems('footer'),
             'category' => $category,
             'product' => $serializedProduct,
+            'viewItemEventId' => $viewItemEventId,
             'faqItems' => $this->productFaq($serializedProduct, $category->name),
             'relatedProducts' => $this->relatedProductCards($product, $category),
             'freeShippingThresholdCents' => $this->freeShippingThresholdCents(),

@@ -16,6 +16,8 @@ class Cart extends Model
         'customer_id',
         'session_id',
         'status',
+        'source',
+        'channel',
         'currency',
         'subtotal_cents',
         'discount_total_cents',
@@ -26,6 +28,9 @@ class Cart extends Model
         'utm_campaign',
         'utm_content',
         'utm_term',
+        'click_ids',
+        'landing_page_url',
+        'referrer_url',
         'expires_at',
         'converted_at',
     ];
@@ -36,6 +41,7 @@ class Cart extends Model
             'subtotal_cents' => 'integer',
             'discount_total_cents' => 'integer',
             'total_cents' => 'integer',
+            'click_ids' => 'array',
             'expires_at' => 'datetime',
             'converted_at' => 'datetime',
         ];

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
+use App\Services\Marketing\MarketingEventService;
 use App\Services\SiteSettingsService;
 use App\Services\Storefront\CartService;
 use App\Support\Storefront\EcommerceAnalytics;
@@ -16,6 +17,7 @@ class CartController extends Controller
     public function __construct(
         private readonly CartService $carts,
         private readonly SiteSettingsService $settings,
+        private readonly MarketingEventService $marketingEvents,
     ) {}
 
     public function show(Request $request): View
@@ -66,14 +68,24 @@ class CartController extends Controller
                 isset($data['product_variant_id']) ? (int) $data['product_variant_id'] : null,
             );
             $quantity = (int) ($data['quantity'] ?? 1);
+            $analyticsPayload = $item ? [
+                'currency' => $payload['currency'],
+                'value' => round(((int) $item['price_cents'] * $quantity) / 100, 2),
+                'items' => [EcommerceAnalytics::cartItem($item, quantity: $quantity)],
+                'product_id' => $item['product_id'] ?? null,
+            ] : null;
+
+            if ($analyticsPayload) {
+                $analyticsPayload['event_id'] = $this->marketingEvents->trackAddToCart(
+                    $request,
+                    $analyticsPayload,
+                    (int) ($item['product_id'] ?? 0)
+                );
+            }
 
             return $this->drawerResponse($request, 'Товар додано до кошика.', $item ? [
                 'event' => 'add_to_cart',
-                'ecommerce' => [
-                    'currency' => $payload['currency'],
-                    'value' => round(((int) $item['price_cents'] * $quantity) / 100, 2),
-                    'items' => [EcommerceAnalytics::cartItem($item, quantity: $quantity)],
-                ],
+                'ecommerce' => $analyticsPayload,
             ] : null);
         }
 
