@@ -119,7 +119,11 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('headerCartSummary', $request->attributes->get('storefront_header_cart_summary'));
 
-            if (! $request->attributes->has('storefront_analytics_config')) {
+            $viewAnalyticsConfig = $view->getData()['storefrontAnalyticsConfig'] ?? null;
+
+            if (is_array($viewAnalyticsConfig)) {
+                $request->attributes->set('storefront_analytics_config', $viewAnalyticsConfig);
+            } elseif (! $request->attributes->has('storefront_analytics_config')) {
                 $request->attributes->set(
                     'storefront_analytics_config',
                     app(StorefrontAnalyticsConfig::class)->storefront($request),

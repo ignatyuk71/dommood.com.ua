@@ -11,9 +11,9 @@ class StorefrontAnalyticsConfig
 {
     public function __construct(private readonly MarketingSourceRouter $sourceRouter) {}
 
-    public function storefront(Request $request): array
+    public function storefront(Request $request, ?array $attribution = null): array
     {
-        $attribution = $this->sourceRouter->capture($request);
+        $attribution ??= $this->sourceRouter->capture($request);
         $providers = $this->providers();
 
         return [

@@ -14,6 +14,7 @@ use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\PaymentMethod;
 use App\Services\Marketing\MarketingEventService;
+use App\Services\Marketing\StorefrontAnalyticsConfig;
 use App\Services\Payments\LiqPayService;
 use App\Services\SiteSettingsService;
 use App\Services\Storefront\CartService;
@@ -36,6 +37,7 @@ class CheckoutController extends Controller
         private readonly DeliveryPolicyService $deliveryPolicy,
         private readonly MarketingSourceRouter $sourceRouter,
         private readonly MarketingEventService $marketingEvents,
+        private readonly StorefrontAnalyticsConfig $analyticsConfig,
     ) {}
 
     public function index(Request $request): View|RedirectResponse
@@ -65,6 +67,7 @@ class CheckoutController extends Controller
             'utilityLinks' => $this->menuItems('utility'),
             'mobileMenuItems' => $this->menuItems('mobile'),
             'footerMenuItems' => $this->menuItems('footer'),
+            'storefrontAnalyticsConfig' => $this->analyticsConfig->storefront($request, $this->cartAttribution($request, $cart)),
         ]);
     }
 
@@ -238,6 +241,7 @@ class CheckoutController extends Controller
             'utilityLinks' => $this->menuItems('utility'),
             'mobileMenuItems' => $this->menuItems('mobile'),
             'footerMenuItems' => $this->menuItems('footer'),
+            'storefrontAnalyticsConfig' => $this->analyticsConfig->storefront($request, $this->orderAttribution($request, $order)),
         ]);
     }
 
@@ -281,6 +285,27 @@ class CheckoutController extends Controller
                 'last_attributed_url' => $captured['touch']['last_attributed_url'] ?? null,
                 'last_attributed_referrer' => $captured['touch']['last_attributed_referrer'] ?? null,
             ], static fn ($value): bool => $value !== null && $value !== ''),
+        ];
+    }
+
+    private function orderAttribution(Request $request, Order $order): array
+    {
+        $captured = $this->sourceRouter->capture($request);
+        $stored = is_array($order->attribution) ? $order->attribution : [];
+        $utm = array_filter([
+            'utm_source' => $order->utm_source,
+            'utm_medium' => $order->utm_medium,
+            'utm_campaign' => $order->utm_campaign,
+            'utm_content' => $order->utm_content,
+            'utm_term' => $order->utm_term,
+        ], static fn ($value): bool => $value !== null && $value !== '');
+
+        return [
+            'source' => $order->source ?: ($stored['source'] ?? $captured['source'] ?? null),
+            'channel' => $order->channel ?: ($stored['channel'] ?? $captured['channel'] ?? null),
+            'utm' => $utm ?: ($stored['utm'] ?? $captured['utm'] ?? []),
+            'click_ids' => $order->click_ids ?: ($stored['click_ids'] ?? $captured['click_ids'] ?? []),
+            'touch' => $stored['touch'] ?? $captured['touch'] ?? [],
         ];
     }
 

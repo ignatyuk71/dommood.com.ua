@@ -51,6 +51,7 @@
             $checkoutTotalCents = (int) $cart['total_cents'] + (int) ($activeDelivery['price_cents'] ?? 0);
             $checkoutAnalytics = \App\Support\Storefront\EcommerceAnalytics::cart($cart, (int) ($activeDelivery['price_cents'] ?? 0), $selectedDelivery, $selectedPayment);
             $checkoutAnalytics['event_id'] = $beginCheckoutEventId ?? null;
+            $checkoutAnalytics['source_channel'] = $cart['channel'] ?? null;
             $breadcrumbs = [
                 ['label' => 'Головна', 'url' => route('home')],
                 ['label' => 'Кошик', 'url' => route('cart.show')],

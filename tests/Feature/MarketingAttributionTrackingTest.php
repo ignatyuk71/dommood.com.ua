@@ -113,6 +113,52 @@ class MarketingAttributionTrackingTest extends TestCase
         ]);
     }
 
+    public function test_thank_you_page_uses_order_attribution_for_browser_pixel_routing(): void
+    {
+        $this->enablePixelProvider('meta');
+        $product = $this->makeProduct();
+
+        $order = Order::query()->create([
+            'order_number' => 'DM-TEST-META',
+            'status' => 'new',
+            'payment_status' => 'unpaid',
+            'payment_method' => 'cod',
+            'delivery_method' => 'nova_poshta_branch',
+            'customer_name' => 'Ірина Клименко',
+            'customer_phone' => '+380931112233',
+            'currency' => 'UAH',
+            'subtotal_cents' => 32500,
+            'delivery_price_cents' => 9000,
+            'total_cents' => 41500,
+            'source' => 'meta',
+            'channel' => 'meta_social',
+            'attribution' => [
+                'source' => 'meta',
+                'channel' => 'meta_social',
+                'utm' => [],
+                'click_ids' => [],
+            ],
+        ]);
+
+        $order->items()->create([
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'sku' => 'DM-META',
+            'price_cents' => 32500,
+            'quantity' => 1,
+            'total_cents' => 32500,
+            'product_snapshot' => ['category_name' => 'Домашні капці'],
+        ]);
+
+        $this->get(route('checkout.thank-you', $order->order_number))
+            ->assertOk()
+            ->assertSee('"source":"meta"', false)
+            ->assertSee('"channel":"meta_social"', false)
+            ->assertSee('"allowed":{"meta":true', false)
+            ->assertSee('"source_channel":"meta_social"', false)
+            ->assertSee("window.StorefrontAnalytics?.pushEcommerce?.('purchase'", false);
+    }
+
     private function enablePixelProvider(string $provider): void
     {
         $integration = MarketingIntegration::query()->create([

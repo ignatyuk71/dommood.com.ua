@@ -71,6 +71,7 @@ class CartController extends Controller
             $analyticsPayload = $item ? [
                 'currency' => $payload['currency'],
                 'value' => round(((int) $item['price_cents'] * $quantity) / 100, 2),
+                'source_channel' => $cart->channel,
                 'items' => [EcommerceAnalytics::cartItem($item, quantity: $quantity)],
                 'product_id' => $item['product_id'] ?? null,
             ] : null;

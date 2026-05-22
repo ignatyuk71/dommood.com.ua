@@ -300,6 +300,8 @@ class CartService
         return [
             'id' => $cart->id,
             'token' => $cart->token,
+            'source' => $cart->source,
+            'channel' => $cart->channel,
             'currency' => $cart->currency ?: 'UAH',
             'items' => $items,
             'items_count' => count($items),

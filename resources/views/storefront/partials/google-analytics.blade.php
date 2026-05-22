@@ -49,16 +49,35 @@
             document.head.appendChild(script);
         };
 
-        const providerAllowed = (provider) => {
+        const payloadSourceMatchesProvider = (provider, payload = {}) => {
+            const source = String(payload.source || '').trim().toLowerCase();
+            const channel = String(payload.source_channel || '').trim().toLowerCase();
+
+            if (provider === 'meta') {
+                return source === 'meta' || channel === 'meta' || channel.startsWith('meta_');
+            }
+
+            if (provider === 'tiktok') {
+                return source === 'tiktok' || channel === 'tiktok' || channel.startsWith('tiktok_');
+            }
+
+            if (provider === 'google') {
+                return source === 'google' || channel === 'google' || channel.startsWith('google_');
+            }
+
+            return false;
+        };
+
+        const providerAllowed = (provider, payload = {}) => {
             if (provider === 'google') {
                 return Boolean(googleConfig.enabled);
             }
 
             if (Object.prototype.hasOwnProperty.call(allowed, provider)) {
-                return Boolean(allowed[provider]);
+                return Boolean(allowed[provider]) || payloadSourceMatchesProvider(provider, payload);
             }
 
-            return routing.strict === false;
+            return routing.strict === false || payloadSourceMatchesProvider(provider, payload);
         };
 
         const normalizeItems = (payload) => {
@@ -168,10 +187,12 @@
             }
         };
 
-        const initMeta = () => {
+        let metaPixelInitialized = false;
+
+        const ensureMetaPixel = (trackPageView = false) => {
             const pixelId = String(metaConfig.pixel_id || '').trim();
-            if (!metaConfig.enabled || !pixelId || !providerAllowed('meta')) {
-                return;
+            if (!metaConfig.enabled || !pixelId) {
+                return false;
             }
 
             if (!window.fbq) {
@@ -193,8 +214,24 @@
                 })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
             }
 
-            window.fbq('init', pixelId);
-            window.fbq('track', 'PageView');
+            if (!metaPixelInitialized) {
+                window.fbq('init', pixelId);
+                metaPixelInitialized = true;
+            }
+
+            if (trackPageView) {
+                window.fbq('track', 'PageView');
+            }
+
+            return typeof window.fbq === 'function';
+        };
+
+        const initMeta = () => {
+            if (!providerAllowed('meta')) {
+                return;
+            }
+
+            ensureMetaPixel(true);
         };
 
         const initTikTok = () => {
@@ -233,7 +270,7 @@
 
         const trackMeta = (eventName, payload) => {
             const mapped = providerEventName('meta', eventName);
-            if (!mapped || !metaConfig.enabled || !providerAllowed('meta') || typeof window.fbq !== 'function') {
+            if (!mapped || !metaConfig.enabled || !providerAllowed('meta', payload) || !ensureMetaPixel(false)) {
                 return;
             }
 
