@@ -156,6 +156,8 @@ class MarketingAttributionTrackingTest extends TestCase
             ->assertSee('"channel":"meta_social"', false)
             ->assertSee('"allowed":{"meta":true', false)
             ->assertSee('"source_channel":"meta_social"', false)
+            ->assertSee('"test_event_code":"TEST123"', false)
+            ->assertSee('test_event_code: metaConfig.mode === \'test\' ? metaConfig.test_event_code : undefined', false)
             ->assertSee("window.StorefrontAnalytics?.pushEcommerce?.('purchase'", false);
     }
 

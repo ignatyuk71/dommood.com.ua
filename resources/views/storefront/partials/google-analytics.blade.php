@@ -148,6 +148,11 @@
             return map[eventName]?.[provider] || null;
         };
 
+        const metaEventOptions = (eventId = null) => cleanObject({
+            eventID: eventId,
+            test_event_code: metaConfig.mode === 'test' ? metaConfig.test_event_code : undefined,
+        });
+
         const initGoogle = () => {
             if (!googleConfig.enabled) {
                 return;
@@ -220,7 +225,7 @@
             }
 
             if (trackPageView) {
-                window.fbq('track', 'PageView');
+                window.fbq('track', 'PageView', {}, metaEventOptions());
             }
 
             return typeof window.fbq === 'function';
@@ -275,9 +280,7 @@
             }
 
             const normalized = normalizePayload(payload);
-            window.fbq('track', mapped, normalized, cleanObject({
-                eventID: normalized.event_id,
-            }));
+            window.fbq('track', mapped, normalized, metaEventOptions(normalized.event_id));
         };
 
         const trackTikTok = (eventName, payload) => {

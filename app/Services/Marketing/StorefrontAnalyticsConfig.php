@@ -92,6 +92,9 @@ class StorefrontAnalyticsConfig
         return [
             'enabled' => $enabled,
             'pixel_id' => $pixelId,
+            'test_event_code' => $integration?->mode === MarketingIntegration::MODE_TEST
+                ? $this->value($settings['test_event_code'] ?? null)
+                : null,
             'send_client' => $enabled,
             'send_server' => (bool) ($settings['send_server'] ?? false),
             'mode' => $integration?->mode === MarketingIntegration::MODE_TEST ? 'test' : 'prod',
