@@ -21,9 +21,10 @@ use App\Models\ShippingProviderSetting;
 use App\Models\SizeChart;
 use App\Models\User;
 use App\Observers\AdminActivityObserver;
+use App\Services\Marketing\GoogleAnalyticsConfig;
 use App\Services\Shipping\NovaPoshtaApi;
-use App\Support\AdminPermissions;
 use App\Services\Storefront\CartService;
+use App\Support\AdminPermissions;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\Facades\View;
@@ -117,6 +118,15 @@ class AppServiceProvider extends ServiceProvider
             }
 
             $view->with('headerCartSummary', $request->attributes->get('storefront_header_cart_summary'));
+
+            if (! $request->attributes->has('storefront_google_analytics')) {
+                $request->attributes->set(
+                    'storefront_google_analytics',
+                    app(GoogleAnalyticsConfig::class)->storefront(),
+                );
+            }
+
+            $view->with('storefrontGoogleAnalytics', $request->attributes->get('storefront_google_analytics'));
         });
     }
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Storefront;
 use App\Http\Controllers\Controller;
 use App\Services\SiteSettingsService;
 use App\Services\Storefront\CartService;
+use App\Support\Storefront\EcommerceAnalytics;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -33,7 +34,13 @@ class CartController extends Controller
 
     public function drawer(Request $request): JsonResponse
     {
-        return $this->drawerResponse($request);
+        $cart = $this->carts->current($request);
+        $payload = $this->carts->payload($cart);
+
+        return $this->drawerResponse($request, analyticsEvent: [
+            'event' => 'view_cart',
+            'ecommerce' => EcommerceAnalytics::cart($payload),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse|JsonResponse
@@ -44,7 +51,7 @@ class CartController extends Controller
             'quantity' => ['nullable', 'integer', 'min:1', 'max:99'],
         ]);
 
-        $this->carts->addProduct(
+        $cart = $this->carts->addProduct(
             $request,
             (int) $data['product_id'],
             isset($data['product_variant_id']) ? (int) $data['product_variant_id'] : null,
@@ -52,7 +59,22 @@ class CartController extends Controller
         );
 
         if ($this->wantsDrawerResponse($request)) {
-            return $this->drawerResponse($request, 'Товар додано до кошика.');
+            $payload = $this->carts->payload($cart);
+            $item = $this->analyticsItemFromPayload(
+                $payload,
+                (int) $data['product_id'],
+                isset($data['product_variant_id']) ? (int) $data['product_variant_id'] : null,
+            );
+            $quantity = (int) ($data['quantity'] ?? 1);
+
+            return $this->drawerResponse($request, 'Товар додано до кошика.', $item ? [
+                'event' => 'add_to_cart',
+                'ecommerce' => [
+                    'currency' => $payload['currency'],
+                    'value' => round(((int) $item['price_cents'] * $quantity) / 100, 2),
+                    'items' => [EcommerceAnalytics::cartItem($item, quantity: $quantity)],
+                ],
+            ] : null);
         }
 
         return redirect()
@@ -88,10 +110,24 @@ class CartController extends Controller
     public function destroy(Request $request, int $item): RedirectResponse|JsonResponse
     {
         $cart = $this->carts->current($request);
+        $removedItem = null;
+
+        if ($this->wantsDrawerResponse($request)) {
+            $removedItem = collect($this->carts->payload($cart)['items'] ?? [])
+                ->firstWhere('id', $item);
+        }
+
         $this->carts->removeItem($cart, $item);
 
         if ($this->wantsDrawerResponse($request)) {
-            return $this->drawerResponse($request, 'Товар видалено з кошика.');
+            return $this->drawerResponse($request, 'Товар видалено з кошика.', $removedItem ? [
+                'event' => 'remove_from_cart',
+                'ecommerce' => [
+                    'currency' => $removedItem['currency'] ?? 'UAH',
+                    'value' => round(((int) ($removedItem['total_cents'] ?? 0)) / 100, 2),
+                    'items' => [EcommerceAnalytics::cartItem($removedItem)],
+                ],
+            ] : null);
         }
 
         return redirect()
@@ -131,7 +167,7 @@ class CartController extends Controller
             ->with('cart_status', 'Купон видалено.');
     }
 
-    private function drawerResponse(Request $request, ?string $statusMessage = null): JsonResponse
+    private function drawerResponse(Request $request, ?string $statusMessage = null, ?array $analyticsEvent = null): JsonResponse
     {
         $cart = $this->carts->current($request);
         $payload = $this->carts->payload($cart);
@@ -148,7 +184,15 @@ class CartController extends Controller
             'is_empty' => $payload['is_empty'],
             'cart_summary' => $this->carts->summaryFromPayload($payload),
             'status_message' => $statusMessage,
+            'analytics_event' => $analyticsEvent,
         ]);
+    }
+
+    private function analyticsItemFromPayload(array $payload, int $productId, ?int $variantId = null): ?array
+    {
+        return collect($payload['items'] ?? [])
+            ->first(fn (array $item): bool => (int) $item['product_id'] === $productId
+                && ($variantId === null || (int) $item['product_variant_id'] === $variantId));
     }
 
     private function wantsDrawerResponse(Request $request): bool

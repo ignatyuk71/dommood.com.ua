@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Customer;
+use App\Models\MarketingIntegration;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -53,6 +54,32 @@ class StorefrontCheckoutTest extends TestCase
         $this->assertStringContainsString('storefront-cart-free-shipping', $response->json('drawer_html'));
         $this->assertStringContainsString('Додайте ще 875 грн', $response->json('drawer_html'));
         $this->assertSame('Товар додано до кошика.', $response->json('status_message'));
+        $this->assertSame('add_to_cart', $response->json('analytics_event.event'));
+        $this->assertSame('UAH', $response->json('analytics_event.ecommerce.currency'));
+        $this->assertEquals(325.0, $response->json('analytics_event.ecommerce.value'));
+        $this->assertSame('Домашні капці Welcome Home', $response->json('analytics_event.ecommerce.items.0.item_name'));
+    }
+
+    public function test_google_analytics_tag_and_checkout_events_render_when_enabled(): void
+    {
+        $this->enableGoogleAnalytics();
+        $product = $this->makeProduct();
+
+        $this->post(route('cart.items.store'), [
+            'product_id' => $product->id,
+            'quantity' => 1,
+        ])->assertRedirect(route('cart.show'));
+
+        $this->get(route('cart.show'))
+            ->assertOk()
+            ->assertSee('https://www.googletagmanager.com/gtag/js?id=G-ZTHCWKS4YP', false)
+            ->assertSee('view_cart', false);
+
+        $this->get(route('checkout.index'))
+            ->assertOk()
+            ->assertSee('begin_checkout', false)
+            ->assertSee('add_shipping_info', false)
+            ->assertSee('add_payment_info', false);
     }
 
     public function test_customer_can_change_cart_item_variant_and_price_updates(): void
@@ -261,6 +288,24 @@ class StorefrontCheckoutTest extends TestCase
             'old_price_cents' => $priceCents + 10000,
             'stock_quantity' => 10,
             'is_active' => true,
+        ]);
+    }
+
+    private function enableGoogleAnalytics(): void
+    {
+        $integration = MarketingIntegration::query()->create([
+            'provider' => MarketingIntegration::PROVIDER_GOOGLE,
+            'status' => MarketingIntegration::STATUS_ACTIVE,
+            'mode' => MarketingIntegration::MODE_PROD,
+        ]);
+
+        $integration->settings()->create([
+            'settings' => [
+                'send_client' => true,
+                'send_server' => false,
+                'measurement_id' => 'G-ZTHCWKS4YP',
+                'gtm_container_id' => null,
+            ],
         ]);
     }
 }

@@ -89,6 +89,7 @@
             }
 
 	            const data = await response.json();
+	            pushAnalyticsEvent(data.analytics_event);
 	            updateCartIndicators(data.cart_summary);
 	            replaceDrawer(data.drawer_html, isOpen);
 	        };
@@ -194,20 +195,41 @@
             showToast(message, 'error');
         };
 
+        const pushEcommerceEvent = (eventName, ecommerce) => {
+            if (window.StorefrontAnalytics?.pushEcommerce) {
+                window.StorefrontAnalytics.pushEcommerce(eventName, ecommerce);
+                return;
+            }
+
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({ ecommerce: null });
+            window.dataLayer.push({ event: eventName, ecommerce });
+        };
+
+        const pushAnalyticsEvent = (analyticsEvent) => {
+            if (!analyticsEvent?.event) {
+                return false;
+            }
+
+            if (analyticsEvent.ecommerce) {
+                pushEcommerceEvent(analyticsEvent.event, analyticsEvent.ecommerce);
+                return true;
+            }
+
+            window.StorefrontAnalytics?.pushEvent?.(analyticsEvent.event, analyticsEvent.parameters || {});
+            return true;
+        };
+
         const pushAddToCartEvent = (form, formData) => {
             if (!form.matches('[data-cart-add]')) {
                 return;
             }
 
-            window.dataLayer = window.dataLayer || [];
-            window.dataLayer.push({
-                event: 'add_to_cart',
-                ecommerce: {
-                    items: [{
-                        item_id: String(formData.get('product_id') || ''),
-                        quantity: Number(formData.get('quantity') || 1),
-                    }],
-                },
+            pushEcommerceEvent('add_to_cart', {
+                items: [{
+                    item_id: String(formData.get('product_id') || ''),
+                    quantity: Number(formData.get('quantity') || 1),
+                }],
             });
         };
 
@@ -285,7 +307,9 @@
                     return;
                 }
 
-	                pushAddToCartEvent(form, formData);
+	                if (!pushAnalyticsEvent(data.analytics_event)) {
+	                    pushAddToCartEvent(form, formData);
+	                }
 	                updateCartIndicators(data.cart_summary);
 	                replaceDrawer(data.drawer_html, true);
 	                showToast(data.status_message || 'Кошик оновлено.');

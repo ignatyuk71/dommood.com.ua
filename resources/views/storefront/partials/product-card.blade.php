@@ -8,6 +8,7 @@
     }
 
     $cardDescription = \Illuminate\Support\Str::limit($cardDescription, 130);
+    $analyticsItem = \App\Support\Storefront\EcommerceAnalytics::productCard($product);
 @endphp
 
 <article
@@ -17,6 +18,8 @@
         'is-preorder' => ($availabilityBadge['status'] ?? null) === 'preorder',
     ])
     data-product-id="{{ $product['id'] }}"
+    data-analytics-product-card
+    data-analytics-item="{{ json_encode($analyticsItem, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) }}"
 >
     <a href="{{ $productUrl($product) }}" class="storefront-product-card__media">
         @if ($product['image_url'])

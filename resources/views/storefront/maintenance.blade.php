@@ -14,6 +14,7 @@
             @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront.css')])
             @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront-page.css')])
         @endif
+        @include('storefront.partials.google-analytics')
     </head>
     <body>
         <main class="storefront-maintenance">

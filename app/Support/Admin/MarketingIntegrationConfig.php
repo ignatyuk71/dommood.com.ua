@@ -17,7 +17,7 @@ class MarketingIntegrationConfig
             'badge' => 'GA4 / Google Ads',
             'color' => '#ef4444',
             'description' => 'Події GA4, Google Ads конверсії, UTM і ROAS по пошуку та Performance Max.',
-            'events' => ['page_view', 'view_item', 'add_to_cart', 'begin_checkout', 'purchase'],
+            'events' => ['page_view', 'view_item_list', 'select_item', 'view_item', 'add_to_cart', 'view_cart', 'begin_checkout', 'add_shipping_info', 'add_payment_info', 'purchase'],
             'metrics' => ['Сесії', 'Конверсії', 'Дохід', 'CPA', 'ROAS'],
         ],
         'tiktok' => [

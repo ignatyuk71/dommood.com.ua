@@ -13,8 +13,11 @@
         @else
             @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront.css')])
         @endif
+        @include('storefront.partials.google-analytics')
     </head>
     <body>
+        @php($cartAnalytics = \App\Support\Storefront\EcommerceAnalytics::cart($cart))
+
         <div class="storefront-page storefront-checkout-page">
             <header class="storefront-checkout-topbar">
                 <a href="{{ route('home') }}" class="storefront-checkout-logo" aria-label="{{ $storeName }} - головна">
@@ -39,5 +42,8 @@
 
         @include('storefront.partials.storefront-feedback')
         @include('storefront.partials.cart-drawer-scripts')
+        <script>
+            window.StorefrontAnalytics?.pushEcommerce?.('view_cart', @json($cartAnalytics));
+        </script>
     </body>
 </html>

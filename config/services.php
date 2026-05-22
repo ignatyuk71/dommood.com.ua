@@ -30,6 +30,11 @@ return [
         'default_weight' => env('NOVA_POSHTA_DEFAULT_WEIGHT', 1),
     ],
 
+    'google_analytics' => [
+        'measurement_id' => env('GOOGLE_ANALYTICS_MEASUREMENT_ID'),
+        'gtm_container_id' => env('GOOGLE_TAG_MANAGER_CONTAINER_ID'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

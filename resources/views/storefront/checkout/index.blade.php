@@ -17,6 +17,7 @@
             @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront.css')])
             @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront-checkout.css')])
         @endif
+        @include('storefront.partials.google-analytics')
     </head>
     <body>
         @php
@@ -48,6 +49,7 @@
             $activeDelivery = $deliveryCollection->firstWhere('code', $selectedDelivery) ?? ($defaultDelivery ?? ['price_cents' => 0, 'type' => 'branch']);
             $activeDeliveryType = $activeDelivery['type'] ?? 'branch';
             $checkoutTotalCents = (int) $cart['total_cents'] + (int) ($activeDelivery['price_cents'] ?? 0);
+            $checkoutAnalytics = \App\Support\Storefront\EcommerceAnalytics::cart($cart, (int) ($activeDelivery['price_cents'] ?? 0), $selectedDelivery, $selectedPayment);
             $breadcrumbs = [
                 ['label' => 'Головна', 'url' => route('home')],
                 ['label' => 'Кошик', 'url' => route('cart.show')],
@@ -416,6 +418,8 @@
                     cities: @json(route('shipping.nova-poshta.cities')),
                     warehouses: @json(route('shipping.nova-poshta.warehouses')),
                 };
+                const checkoutAnalytics = @json($checkoutAnalytics);
+                const checkoutFormElement = document.getElementById('checkout-form');
                 let cityTimer = null;
                 let warehouseTimer = null;
                 let activeCityRequest = null;
@@ -572,6 +576,20 @@
                 };
 
                 const selectedDelivery = () => form.querySelector('[data-delivery-option] input[type="radio"]:checked')?.closest('[data-delivery-option]');
+                const selectedPaymentInput = () => form.querySelector('input[name="payment_method"]:checked');
+                const checkoutEcommerce = () => {
+                    const delivery = selectedDelivery();
+                    const priceCents = Number(delivery?.dataset.priceCents || 0);
+
+                    return Object.assign({}, checkoutAnalytics, {
+                        shipping: Number((priceCents / 100).toFixed(2)),
+                        shipping_tier: delivery?.querySelector('input[type="radio"]')?.value || checkoutAnalytics.shipping_tier || '',
+                        payment_type: selectedPaymentInput()?.value || checkoutAnalytics.payment_type || '',
+                    });
+                };
+                const pushCheckoutEcommerce = (eventName) => {
+                    window.StorefrontAnalytics?.pushEcommerce?.(eventName, checkoutEcommerce());
+                };
 
                 const lookupParts = (lookup) => ({
                     input: lookup?.querySelector('input[type="text"]') ?? null,
@@ -932,13 +950,24 @@
                     submitCheckoutCartAction(cartForm);
                 });
                 form.querySelectorAll('[data-delivery-option] input[type="radio"]').forEach((input) => {
-                    input.addEventListener('change', syncDelivery);
+                    input.addEventListener('change', () => {
+                        syncDelivery();
+                        pushCheckoutEcommerce('add_shipping_info');
+                    });
+                });
+                form.querySelectorAll('input[name="payment_method"]').forEach((input) => {
+                    input.addEventListener('change', () => pushCheckoutEcommerce('add_payment_info'));
+                });
+                checkoutFormElement?.addEventListener('submit', () => {
+                    pushCheckoutEcommerce('add_shipping_info');
+                    pushCheckoutEcommerce('add_payment_info');
                 });
                 document.addEventListener('click', (event) => {
                     if (!cityLookup?.contains(event.target)) clearResults(cityLookup);
                     if (!warehouseLookup?.contains(event.target)) clearResults(warehouseLookup);
                 });
 
+                pushCheckoutEcommerce('begin_checkout');
                 syncDelivery();
                 syncCommentVisibility();
             })();

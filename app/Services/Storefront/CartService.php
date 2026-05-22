@@ -549,6 +549,7 @@ class CartService
             'name' => $product->name,
             'slug' => $product->slug,
             'category_slug' => $product->primaryCategory?->slug,
+            'category_name' => $product->primaryCategory?->name,
             'sku' => $variant?->sku ?: $product->sku,
             'variant_name' => $variantName ?: null,
             'image_url' => $this->imageUrl($mainImage, $product, 'thumb'),
@@ -562,6 +563,7 @@ class CartService
     {
         $snapshot = $item->product_snapshot ?? [];
         $categorySlug = $snapshot['category_slug'] ?? $item->product?->primaryCategory?->slug;
+        $categoryName = $snapshot['category_name'] ?? $item->product?->primaryCategory?->name;
         $productSlug = $snapshot['slug'] ?? $item->product?->slug;
 
         return [
@@ -576,6 +578,8 @@ class CartService
             'old_price_cents' => (int) ($snapshot['old_price_cents'] ?? 0),
             'total_cents' => (int) $item->total_cents,
             'currency' => $snapshot['currency'] ?? 'UAH',
+            'category_name' => $categoryName,
+            'category_slug' => $categorySlug,
             'variant_options' => $this->serializeVariantOptions($item),
             'image_url' => $snapshot['image_url'] ?? null,
             'image_alt' => $snapshot['image_alt'] ?? ($snapshot['name'] ?? 'Товар'),

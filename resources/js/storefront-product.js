@@ -38,6 +38,42 @@
         return nextCurrency === 'UAH' ? `${value} грн` : `${value} ${nextCurrency}`;
     };
 
+    const compactObject = (value) => Object.fromEntries(
+        Object.entries(value).filter(([, entry]) => entry !== null && entry !== undefined && entry !== ''),
+    );
+    const trackEvent = (eventName, parameters = {}) => {
+        if (window.StorefrontAnalytics?.pushEvent) {
+            window.StorefrontAnalytics.pushEvent(eventName, parameters);
+            return;
+        }
+
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push(Object.assign({ event: eventName }, parameters));
+    };
+    const trackEcommerce = (eventName, ecommerce = {}) => {
+        if (window.StorefrontAnalytics?.pushEcommerce) {
+            window.StorefrontAnalytics.pushEcommerce(eventName, ecommerce);
+            return;
+        }
+
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ ecommerce: null });
+        window.dataLayer.push({ event: eventName, ecommerce });
+    };
+    const analyticsItem = (variant = currentVariant(), quantity = 1) => {
+        const priceCents = Number(variant?.price_cents || product.base_price_cents || 0);
+
+        return compactObject({
+            item_id: String(variant?.sku || product.sku || product.id || ''),
+            item_name: product.name || '',
+            item_brand: product.brand || '',
+            item_category: product.category || '',
+            item_variant: variant?.label || variant?.name || '',
+            price: Number((priceCents / 100).toFixed(2)),
+            quantity: Number(quantity || 1),
+        });
+    };
+
     const normalized = (value) => String(value || '').trim().toLocaleLowerCase('uk-UA');
     const colorKey = (variant) => normalized(`${variant.color_name || ''}|${variant.color_hex || ''}`);
     const sizeKey = (variant) => normalized(variant.size || '');
@@ -512,9 +548,7 @@
             }
 
             if (emitEvent) {
-                window.dataLayer = window.dataLayer || [];
-                window.dataLayer.push({
-                    event: 'product_detail_tab_select',
+                trackEvent('product_detail_tab_select', {
                     tab_name: button.textContent.trim(),
                     item_id: String(currentVariant()?.sku || product.sku || product.id || ''),
                     item_name: product.name || '',
@@ -674,20 +708,10 @@
             colorLabel.textContent = nextVariant.color_name || 'оберіть відтінок';
         }
 
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({
-            event: 'select_item_variant',
-            ecommerce: {
-                currency,
-                value: price / 100,
-                items: [{
-                    item_id: String(nextVariant.sku || product.sku || product.id || ''),
-                    item_name: product.name || '',
-                    item_variant: nextVariant.label || nextVariant.name || '',
-                    price: price / 100,
-                    quantity: Number(quantityInput?.value || 1),
-                }],
-            },
+        trackEcommerce('select_item_variant', {
+            currency,
+            value: Number((price / 100).toFixed(2)),
+            items: [analyticsItem(nextVariant, Number(quantityInput?.value || 1))],
         });
     };
 
@@ -806,9 +830,7 @@
 
     page.querySelectorAll('[data-product-unavailable-action]').forEach((action) => {
         action.addEventListener('click', () => {
-            window.dataLayer = window.dataLayer || [];
-            window.dataLayer.push({
-                event: action.dataset.productUnavailableAction || 'out_of_stock_contact_click',
+            trackEvent(action.dataset.productUnavailableAction || 'out_of_stock_contact_click', {
                 item_id: String(currentVariant()?.sku || product.sku || product.id || ''),
                 item_name: product.name || '',
                 item_variant: currentVariant()?.label || currentVariant()?.name || '',
@@ -816,18 +838,9 @@
         });
     });
 
-    window.dataLayer = window.dataLayer || [];
-    window.dataLayer.push({
-        event: 'view_item',
-        ecommerce: {
-            currency,
-            value: Number(currentVariant()?.price_cents || product.base_price_cents || 0) / 100,
-            items: [{
-                item_id: String(currentVariant()?.sku || product.sku || product.id || ''),
-                item_name: product.name || '',
-                price: Number(currentVariant()?.price_cents || product.base_price_cents || 0) / 100,
-                quantity: 1,
-            }],
-        },
+    trackEcommerce('view_item', {
+        currency,
+        value: Number((Number(currentVariant()?.price_cents || product.base_price_cents || 0) / 100).toFixed(2)),
+        items: [analyticsItem(currentVariant(), 1)],
     });
 })();

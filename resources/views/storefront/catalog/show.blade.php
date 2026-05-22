@@ -23,6 +23,7 @@
             @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront.css')])
             @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront-product.css')])
         @endif
+        @include('storefront.partials.google-analytics')
     </head>
     <body>
         @php
@@ -171,6 +172,8 @@
                 'base_price_cents' => $product['price_cents'],
                 'base_old_price_cents' => $product['old_price_cents'],
                 'sku' => $product['sku'],
+                'brand' => $product['brand']['name'] ?? null,
+                'category' => $product['category']['name'] ?? $category->name,
                 'stock_status' => $product['stock_status'],
                 'stock_status_label' => $product['stock_status_label'],
                 'is_new' => (bool) ($product['is_new'] ?? false),

@@ -12,6 +12,7 @@
         const filterOpenButtons = document.querySelectorAll('[data-catalog-filters-open]');
         const filterCloseButtons = document.querySelectorAll('[data-catalog-filters-close]');
         const priceForms = document.querySelectorAll('[data-catalog-price-filter]');
+        const analyticsProductCards = Array.from(document.querySelectorAll('[data-analytics-product-card][data-analytics-item]'));
 
         const setPanelInert = (panel, isHidden) => {
             panel?.toggleAttribute('inert', isHidden);
@@ -196,6 +197,54 @@
             inputTo?.addEventListener('change', submitPriceFilter);
             form.addEventListener('submit', () => syncPrice('to'));
         });
+
+        const analyticsItemFromCard = (card, index) => {
+            try {
+                return Object.assign(JSON.parse(card.dataset.analyticsItem || '{}'), { index });
+            } catch (error) {
+                return null;
+            }
+        };
+
+        if (analyticsProductCards.length > 0) {
+            const listName = (document.querySelector('h1')?.textContent || document.title || 'Storefront').trim();
+            const listId = listName
+                .toLocaleLowerCase('uk-UA')
+                .replace(/[^a-z0-9а-яіїєґ]+/giu, '_')
+                .replace(/^_+|_+$/g, '')
+                .slice(0, 80) || 'storefront_list';
+            const listItems = analyticsProductCards
+                .slice(0, 30)
+                .map((card, index) => analyticsItemFromCard(card, index))
+                .filter(Boolean)
+                .map((item) => Object.assign({ item_list_id: listId, item_list_name: listName }, item));
+
+            if (listItems.length > 0) {
+                window.StorefrontAnalytics?.pushEcommerce?.('view_item_list', {
+                    item_list_id: listId,
+                    item_list_name: listName,
+                    items: listItems,
+                });
+            }
+
+            analyticsProductCards.forEach((card, index) => {
+                card.querySelectorAll('a[href]').forEach((link) => {
+                    link.addEventListener('click', () => {
+                        const item = analyticsItemFromCard(card, index);
+
+                        if (!item) {
+                            return;
+                        }
+
+                        window.StorefrontAnalytics?.pushEcommerce?.('select_item', {
+                            item_list_id: listId,
+                            item_list_name: listName,
+                            items: [Object.assign({ item_list_id: listId, item_list_name: listName }, item)],
+                        });
+                    });
+                });
+            });
+        }
 
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {

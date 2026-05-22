@@ -17,6 +17,7 @@
             @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront.css')])
             @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront-checkout.css')])
         @endif
+        @include('storefront.partials.google-analytics')
     </head>
     <body>
         @php
@@ -51,13 +52,7 @@
                 ['label' => 'Оформлення замовлення', 'url' => route('checkout.index')],
                 ['label' => 'Дякуємо за замовлення'],
             ];
-            $purchaseItems = $order->items->map(fn ($item) => [
-                'item_id' => $item->sku ?: (string) $item->product_id,
-                'item_name' => $item->product_name,
-                'item_variant' => $item->variant_name,
-                'price' => round(((int) $item->price_cents) / 100, 2),
-                'quantity' => (int) $item->quantity,
-            ])->values();
+            $purchaseAnalytics = \App\Support\Storefront\EcommerceAnalytics::purchase($order);
         @endphp
 
         <div class="storefront-page storefront-checkout-page">
@@ -175,16 +170,7 @@
         @include('storefront.partials.cart-drawer-scripts')
 
         <script>
-            window.dataLayer = window.dataLayer || [];
-            window.dataLayer.push({
-                event: 'purchase',
-                ecommerce: {
-                    transaction_id: @json($order->order_number),
-                    value: {{ number_format(((int) $order->total_cents) / 100, 2, '.', '') }},
-                    currency: @json($order->currency ?: 'UAH'),
-                    items: @json($purchaseItems)
-                }
-            });
+            window.StorefrontAnalytics?.pushEcommerce?.('purchase', @json($purchaseAnalytics));
         </script>
     </body>
 </html>
