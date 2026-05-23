@@ -445,26 +445,34 @@ class MarketingEventService
         ?string $eventSourceUrl,
     ): array {
         $ttclid = $this->clickId($request, 'ttclid');
+        $url = $eventSourceUrl ?: $this->eventSourceUrl($request);
+        $userData = $this->tikTokUserData($request, $userContext, $ttclid);
 
         return [
             'event' => $this->clean([
                 'event' => $this->tikTokEventName($eventName),
                 'event_time' => now()->timestamp,
                 'event_id' => $eventId,
+                'page' => [
+                    'url' => $url,
+                    'referrer' => trim((string) $request->headers->get('referer')),
+                ],
+                'user' => $userData,
                 'context' => $this->clean([
                     'ip' => $request->ip(),
                     'user_agent' => $request->userAgent(),
                     'ad' => $ttclid !== '' ? ['callback' => $ttclid] : null,
                     'page' => [
-                        'url' => $eventSourceUrl ?: $this->eventSourceUrl($request),
+                        'url' => $url,
                         'referrer' => trim((string) $request->headers->get('referer')),
                     ],
-                    'user' => $this->tikTokUserData($request, $userContext),
+                    'user' => $userData,
                 ]),
                 'properties' => $this->clean([
                     'currency' => $payload['currency'] ?? 'UAH',
                     'value' => $payload['value'] ?? null,
                     'content_type' => $payload['content_type'] ?? null,
+                    'content_id' => $this->firstContentId($payload),
                     'content_ids' => $payload['content_ids'] ?? null,
                     'contents' => array_map(static fn (array $item): array => array_filter([
                         'content_id' => $item['id'] ?? null,
@@ -473,6 +481,7 @@ class MarketingEventService
                     ], static fn ($value): bool => $value !== null && $value !== ''), $payload['contents'] ?? []),
                     'num_items' => $payload['num_items'] ?? null,
                     'content_name' => $payload['content_name'] ?? null,
+                    'url' => $url,
                 ]),
             ]),
         ];
@@ -500,12 +509,15 @@ class MarketingEventService
         ]);
     }
 
-    private function tikTokUserData(Request $request, array $context): array
+    private function tikTokUserData(Request $request, array $context, string $ttclid = ''): array
     {
         return $this->clean([
             'email' => $this->hash($context['email'] ?? null, 'email'),
-            'phone_number' => $this->hash($context['phone'] ?? null, 'phone'),
+            'phone' => $this->hash($context['phone'] ?? null, 'phone'),
             'external_id' => $this->hash($context['external_id'] ?? null, 'text'),
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+            'ttclid' => $ttclid !== '' ? $ttclid : null,
             'ttp' => trim((string) ($request->cookie('_ttp') ?: $request->cookie('ttp'))) ?: null,
         ]);
     }
@@ -527,9 +539,24 @@ class MarketingEventService
             'view_item' => 'ViewContent',
             'add_to_cart' => 'AddToCart',
             'begin_checkout' => 'InitiateCheckout',
-            'purchase' => 'CompletePayment',
+            'purchase' => 'Purchase',
             default => Str::studly($eventName),
         };
+    }
+
+    private function firstContentId(array $payload): ?string
+    {
+        $contentIds = $payload['content_ids'] ?? [];
+        if (is_array($contentIds) && $contentIds !== []) {
+            return (string) reset($contentIds);
+        }
+
+        $contents = $payload['contents'] ?? [];
+        if (is_array($contents) && isset($contents[0]) && is_array($contents[0]) && ! empty($contents[0]['id'])) {
+            return (string) $contents[0]['id'];
+        }
+
+        return null;
     }
 
     private function googleCartData(array $payload): array

@@ -52,6 +52,16 @@ class MarketingAttributionTrackingTest extends TestCase
             'source' => 'tiktok',
             'channel' => 'tiktok_ads',
         ]);
+
+        Http::assertSent(fn ($request): bool => $request['event_source'] === 'web'
+            && $request['event_source_id'] === 'tiktok-pixel'
+            && data_get($request->data(), 'data.0.event') === 'AddToCart'
+            && data_get($request->data(), 'data.0.user.ttclid') === 'tt-click'
+            && data_get($request->data(), 'data.0.user.ip') !== null
+            && data_get($request->data(), 'data.0.user.user_agent') !== null
+            && data_get($request->data(), 'data.0.properties.content_id') === (string) $product->id
+            && str_contains((string) data_get($request->data(), 'data.0.properties.url'), 'ttclid=tt-click')
+        );
     }
 
     public function test_tiktok_browser_pixel_uses_event_id_options_for_deduplication(): void
@@ -158,7 +168,7 @@ class MarketingAttributionTrackingTest extends TestCase
 
         $this->assertDatabaseMissing('marketing_event_outbox', [
             'provider' => 'tiktok',
-            'event_name' => 'CompletePayment',
+            'event_name' => 'Purchase',
         ]);
     }
 

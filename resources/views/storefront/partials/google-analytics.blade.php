@@ -142,7 +142,7 @@
                 view_item: { meta: 'ViewContent', tiktok: 'ViewContent' },
                 add_to_cart: { meta: 'AddToCart', tiktok: 'AddToCart' },
                 begin_checkout: { meta: 'InitiateCheckout', tiktok: 'InitiateCheckout' },
-                purchase: { meta: 'Purchase', tiktok: 'CompletePayment' },
+                purchase: { meta: 'Purchase', tiktok: 'Purchase' },
             };
 
             return map[eventName]?.[provider] || null;
@@ -298,6 +298,7 @@
                 currency: normalized.currency,
                 value: normalized.value,
                 content_type: normalized.content_type,
+                content_id: normalized.content_ids?.[0],
                 content_ids: normalized.content_ids,
                 contents: normalized.contents?.map((item) => cleanObject({
                     content_id: item.id,
@@ -306,9 +307,10 @@
                 })),
                 num_items: normalized.num_items,
                 content_name: normalized.content_name,
+                url: window.location.href,
             });
 
-            if (['ViewContent', 'AddToCart', 'InitiateCheckout', 'CompletePayment'].includes(mapped) && (!properties.content_ids || !properties.content_ids.length)) {
+            if (['ViewContent', 'AddToCart', 'InitiateCheckout', 'Purchase'].includes(mapped) && (!properties.content_ids || !properties.content_ids.length)) {
                 return;
             }
 
