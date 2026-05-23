@@ -419,7 +419,7 @@
 }
 
 .storefront-catalog-grid .storefront-product-price del {
-    color: #9ca3af;
+    color: var(--dm-color-price-muted);
     font-size: 1.05rem;
     line-height: 1.05;
 }
@@ -433,7 +433,7 @@
 
 .storefront-catalog-grid .storefront-product-card.is-out-of-stock .storefront-product-price span,
 .storefront-catalog-grid .storefront-product-card.is-out-of-stock .storefront-product-price del {
-    color: #9ca3af;
+    color: var(--dm-color-price-muted);
 }
 
 .storefront-catalog-grid .storefront-product-card.is-out-of-stock .storefront-stock {

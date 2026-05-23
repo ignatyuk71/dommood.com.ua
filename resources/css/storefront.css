@@ -1,6 +1,7 @@
 :root {
     --dm-color-text: #171717;
     --dm-color-muted: #667085;
+    --dm-color-price-muted: #5f6876;
     --dm-color-border: #dde3ea;
     --dm-color-surface: #ffffff;
     --dm-color-soft: #fdf7f3;
@@ -1017,7 +1018,7 @@ svg {
 }
 
 .storefront-product-grid--new .storefront-product-price del {
-    color: #9ca3af;
+    color: var(--dm-color-price-muted);
     font-size: 1.05rem;
     line-height: 1.05;
 }
@@ -1201,7 +1202,7 @@ svg {
 }
 
 .storefront-product-price del {
-    color: #9ca3af;
+    color: var(--dm-color-price-muted);
     font-size: 0.83rem;
     font-weight: 400;
 }
@@ -3271,7 +3272,7 @@ svg {
 }
 
 .storefront-cart-item__price del {
-    color: #9ca3af;
+    color: var(--dm-color-price-muted);
     font-size: 1rem;
 }
 

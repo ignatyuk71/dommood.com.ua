@@ -684,7 +684,7 @@
 }
 
 .storefront-featured-product__price del {
-    color: #9ca3af;
+    color: var(--dm-color-price-muted);
     font-size: 1rem;
     font-weight: 500;
 }
