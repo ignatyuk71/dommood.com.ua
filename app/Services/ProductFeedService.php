@@ -15,7 +15,9 @@ use Illuminate\Support\Str;
 class ProductFeedService
 {
     public const CHANNEL_GOOGLE = 'google_merchant';
+
     public const CHANNEL_META = 'meta_catalog';
+
     public const CHANNEL_TIKTOK = 'tiktok_catalog';
 
     public function channelOptions(): array
@@ -359,7 +361,7 @@ class ProductFeedService
     {
         $variantImages = $variant
             ? $variant->images->sortBy('sort_order')->values()
-            : new EloquentCollection();
+            : new EloquentCollection;
         $productImages = $product->images->sortBy('sort_order')->values();
         $images = $variantImages->isNotEmpty() ? $variantImages : $productImages;
 
@@ -465,13 +467,14 @@ class ProductFeedService
     protected function googleIdentifiers(Product $product, ?ProductVariant $variant, string $brand): array
     {
         if ($variant) {
-            $gtin = $this->normalizedGtin($variant->barcode);
-            $mpn = $gtin ? null : $this->normalizedMpn($variant->sku);
+            // Як у Dream V Doma: варіанти віддаємо через SKU/MPN, щоб розміри не
+            // злипалися в один товар через спільний або некоректний штрихкод.
+            $mpn = $this->normalizedMpn($variant->sku);
 
             return [
-                'gtin' => $gtin,
+                'gtin' => null,
                 'mpn' => $mpn,
-                'identifier_exists' => $this->identifierExistsValue($gtin, $mpn, $brand),
+                'identifier_exists' => $this->identifierExistsValue(null, $mpn, $brand),
             ];
         }
 
