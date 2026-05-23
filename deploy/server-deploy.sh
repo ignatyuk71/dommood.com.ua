@@ -46,6 +46,13 @@ php artisan migrate --force
 rm -rf public/storage
 php artisan storage:link
 
+LEGACY_BANNER_DIR="$APP_DIR/shared/storage/app/public/banners/featured"
+mkdir -p "$LEGACY_BANNER_DIR"
+if [ -f "$RELEASE_DIR/public/brand/home/pajamas-promo-img-4461.webp" ]; then
+  cp "$RELEASE_DIR/public/brand/home/pajamas-promo-img-4461.webp" "$LEGACY_BANNER_DIR/pajamas-promo-user-attachment.webp"
+  chmod a+r "$LEGACY_BANNER_DIR/pajamas-promo-user-attachment.webp"
+fi
+
 if [ ! -d "$APP_DIR/shared/build" ]; then
   echo "DEPLOY_FAILED: public/build не завантажений у $APP_DIR/shared/build"
   exit 1
