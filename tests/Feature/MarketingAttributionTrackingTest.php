@@ -54,6 +54,55 @@ class MarketingAttributionTrackingTest extends TestCase
         ]);
     }
 
+    public function test_tiktok_browser_pixel_uses_event_id_options_for_deduplication(): void
+    {
+        $this->enablePixelProvider('tiktok');
+        $product = $this->makeProduct();
+
+        $order = Order::query()->create([
+            'order_number' => 'DM-TEST-TIKTOK',
+            'status' => 'new',
+            'payment_status' => 'unpaid',
+            'payment_method' => 'cod',
+            'delivery_method' => 'nova_poshta_branch',
+            'customer_name' => 'Ірина Клименко',
+            'customer_phone' => '+380931112233',
+            'currency' => 'UAH',
+            'subtotal_cents' => 32500,
+            'delivery_price_cents' => 9000,
+            'total_cents' => 41500,
+            'source' => 'tiktok',
+            'channel' => 'tiktok_ads',
+            'attribution' => [
+                'source' => 'tiktok',
+                'channel' => 'tiktok_ads',
+                'utm' => ['utm_source' => 'tiktok', 'utm_medium' => 'paid_social'],
+                'click_ids' => ['ttclid' => 'tt-click'],
+            ],
+        ]);
+
+        $order->items()->create([
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'sku' => 'DM-TT',
+            'price_cents' => 32500,
+            'quantity' => 1,
+            'total_cents' => 32500,
+            'product_snapshot' => ['category_name' => 'Домашні капці'],
+        ]);
+
+        $this->get(route('checkout.thank-you', $order->order_number))
+            ->assertOk()
+            ->assertSee('"source":"tiktok"', false)
+            ->assertSee('"channel":"tiktok_ads"', false)
+            ->assertSee('"allowed":{"meta":false,"tiktok":true', false)
+            ->assertSee('"test_event_code":"TEST123"', false)
+            ->assertSee('const tikTokEventOptions = (eventId = null) => cleanObject({', false)
+            ->assertSee('event_id: eventId', false)
+            ->assertSee('window.ttq.track(mapped, properties, tikTokEventOptions(normalized.event_id));', false)
+            ->assertSee("window.StorefrontAnalytics?.pushEcommerce?.('purchase'", false);
+    }
+
     public function test_google_ads_purchase_sends_only_google_ads_conversion(): void
     {
         Cache::flush();

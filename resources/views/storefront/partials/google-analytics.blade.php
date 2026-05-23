@@ -153,6 +153,10 @@
             test_event_code: metaConfig.mode === 'test' ? metaConfig.test_event_code : undefined,
         });
 
+        const tikTokEventOptions = (eventId = null) => cleanObject({
+            event_id: eventId,
+        });
+
         const initGoogle = () => {
             if (!googleConfig.enabled) {
                 return;
@@ -302,14 +306,13 @@
                 })),
                 num_items: normalized.num_items,
                 content_name: normalized.content_name,
-                event_id: normalized.event_id,
             });
 
             if (['ViewContent', 'AddToCart', 'InitiateCheckout', 'CompletePayment'].includes(mapped) && (!properties.content_ids || !properties.content_ids.length)) {
                 return;
             }
 
-            window.ttq.track(mapped, properties);
+            window.ttq.track(mapped, properties, tikTokEventOptions(normalized.event_id));
         };
 
         const trackGoogleAdsConversion = (eventName, payload) => {
