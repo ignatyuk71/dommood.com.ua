@@ -100,7 +100,7 @@
                 ['title' => 'Відгуки про магазин', 'url' => url('/vidhuky-pro-mahazyn')],
                 ['title' => 'Безкоштовне повернення', 'url' => url('/bezkoshtovne-povernennia-novoiu-poshtoiu')],
             ];
-            $outdoorPromoBackground = asset('storage/banners/featured/outdoor-promo-img-8006.webp');
+            $outdoorPromoBackground = asset('brand/home/outdoor-promo-img-8006.webp');
             $pajamasPromoBackground = asset('storage/banners/featured/pajamas-promo-user-attachment.webp');
             $homeComfortLinks = [
                 [
