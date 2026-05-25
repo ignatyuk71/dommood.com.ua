@@ -715,14 +715,11 @@
             <dialog class="product-dialog" data-product-dialog="size-chart">
                 <div class="product-dialog__panel">
                     <button type="button" class="product-dialog__close" data-product-dialog-close aria-label="Закрити">×</button>
-                    <h2>{{ $product['size_chart']['title'] }}</h2>
+                    <h2>Розмірна сітка</h2>
                     <div class="product-dialog__tabs" aria-label="Навігація по розмірах">
                         <button type="button" class="is-active">Розмірна сітка</button>
                         <button type="button" data-product-dialog-open="measure-guide">Як знімати мірки</button>
                     </div>
-                    @if ($product['size_chart']['description'] ?? null)
-                        <p>{{ $product['size_chart']['description'] }}</p>
-                    @endif
                     <div class="product-dialog__content">{!! $product['size_chart']['content_html'] !!}</div>
                 </div>
             </dialog>
