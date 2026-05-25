@@ -1066,6 +1066,7 @@
                 });
 
                 if (categoryCollage) {
+                    const categoryScroller = categoryCollage.querySelector('.storefront-category-banner__rail') || categoryCollage;
                     let isDraggingCollage = false;
                     let dragStartX = 0;
                     let dragStartScroll = 0;
@@ -1075,15 +1076,15 @@
                     categoryCollage.addEventListener('pointerdown', (event) => {
                         hasDraggedCollage = false;
 
-                        if (event.pointerType === 'touch' || event.target.closest('a')) {
+                        if (event.pointerType === 'touch') {
                             return;
                         }
 
                         isDraggingCollage = true;
                         collagePointerId = event.pointerId;
                         dragStartX = event.clientX;
-                        dragStartScroll = categoryCollage.scrollLeft;
-                        categoryCollage.classList.add('is-dragging');
+                        dragStartScroll = categoryScroller.scrollLeft;
+                        categoryScroller.classList.add('is-dragging');
 
                         if (categoryCollage.hasPointerCapture?.(event.pointerId) === false) {
                             categoryCollage.setPointerCapture(event.pointerId);
@@ -1097,7 +1098,7 @@
 
                         const dragDistance = event.clientX - dragStartX;
                         hasDraggedCollage = Math.abs(dragDistance) > 10;
-                        categoryCollage.scrollLeft = dragStartScroll - dragDistance;
+                        categoryScroller.scrollLeft = dragStartScroll - dragDistance;
                     });
 
                     const stopCategoryDrag = (event) => {
@@ -1107,7 +1108,7 @@
 
                         isDraggingCollage = false;
                         collagePointerId = null;
-                        categoryCollage.classList.remove('is-dragging');
+                        categoryScroller.classList.remove('is-dragging');
 
                         if (categoryCollage.hasPointerCapture?.(event.pointerId)) {
                             categoryCollage.releasePointerCapture(event.pointerId);
@@ -1119,10 +1120,6 @@
                     categoryCollage.addEventListener('pointerleave', stopCategoryDrag);
 
                     categoryCollage.addEventListener('click', (event) => {
-                        if (event.target.closest('a')) {
-                            return;
-                        }
-
                         if (hasDraggedCollage) {
                             event.preventDefault();
                             event.stopPropagation();
