@@ -1073,15 +1073,49 @@ class CatalogController extends Controller
             return null;
         }
 
+        $contentJson = $product->sizeChart->content_json;
+        $contentHtml = $product->sizeChart->content_html ?: $this->renderSizeChartHtml($contentJson);
+
         return [
             'title' => $product->sizeChart->title,
             'description' => $product->sizeChart->description,
-            'content_html' => $product->sizeChart->content_html,
-            'content_json' => $product->sizeChart->content_json,
+            'content_html' => $contentHtml,
+            'content_json' => $contentJson,
             'image_url' => filled($product->sizeChart->image_path)
                 ? Storage::disk('public')->url($product->sizeChart->image_path)
                 : null,
         ];
+    }
+
+    private function renderSizeChartHtml(?array $content): ?string
+    {
+        $columns = collect($content['columns'] ?? [])
+            ->map(fn ($column): string => trim((string) $column))
+            ->filter()
+            ->values();
+        $rows = collect($content['rows'] ?? [])
+            ->filter(fn ($row): bool => is_array($row) && collect($row)->filter(fn ($cell): bool => filled($cell))->isNotEmpty())
+            ->values();
+
+        if ($columns->isEmpty() || $rows->isEmpty()) {
+            return null;
+        }
+
+        $head = $columns
+            ->map(fn (string $column): string => '<th scope="col">'.e($column).'</th>')
+            ->implode('');
+        $body = $rows
+            ->map(function (array $row) use ($columns): string {
+                $cells = $columns
+                    ->keys()
+                    ->map(fn (int $index): string => '<td>'.e((string) ($row[$index] ?? '')).'</td>')
+                    ->implode('');
+
+                return '<tr>'.$cells.'</tr>';
+            })
+            ->implode('');
+
+        return '<table class="product-size-table"><thead><tr>'.$head.'</tr></thead><tbody>'.$body.'</tbody></table>';
     }
 
     private function serializeReviews(Product $product): array

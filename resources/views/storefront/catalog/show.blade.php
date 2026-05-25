@@ -359,11 +359,13 @@
                                     </form>
 
                                     <div class="product-help-cards" aria-label="Допомога з розміром">
-                                        <button type="button" data-product-dialog-open="size-chart">
-                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 15 11-11 5 5L9 20H4z"/><path d="m13 6 2 2"/><path d="m10 9 2 2"/><path d="m7 12 2 2"/></svg>
-                                            <span>Таблиця розмірів</span>
-                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
-                                        </button>
+                                        @if ($product['size_chart']['content_html'] ?? null)
+                                            <button type="button" data-product-dialog-open="size-chart">
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 15 11-11 5 5L9 20H4z"/><path d="m13 6 2 2"/><path d="m10 9 2 2"/><path d="m7 12 2 2"/></svg>
+                                                <span>Таблиця розмірів</span>
+                                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                                            </button>
+                                        @endif
                                         <button type="button" data-product-dialog-open="measure-guide">
                                             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.4 9a2.8 2.8 0 1 1 4 2.5c-.9.5-1.4 1.1-1.4 2.2"/><path d="M12 17h.01"/></svg>
                                             <span>Як знімати мірки</span>
@@ -709,46 +711,31 @@
             @include('storefront.partials.site-footer')
         </div>
 
-        <dialog class="product-dialog" data-product-dialog="size-chart">
-            <div class="product-dialog__panel">
-                <button type="button" class="product-dialog__close" data-product-dialog-close aria-label="Закрити">×</button>
-                <h2>{{ $product['size_chart']['title'] ?? 'Таблиця розмірів' }}</h2>
-                <div class="product-dialog__tabs" aria-label="Навігація по розмірах">
-                    <button type="button" class="is-active">Розмірна сітка</button>
-                    <button type="button" data-product-dialog-open="measure-guide">Як знімати мірки</button>
-                </div>
-                @if ($product['size_chart']['description'] ?? null)
-                    <p>{{ $product['size_chart']['description'] }}</p>
-                @else
-                    <p>Порівняйте довжину стопи з розміром. Якщо вагаєтесь між двома розмірами, краще уточнити заміри у менеджера.</p>
-                @endif
-                @if ($product['size_chart']['content_html'] ?? null)
+        @if ($product['size_chart']['content_html'] ?? null)
+            <dialog class="product-dialog" data-product-dialog="size-chart">
+                <div class="product-dialog__panel">
+                    <button type="button" class="product-dialog__close" data-product-dialog-close aria-label="Закрити">×</button>
+                    <h2>{{ $product['size_chart']['title'] }}</h2>
+                    <div class="product-dialog__tabs" aria-label="Навігація по розмірах">
+                        <button type="button" class="is-active">Розмірна сітка</button>
+                        <button type="button" data-product-dialog-open="measure-guide">Як знімати мірки</button>
+                    </div>
+                    @if ($product['size_chart']['description'] ?? null)
+                        <p>{{ $product['size_chart']['description'] }}</p>
+                    @endif
                     <div class="product-dialog__content">{!! $product['size_chart']['content_html'] !!}</div>
-                @else
-                    <table class="product-size-table">
-                        <thead>
-                            <tr>
-                                <th scope="col">Розмір</th>
-                                <th scope="col">Довжина</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td>36/37</td><td>24-24.5 см</td></tr>
-                            <tr><td>38/39</td><td>25-25.5 см</td></tr>
-                            <tr><td>40/41</td><td>26-26.5 см</td></tr>
-                            <tr><td>42/43</td><td>27-27.5 см</td></tr>
-                        </tbody>
-                    </table>
-                @endif
-            </div>
-        </dialog>
+                </div>
+            </dialog>
+        @endif
 
         <dialog class="product-dialog product-dialog--measure" data-product-dialog="measure-guide">
             <div class="product-dialog__panel">
                 <button type="button" class="product-dialog__close" data-product-dialog-close aria-label="Закрити">×</button>
                 <h2>Як знімати мірки</h2>
                 <div class="product-dialog__tabs" aria-label="Навігація по розмірах">
-                    <button type="button" data-product-dialog-open="size-chart">Розмірна сітка</button>
+                    @if ($product['size_chart']['content_html'] ?? null)
+                        <button type="button" data-product-dialog-open="size-chart">Розмірна сітка</button>
+                    @endif
                     <button type="button" class="is-active">Як знімати мірки</button>
                 </div>
                 <div class="product-measure-guide">
