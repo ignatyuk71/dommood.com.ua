@@ -1084,11 +1084,6 @@
                         collagePointerId = event.pointerId;
                         dragStartX = event.clientX;
                         dragStartScroll = categoryScroller.scrollLeft;
-                        categoryScroller.classList.add('is-dragging');
-
-                        if (categoryCollage.hasPointerCapture?.(event.pointerId) === false) {
-                            categoryCollage.setPointerCapture(event.pointerId);
-                        }
                     });
 
                     categoryCollage.addEventListener('pointermove', (event) => {
@@ -1097,8 +1092,19 @@
                         }
 
                         const dragDistance = event.clientX - dragStartX;
-                        hasDraggedCollage = Math.abs(dragDistance) > 10;
+                        const isPastDragThreshold = Math.abs(dragDistance) > 10;
+
+                        if (! isPastDragThreshold) {
+                            return;
+                        }
+
+                        hasDraggedCollage = true;
+                        categoryScroller.classList.add('is-dragging');
                         categoryScroller.scrollLeft = dragStartScroll - dragDistance;
+
+                        if (categoryCollage.hasPointerCapture?.(event.pointerId) === false) {
+                            categoryCollage.setPointerCapture(event.pointerId);
+                        }
                     });
 
                     const stopCategoryDrag = (event) => {
