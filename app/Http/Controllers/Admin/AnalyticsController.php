@@ -7,7 +7,9 @@ use App\Models\AnalyticsEvent;
 use App\Models\MarketingEventOutbox;
 use App\Models\MarketingIntegration;
 use App\Support\Admin\MarketingIntegrationConfig;
+use App\Support\DateTime\KyivDateTime;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -65,10 +67,12 @@ class AnalyticsController extends Controller
     {
         $start = $period['start'];
         $end = $period['end'];
+        $queryStart = KyivDateTime::toStorage($start);
+        $queryEnd = KyivDateTime::toStorage($end);
         $sourceAliases = $this->sourceAliases($provider);
         $events = AnalyticsEvent::query()
             ->whereIn('source', $sourceAliases)
-            ->whereBetween('occurred_at', [$start, $end])
+            ->whereBetween('occurred_at', [$queryStart, $queryEnd])
             ->orderByDesc('occurred_at')
             ->get([
                 'id',
@@ -89,7 +93,7 @@ class AnalyticsController extends Controller
                 fn ($query) => $query->where('marketing_integration_id', $integration->id),
                 fn ($query) => $query->where('provider', $provider),
             )
-            ->whereBetween('created_at', [$start, $end])
+            ->whereBetween('created_at', [$queryStart, $queryEnd])
             ->orderByDesc('created_at')
             ->get([
                 'id',
@@ -129,7 +133,7 @@ class AnalyticsController extends Controller
         }
 
         foreach ($normalizedEvents as $event) {
-            $day = $event['occurred_at']?->toDateString();
+            $day = KyivDateTime::isoDate($event['occurred_at']);
             if ($day && isset($chartBuckets[$day][$event['event']])) {
                 $chartBuckets[$day][$event['event']]++;
             }
@@ -175,6 +179,7 @@ class AnalyticsController extends Controller
                 'label' => $period['label'],
                 'start' => $start->toDateString(),
                 'end' => $end->toDateString(),
+                'today' => KyivDateTime::today()->toDateString(),
             ],
             'chart' => [
                 'labels' => $chartLabels,
@@ -217,7 +222,7 @@ class AnalyticsController extends Controller
     {
         $browserRows = $analyticsEvents->map(fn (array $event): array => [
             'id' => 'event-'.$event['event_id'].'-'.$event['raw_event'],
-            'date' => $event['occurred_at']?->toDateTimeString(),
+            'date' => KyivDateTime::sql($event['occurred_at']),
             'event_name' => $this->eventLabel($event['event']),
             'event_id' => $event['event_id'] ?: '—',
             'transport' => 'browser',
@@ -228,7 +233,7 @@ class AnalyticsController extends Controller
 
         $serverRows = $outbox->map(fn (MarketingEventOutbox $event): array => [
             'id' => 'outbox-'.$event->id,
-            'date' => ($event->sent_at ?? $event->created_at)?->toDateTimeString(),
+            'date' => KyivDateTime::sql($event->sent_at ?? $event->created_at),
             'event_name' => $this->eventLabel($this->normalizeEventName($event->event_name)),
             'event_id' => $event->event_id ?: '—',
             'transport' => $event->transport,
@@ -287,7 +292,7 @@ class AnalyticsController extends Controller
 
     private function dateRange(Request $request): array
     {
-        $defaultEnd = CarbonImmutable::now()->endOfDay();
+        $defaultEnd = KyivDateTime::now()->endOfDay();
         $defaultStart = $defaultEnd->subDays(29)->startOfDay();
         $startInput = $request->query('start_date');
         $endInput = $request->query('end_date');
@@ -301,8 +306,8 @@ class AnalyticsController extends Controller
         }
 
         try {
-            $start = CarbonImmutable::createFromFormat('Y-m-d', $startInput)->startOfDay();
-            $end = CarbonImmutable::createFromFormat('Y-m-d', $endInput)->endOfDay();
+            $start = CarbonImmutable::createFromFormat('Y-m-d', $startInput, KyivDateTime::timezone())->startOfDay();
+            $end = CarbonImmutable::createFromFormat('Y-m-d', $endInput, KyivDateTime::timezone())->endOfDay();
         } catch (\Throwable) {
             return [
                 'label' => 'Останні 30 днів',

@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreCategoryRequest;
 use App\Http\Requests\Admin\UpdateCategoryRequest;
 use App\Models\Category;
 use App\Models\ProductAttribute;
+use App\Support\DateTime\KyivDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -301,7 +302,7 @@ class CategoryController extends Controller
             'products_count' => $category->products_count ?? 0,
             'primary_products_count' => $category->primary_products_count ?? 0,
             'filter_attributes_count' => $category->filter_attributes_count ?? 0,
-            'created_at' => $category->created_at?->toDateTimeString(),
+            'created_at' => KyivDateTime::sql($category->created_at),
         ];
     }
 
@@ -334,7 +335,7 @@ class CategoryController extends Controller
     {
         $extension = strtolower($image->getClientOriginalExtension() ?: $image->extension() ?: 'jpg');
         $siteSlug = Str::slug(config('app.name', 'dommood')) ?: 'dommood';
-        $filename = "{$category->slug}-{$siteSlug}-".now()->format('Ymd-His').".{$extension}";
+        $filename = "{$category->slug}-{$siteSlug}-".KyivDateTime::now()->format('Ymd-His').".{$extension}";
 
         return $image->storeAs("categories/{$category->id}", $filename, 'public');
     }

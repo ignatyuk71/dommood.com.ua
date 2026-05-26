@@ -9,6 +9,7 @@ use App\Models\AttributeValue;
 use App\Models\ProductAttribute;
 use App\Support\Catalog\CatalogSlug;
 use App\Support\Catalog\FilterUrlBuilder;
+use App\Support\DateTime\KyivDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -271,7 +272,7 @@ class ProductAttributeController extends Controller
                 ])
                 ->values()
                 ->all(),
-            'created_at' => $full ? $attribute->created_at?->toDateTimeString() : null,
+            'created_at' => $full ? KyivDateTime::sql($attribute->created_at) : null,
         ];
     }
 

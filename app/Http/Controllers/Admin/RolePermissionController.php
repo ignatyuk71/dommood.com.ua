@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\AdminActivityLogger;
 use App\Support\AdminPermissions;
+use App\Support\DateTime\KyivDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -54,8 +55,8 @@ class RolePermissionController extends Controller
                     'email' => $user->email,
                     'role' => $user->role,
                     'is_active' => (bool) $user->is_active,
-                    'last_login_at' => $user->last_login_at?->format('d.m.Y H:i'),
-                    'created_at' => $user->created_at?->format('d.m.Y'),
+                    'last_login_at' => KyivDateTime::dateTime($user->last_login_at),
+                    'created_at' => KyivDateTime::date($user->created_at),
                 ])->values()->all(),
             ]);
 

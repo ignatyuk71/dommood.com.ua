@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreSizeChartRequest;
 use App\Http\Requests\Admin\UpdateSizeChartRequest;
 use App\Models\SizeChart;
+use App\Support\DateTime\KyivDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -206,7 +207,7 @@ class SizeChartController extends Controller
         $extension = strtolower($image->getClientOriginalExtension() ?: $image->extension() ?: 'jpg');
         $codeSlug = Str::slug($chart->code) ?: 'size-chart';
         $siteSlug = Str::slug(config('app.name', 'dommood')) ?: 'dommood';
-        $filename = "{$codeSlug}-{$siteSlug}-".now()->format('Ymd-His').".{$extension}";
+        $filename = "{$codeSlug}-{$siteSlug}-".KyivDateTime::now()->format('Ymd-His').".{$extension}";
 
         return $image->storeAs("size-charts/{$chart->id}", $filename, 'public');
     }

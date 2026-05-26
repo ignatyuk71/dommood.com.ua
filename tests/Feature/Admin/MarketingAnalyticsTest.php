@@ -171,7 +171,7 @@ class MarketingAnalyticsTest extends TestCase
             'mode' => 'test',
         ]);
 
-        $now = CarbonImmutable::now();
+        $now = CarbonImmutable::create(2026, 5, 26, 8, 18, 6, 'UTC');
 
         AnalyticsEvent::query()->create([
             'event_name' => 'ViewContent',
@@ -221,6 +221,7 @@ class MarketingAnalyticsTest extends TestCase
                 ->where('analytics.funnel.0.count', 1)
                 ->where('analytics.funnel.1.count', 1)
                 ->where('analytics.funnel.3.count', 1)
+                ->where('analytics.eventLog.0.date', '2026-05-26 11:18:06')
                 ->has('analytics.chart.series', 4)
                 ->has('analytics.eventLog', 4)
             );

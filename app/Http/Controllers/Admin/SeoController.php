@@ -22,6 +22,7 @@ use App\Services\Seo\SitemapGenerator;
 use App\Support\AdminPermissions;
 use App\Support\Catalog\CatalogSlug;
 use App\Support\Catalog\FilterUrlBuilder;
+use App\Support\DateTime\KyivDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -563,7 +564,7 @@ class SeoController extends Controller
                 'total_urls_count' => $lastRun->total_urls_count,
                 'file_path' => $lastRun->file_path,
                 'url' => $lastRun->meta['url'] ?? url('/sitemap.xml'),
-                'finished_at' => $lastRun->finished_at?->format('d.m.Y H:i'),
+                'finished_at' => KyivDateTime::dateTime($lastRun->finished_at),
             ] : null,
             'current_counts' => [
                 'products' => Product::query()->where('status', 'active')->count(),
@@ -604,7 +605,7 @@ class SeoController extends Controller
             'preserve_query' => $redirect->preserve_query,
             'is_active' => $redirect->is_active,
             'hits' => $redirect->hits,
-            'last_hit_at' => $redirect->last_hit_at?->format('d.m.Y H:i'),
+            'last_hit_at' => KyivDateTime::dateTime($redirect->last_hit_at),
             'notes' => $redirect->notes,
         ];
     }

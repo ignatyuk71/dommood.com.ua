@@ -8,6 +8,7 @@ use App\Models\FilterSeoPage;
 use App\Models\Product;
 use App\Models\SitemapRun;
 use App\Support\Catalog\FilterUrlBuilder;
+use App\Support\DateTime\KyivDateTime;
 use Illuminate\Support\Facades\File;
 
 class SitemapGenerator
@@ -76,7 +77,7 @@ class SitemapGenerator
         $rows = $urls
             ->map(function (array $url): string {
                 $loc = e($url['loc']);
-                $lastmod = $url['lastmod']?->toAtomString() ?? now()->toAtomString();
+                $lastmod = (KyivDateTime::fromStorage($url['lastmod']) ?? KyivDateTime::now())->toAtomString();
 
                 return "    <url>\n        <loc>{$loc}</loc>\n        <lastmod>{$lastmod}</lastmod>\n    </url>";
             })

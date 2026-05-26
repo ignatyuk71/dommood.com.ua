@@ -10,9 +10,9 @@ use App\Models\Order;
 use App\Services\Marketing\Clients\GoogleAdsApiClient;
 use App\Services\Marketing\Clients\MetaCapiClient;
 use App\Services\Marketing\Clients\TikTokEventsApiClient;
+use App\Support\DateTime\KyivDateTime;
 use App\Support\Marketing\MarketingPayloadNormalizer;
 use App\Support\Marketing\MarketingSourceRouter;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Throwable;
@@ -619,13 +619,7 @@ class MarketingEventService
 
     private function googleConversionDate(mixed $date): string
     {
-        try {
-            return Carbon::parse($date ?: now())
-                ->timezone((string) config('app.timezone', 'Europe/Kyiv'))
-                ->format('Y-m-d H:i:sP');
-        } catch (Throwable) {
-            return now()->timezone((string) config('app.timezone', 'Europe/Kyiv'))->format('Y-m-d H:i:sP');
-        }
+        return (KyivDateTime::fromStorage($date) ?? KyivDateTime::now())->format('Y-m-d H:i:sP');
     }
 
     private function resolveProductId(array $payload): ?int

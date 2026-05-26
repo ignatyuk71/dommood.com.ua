@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Support\DateTime\KyivDateTime;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,11 +17,11 @@ class DashboardController extends Controller
 {
     public function __invoke(Request $request): Response
     {
-        $endDate = CarbonImmutable::now()->endOfDay();
+        $endDate = KyivDateTime::now()->endOfDay();
         $startDate = $endDate->subDays(29)->startOfDay();
 
         $orders = Order::query()
-            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereBetween('created_at', [KyivDateTime::toStorage($startDate), KyivDateTime::toStorage($endDate)])
             ->get([
                 'id',
                 'customer_id',
@@ -70,7 +71,7 @@ class DashboardController extends Controller
 
     private function dailyChart($orders, CarbonImmutable $startDate, CarbonImmutable $endDate): array
     {
-        $grouped = $orders->groupBy(fn (Order $order): string => $order->created_at->toDateString());
+        $grouped = $orders->groupBy(fn (Order $order): string => KyivDateTime::isoDate($order->created_at) ?? '');
         $labels = [];
         $ordersSeries = [];
         $revenueSeries = [];

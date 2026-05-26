@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreReviewRequest;
 use App\Http\Requests\Admin\UpdateReviewRequest;
 use App\Models\Product;
 use App\Models\Review;
+use App\Support\DateTime\KyivDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -203,9 +204,9 @@ class ReviewController extends Controller
             'source' => $review->source,
             'moderation_note' => $review->moderation_note,
             'admin_reply' => $review->admin_reply,
-            'published_at' => $review->published_at?->toDateTimeString(),
-            'moderated_at' => $review->moderated_at?->toDateTimeString(),
-            'created_at' => $review->created_at?->toDateTimeString(),
+            'published_at' => KyivDateTime::sql($review->published_at),
+            'moderated_at' => KyivDateTime::sql($review->moderated_at),
+            'created_at' => KyivDateTime::sql($review->created_at),
             'moderator' => $review->moderator ? [
                 'id' => $review->moderator->id,
                 'name' => $review->moderator->name,

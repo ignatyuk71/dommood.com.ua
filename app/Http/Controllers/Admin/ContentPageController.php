@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreContentPageRequest;
 use App\Http\Requests\Admin\UpdateContentPageRequest;
 use App\Models\ContentPage;
+use App\Support\DateTime\KyivDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -102,7 +103,9 @@ class ContentPageController extends Controller
             'meta_title' => $this->nullableString($data['meta_title'] ?? null),
             'meta_description' => $this->nullableString($data['meta_description'] ?? null),
             'canonical_url' => $this->nullableString($data['canonical_url'] ?? null),
-            'published_at' => $status === 'published' ? ($data['published_at'] ?? now()) : null,
+            'published_at' => $status === 'published'
+                ? (KyivDateTime::fromAdminInput($data['published_at'] ?? null) ?? KyivDateTime::toStorage(KyivDateTime::now()))
+                : null,
         ];
     }
 
@@ -135,8 +138,8 @@ class ContentPageController extends Controller
             'meta_title' => $page->meta_title,
             'meta_description' => $page->meta_description,
             'canonical_url' => $page->canonical_url,
-            'published_at' => $page->published_at?->format('Y-m-d\TH:i'),
-            'updated_at' => $page->updated_at?->format('d.m.Y H:i'),
+            'published_at' => KyivDateTime::input($page->published_at),
+            'updated_at' => KyivDateTime::dateTime($page->updated_at),
         ];
 
         if ($full) {

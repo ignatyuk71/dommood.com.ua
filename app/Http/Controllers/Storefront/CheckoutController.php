@@ -19,6 +19,7 @@ use App\Services\Payments\LiqPayService;
 use App\Services\SiteSettingsService;
 use App\Services\Storefront\CartService;
 use App\Services\Storefront\DeliveryPolicyService;
+use App\Support\DateTime\KyivDateTime;
 use App\Support\Marketing\MarketingSourceRouter;
 use App\Support\Storefront\EcommerceAnalytics;
 use Illuminate\Contracts\View\View;
@@ -472,7 +473,7 @@ class CheckoutController extends Controller
     private function generateOrderNumber(): string
     {
         do {
-            $number = 'DM-'.now()->format('ymd').'-'.random_int(1000, 9999);
+            $number = 'DM-'.KyivDateTime::now()->format('ymd').'-'.random_int(1000, 9999);
         } while (Order::query()->where('order_number', $number)->exists());
 
         return $number;

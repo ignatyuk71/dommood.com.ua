@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use App\Services\Media\ProductImageOptimizer;
+use App\Support\DateTime\KyivDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -166,8 +167,8 @@ class BannerController extends Controller
             'mobile_image_path' => $banner?->mobile_image_path,
             'is_active' => (bool) ($data['is_active'] ?? false),
             'sort_order' => (int) ($data['sort_order'] ?? 0),
-            'starts_at' => $data['starts_at'] ?? null,
-            'ends_at' => $data['ends_at'] ?? null,
+            'starts_at' => KyivDateTime::fromAdminInput($data['starts_at'] ?? null),
+            'ends_at' => KyivDateTime::fromAdminInput($data['ends_at'] ?? null),
         ];
     }
 
@@ -186,8 +187,8 @@ class BannerController extends Controller
             'button_text' => $banner->button_text,
             'is_active' => $banner->is_active,
             'sort_order' => $banner->sort_order,
-            'starts_at' => $banner->starts_at?->format('Y-m-d\TH:i'),
-            'ends_at' => $banner->ends_at?->format('Y-m-d\TH:i'),
+            'starts_at' => KyivDateTime::input($banner->starts_at),
+            'ends_at' => KyivDateTime::input($banner->ends_at),
         ];
     }
 
@@ -215,7 +216,7 @@ class BannerController extends Controller
     {
         [$maxWidth, $maxHeight] = $this->recommendedImageSize($banner->placement, $variant);
         $slug = Str::slug($banner->title) ?: 'banner';
-        $filename = "{$slug}-{$variant}-".now()->format('Ymd-His');
+        $filename = "{$slug}-{$variant}-".KyivDateTime::now()->format('Ymd-His');
 
         return $this->imageOptimizer->storeAsWebp(
             $image,

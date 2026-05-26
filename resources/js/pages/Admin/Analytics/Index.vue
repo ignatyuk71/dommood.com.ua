@@ -161,7 +161,7 @@ const calendarMonths = computed(() => [
     buildMonth(addMonths(calendarCursor.value, 1)),
 ]);
 const presetRanges = computed(() => {
-    const today = new Date();
+    const today = parseIsoDate(props.analytics.period.today ?? toIsoDate(new Date()));
     const period = (days) => ({
         start: toIsoDate(addDays(today, -(days - 1))),
         end: toIsoDate(today),

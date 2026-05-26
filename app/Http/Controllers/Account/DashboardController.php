@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Account;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Support\DateTime\KyivDateTime;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,7 +32,7 @@ class DashboardController extends Controller
             ->map(fn ($order): array => [
                 'id' => $order->id,
                 'order_number' => $order->order_number,
-                'created_at' => $order->created_at?->format('d.m.Y H:i'),
+                'created_at' => KyivDateTime::dateTime($order->created_at),
                 'status' => $order->status,
                 'payment_status' => $order->payment_status,
                 'total' => number_format($order->total_cents / 100, 2, '.', ' '),

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\User;
+use App\Support\DateTime\KyivDateTime;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -59,11 +60,11 @@ class CustomerController extends Controller
             'orders_count' => $customer->real_orders_count ?: $customer->orders_count,
             'total_spent' => number_format($customer->total_spent_cents / 100, 2, '.', ' '),
             'source' => $customer->source ?: $customer->utm_source ?: 'Інше',
-            'first_order_at' => $customer->first_order_at?->format('d.m.Y H:i'),
-            'last_order_at' => $customer->last_order_at?->format('d.m.Y H:i'),
+            'first_order_at' => KyivDateTime::dateTime($customer->first_order_at),
+            'last_order_at' => KyivDateTime::dateTime($customer->last_order_at),
             'registered' => (bool) $customer->user_id,
             'is_active' => $customer->user?->is_active ?? true,
-            'last_login_at' => $customer->user?->last_login_at?->format('d.m.Y H:i'),
+            'last_login_at' => KyivDateTime::dateTime($customer->user?->last_login_at),
         ];
     }
 }

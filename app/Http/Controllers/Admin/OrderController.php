@@ -9,7 +9,7 @@ use App\Models\OrderStatusHistory;
 use App\Models\PaymentTransaction;
 use App\Models\ProductImage;
 use App\Services\AdminActivityLogger;
-use Carbon\CarbonImmutable;
+use App\Support\DateTime\KyivDateTime;
 use DateTimeInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -23,8 +23,6 @@ use Inertia\Response;
 
 class OrderController extends Controller
 {
-    private const ADMIN_TIMEZONE = 'Europe/Kyiv';
-
     private const STATUS_OPTIONS = [
         'new' => [
             'label' => 'Нове',
@@ -545,9 +543,7 @@ class OrderController extends Controller
 
     private function adminDateTime(?DateTimeInterface $dateTime): ?string
     {
-        return $dateTime
-            ? CarbonImmutable::instance($dateTime)->setTimezone(self::ADMIN_TIMEZONE)->format('d.m.Y H:i')
-            : null;
+        return KyivDateTime::dateTime($dateTime);
     }
 
     private function amountDueCents(Order $order): int

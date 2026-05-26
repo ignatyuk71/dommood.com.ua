@@ -6,6 +6,7 @@ use App\Models\MarketingEventOutbox;
 use App\Models\MarketingIntegration;
 use App\Models\MarketingIntegrationCredential;
 use App\Models\MarketingIntegrationSetting;
+use App\Support\DateTime\KyivDateTime;
 use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
@@ -320,7 +321,7 @@ class MarketingIntegrationConfig
             $payload[$credential->secret_type] = [
                 'exists' => (bool) $credential->secret_value,
                 'masked' => $credential->secret_last_four ? '••••'.$credential->secret_last_four : '',
-                'updated_at' => $credential->updated_at?->toDateTimeString(),
+                'updated_at' => KyivDateTime::sql($credential->updated_at),
             ];
         }
 

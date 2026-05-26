@@ -16,12 +16,13 @@ use App\Models\SizeChart;
 use App\Services\AdminActivityLogger;
 use App\Services\Media\ProductImageOptimizer;
 use App\Support\Catalog\CatalogSlug;
+use App\Support\DateTime\KyivDateTime;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Database\UniqueConstraintViolationException;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -1020,7 +1021,7 @@ class ProductController extends Controller
             'meta_description' => $full ? $product->meta_description : null,
             'seo_text' => $full ? $product->seo_text : null,
             'canonical_url' => $full ? $product->canonical_url : null,
-            'published_at' => $product->published_at?->format('Y-m-d\TH:i'),
+            'published_at' => KyivDateTime::input($product->published_at),
             'attribute_value_ids' => $full ? $product->attributeValues->pluck('id')->values()->all() : [],
             'attribute_rows' => $full ? $this->serializeAttributeRows($product) : [],
             'variants' => $product->relationLoaded('variants') ? $this->serializeVariants($product) : [],
@@ -1029,7 +1030,7 @@ class ProductController extends Controller
             'categories_count' => $product->categories_count ?? 0,
             'attribute_values_count' => $product->attribute_values_count ?? 0,
             'variants_count' => $product->variants_count ?? 0,
-            'created_at' => $product->created_at?->toDateTimeString(),
+            'created_at' => KyivDateTime::sql($product->created_at),
         ];
     }
 
@@ -1130,7 +1131,7 @@ class ProductController extends Controller
     private function storeImage(Product $product, UploadedFile $image, int $index): string
     {
         $siteSlug = CatalogSlug::make(config('app.name', 'dommood')) ?: 'dommood';
-        $filename = "{$product->slug}-{$siteSlug}-".now()->format('Ymd-His').'-'.($index + 1);
+        $filename = "{$product->slug}-{$siteSlug}-".KyivDateTime::now()->format('Ymd-His').'-'.($index + 1);
 
         return app(ProductImageOptimizer::class)->storeAsWebp($image, "products/{$product->id}", $filename);
     }
@@ -1201,13 +1202,13 @@ class ProductController extends Controller
         return $cents === null ? null : $this->centsToMoney($cents);
     }
 
-    private function publishedAt(?string $value, string $status): ?Carbon
+    private function publishedAt(?string $value, string $status): ?CarbonImmutable
     {
         if ($value) {
-            return Carbon::parse($value);
+            return KyivDateTime::fromAdminInput($value);
         }
 
-        return $status === Product::STATUS_ACTIVE ? now() : null;
+        return $status === Product::STATUS_ACTIVE ? KyivDateTime::toStorage(KyivDateTime::now()) : null;
     }
 
     private function nullableString(?string $value): ?string

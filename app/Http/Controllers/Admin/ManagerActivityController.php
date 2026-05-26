@@ -12,6 +12,7 @@ use App\Models\ProductColorGroup;
 use App\Models\Review;
 use App\Models\SizeChart;
 use App\Models\User;
+use App\Support\DateTime\KyivDateTime;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -298,7 +299,7 @@ class ManagerActivityController extends Controller
     private function activityQuery(CarbonImmutable $start, CarbonImmutable $end, array $filters): Builder
     {
         return AdminActivityLog::query()
-            ->whereBetween('created_at', [$start, $end])
+            ->whereBetween('created_at', [KyivDateTime::toStorage($start), KyivDateTime::toStorage($end)])
             ->when($filters['manager_id'], fn (Builder $query, int $managerId): Builder => $query->where('user_id', $managerId))
             ->when(
                 isset(self::EVENT_GROUPS[$filters['event_group']]),
@@ -326,7 +327,7 @@ class ManagerActivityController extends Controller
 
     private function dateRange(Request $request): array
     {
-        $today = CarbonImmutable::today();
+        $today = KyivDateTime::today();
         $start = $this->parseDate($request->string('date_from')->toString()) ?? $today->subDays(13);
         $end = $this->parseDate($request->string('date_to')->toString()) ?? $today;
 
@@ -349,7 +350,7 @@ class ManagerActivityController extends Controller
         }
 
         try {
-            return CarbonImmutable::parse($value);
+            return CarbonImmutable::parse($value, KyivDateTime::timezone());
         } catch (Throwable) {
             return null;
         }
@@ -370,7 +371,7 @@ class ManagerActivityController extends Controller
                 'email' => $user->email,
                 'role' => $user->role,
                 'role_label' => $this->roleLabel($user->role),
-                'last_login_at' => $user->last_login_at?->format('d.m.Y H:i'),
+                'last_login_at' => KyivDateTime::dateTime($user->last_login_at),
             ])
             ->values()
             ->all();
@@ -405,7 +406,7 @@ class ManagerActivityController extends Controller
                     ->orWhere('event', 'like', 'seo.%')
                     ->orWhere('event', 'like', 'payment_delivery.%');
             })->count(),
-            'last_activity_at' => $lastActivity ? CarbonImmutable::parse($lastActivity)->format('d.m.Y H:i') : null,
+            'last_activity_at' => KyivDateTime::dateTime($lastActivity),
         ];
     }
 
@@ -443,7 +444,7 @@ class ManagerActivityController extends Controller
                 'order_actions_count' => (int) $row->order_actions_count,
                 'product_actions_count' => (int) $row->product_actions_count,
                 'catalog_actions_count' => (int) $row->catalog_actions_count,
-                'last_activity_at' => $row->last_activity_at ? CarbonImmutable::parse($row->last_activity_at)->format('d.m.Y H:i') : null,
+                'last_activity_at' => KyivDateTime::dateTime($row->last_activity_at),
             ])
             ->values()
             ->all();
@@ -472,7 +473,7 @@ class ManagerActivityController extends Controller
             'changes_extra_count' => max(0, $changes->count() - 5),
             'metadata' => $log->metadata ?? [],
             'ip_address' => $log->ip_address,
-            'created_at' => $log->created_at?->format('d.m.Y H:i'),
+            'created_at' => KyivDateTime::dateTime($log->created_at),
         ];
     }
 
@@ -566,7 +567,7 @@ class ManagerActivityController extends Controller
 
         if (str_ends_with($key, '_at')) {
             try {
-                return CarbonImmutable::parse((string) $value)->format('d.m.Y H:i');
+                return KyivDateTime::dateTime((string) $value) ?? (string) $value;
             } catch (Throwable) {
                 return (string) $value;
             }

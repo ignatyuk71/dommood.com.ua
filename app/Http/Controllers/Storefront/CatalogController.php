@@ -21,6 +21,7 @@ use App\Services\Storefront\DeliveryPolicyService;
 use App\Services\Storefront\ProductAvailabilityService;
 use App\Support\Catalog\FilterUrlBuilder;
 use App\Support\Catalog\ProductFilterQuery;
+use App\Support\DateTime\KyivDateTime;
 use App\Support\Storefront\EcommerceAnalytics;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -1131,7 +1132,7 @@ class CatalogController extends Controller
                 'title' => $review->title,
                 'body' => $review->body,
                 'is_verified_buyer' => (bool) $review->is_verified_buyer,
-                'published_at' => $review->published_at?->format('d.m.Y'),
+                'published_at' => KyivDateTime::date($review->published_at),
             ])
             ->values()
             ->all();

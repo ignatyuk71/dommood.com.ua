@@ -56,7 +56,7 @@ class SiteSettingsService
                 'support_email' => '',
                 'support_phone' => '',
                 'currency' => 'UAH',
-                'timezone' => config('app.timezone', 'Europe/Kyiv'),
+                'timezone' => config('app.display_timezone', 'Europe/Kyiv'),
                 'maintenance_mode' => false,
                 'maintenance_message' => '',
             ],

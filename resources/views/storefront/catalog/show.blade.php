@@ -152,8 +152,8 @@
             ];
             $shortMonths = [1 => 'січ', 2 => 'лют', 3 => 'бер', 4 => 'кві', 5 => 'тра', 6 => 'чер', 7 => 'лип', 8 => 'сер', 9 => 'вер', 10 => 'жов', 11 => 'лис', 12 => 'гру'];
             $formatShortDate = static fn ($date): string => $date->format('j').' '.($shortMonths[(int) $date->format('n')] ?? $date->format('M'));
-            $deliveryStart = now()->addDays(2);
-            $deliveryEnd = now()->addDays(3);
+            $deliveryStart = \App\Support\DateTime\KyivDateTime::now()->addDays(2);
+            $deliveryEnd = \App\Support\DateTime\KyivDateTime::now()->addDays(3);
             $freeDeliveryThreshold = max(1, (int) ($freeShippingThresholdCents ?? \App\Services\Storefront\DeliveryPolicyService::DEFAULT_FREE_SHIPPING_THRESHOLD_CENTS));
             $cartTotalCents = max(0, (int) ($headerCartSummary['total_cents'] ?? 0));
             $freeDeliveryLeft = max(0, $freeDeliveryThreshold - $cartTotalCents);

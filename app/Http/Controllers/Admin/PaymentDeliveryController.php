@@ -11,6 +11,7 @@ use App\Services\AdminActivityLogger;
 use App\Services\SiteSettingsService;
 use App\Services\Storefront\DeliveryPolicyService;
 use App\Support\AdminPermissions;
+use App\Support\DateTime\KyivDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -490,9 +491,9 @@ class PaymentDeliveryController extends Controller
             'currency' => $transaction->currency,
             'is_test' => $transaction->is_test,
             'failure_reason' => $transaction->failure_reason,
-            'processed_at' => $transaction->processed_at?->format('d.m.Y H:i'),
-            'paid_at' => $transaction->paid_at?->format('d.m.Y H:i'),
-            'created_at' => $transaction->created_at?->format('d.m.Y H:i'),
+            'processed_at' => KyivDateTime::dateTime($transaction->processed_at),
+            'paid_at' => KyivDateTime::dateTime($transaction->paid_at),
+            'created_at' => KyivDateTime::dateTime($transaction->created_at),
         ];
     }
 
