@@ -7,6 +7,11 @@
         <title>{{ $seo['title'] ?? $page->title }}</title>
         <meta name="description" content="{{ $seo['meta_description'] ?? ($page->meta_description ?: $page->title) }}">
         <link rel="canonical" href="{{ $seo['canonical_url'] ?? url('/'.$page->slug) }}">
+        <meta property="og:type" content="article">
+        <meta property="og:title" content="{{ $seo['title'] ?? $page->title }}">
+        <meta property="og:description" content="{{ $seo['meta_description'] ?? ($page->meta_description ?: $page->title) }}">
+        <meta property="og:url" content="{{ $seo['canonical_url'] ?? url('/'.$page->slug) }}">
+        <meta name="twitter:card" content="summary">
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">

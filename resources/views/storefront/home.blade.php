@@ -7,6 +7,14 @@
         <title>{{ $storeName }} - товари для дому та щоденного затишку</title>
         <meta name="description" content="{{ $storeName }}: категорії, новинки, актуальні ціни та наявність для швидкої покупки онлайн.">
         <link rel="canonical" href="{{ url('/') }}">
+        <meta property="og:type" content="website">
+        <meta property="og:title" content="{{ $storeName }} - товари для дому та щоденного затишку">
+        <meta property="og:description" content="{{ $storeName }}: категорії, новинки, актуальні ціни та наявність для швидкої покупки онлайн.">
+        <meta property="og:url" content="{{ url('/') }}">
+        @if ($homeBanners['main']['image_url'] ?? null)
+            <meta property="og:image" content="{{ $homeBanners['main']['image_url'] }}">
+        @endif
+        <meta name="twitter:card" content="summary_large_image">
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">

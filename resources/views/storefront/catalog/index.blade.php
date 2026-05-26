@@ -19,6 +19,10 @@
         <meta property="og:description" content="{{ $seo['meta_description'] ?? $intro }}">
         <meta property="og:url" content="{{ $seo['canonical_url'] ?? url()->current() }}">
         <meta property="og:type" content="website">
+        @if ($category?->image_path)
+            <meta property="og:image" content="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($category->image_path) }}">
+        @endif
+        <meta name="twitter:card" content="summary_large_image">
         @if (file_exists(public_path('hot')))
             @vite(['resources/css/storefront.css', 'resources/css/storefront-catalog.css'])
         @else

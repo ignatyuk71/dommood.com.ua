@@ -10,9 +10,11 @@
         <meta property="og:type" content="product">
         <meta property="og:title" content="{{ $seo['title'] ?? $product['name'] }}">
         <meta property="og:description" content="{{ $seo['meta_description'] ?? ($product['short_description'] ?: trim(strip_tags((string) ($product['description'] ?? ''))) ?: $product['name']) }}">
+        <meta property="og:url" content="{{ $seo['canonical_url'] ?? url('/catalog/'.$category->slug.'/'.$product['slug']) }}">
         @if ($product['image_url'])
             <meta property="og:image" content="{{ $product['image_url'] }}">
         @endif
+        <meta name="twitter:card" content="summary_large_image">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
         <link rel="manifest" href="/site.webmanifest">
