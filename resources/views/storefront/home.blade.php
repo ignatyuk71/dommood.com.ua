@@ -19,6 +19,18 @@
             @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront-home.css')])
         @endif
         @include('storefront.partials.google-analytics')
+        @php
+            $heroPreloadDesktop = $homeBanners['main']['image_url'] ?? null;
+            $heroPreloadMobile  = $homeBanners['main']['mobile_image_url'] ?? null;
+        @endphp
+        @if ($heroPreloadDesktop)
+            @if ($heroPreloadMobile)
+                <link rel="preload" as="image" href="{{ $heroPreloadMobile }}" media="(max-width: 767.98px)" fetchpriority="high">
+                <link rel="preload" as="image" href="{{ $heroPreloadDesktop }}" media="(min-width: 768px)" fetchpriority="high">
+            @else
+                <link rel="preload" as="image" href="{{ $heroPreloadDesktop }}" fetchpriority="high">
+            @endif
+        @endif
     </head>
     <body>
         @php
@@ -377,7 +389,7 @@
                                                     width="1600"
                                                     height="920"
                                                     fetchpriority="high"
-                                                    decoding="async"
+                                                    loading="eager"
                                                 >
                                             </picture>
                                         </span>
@@ -401,7 +413,7 @@
                                                             @if ($banner['mobile_image_url'] ?? null)
                                                                 <source media="(max-width: 767.98px)" srcset="{{ $banner['mobile_image_url'] }}">
                                                             @endif
-                                                            <img src="{{ $banner['image_url'] }}" alt="{{ $banner['alt'] ?? $banner['title'] ?? $storeName }}" loading="lazy" decoding="async" width="900" height="760">
+                                                            <img src="{{ $banner['image_url'] }}" alt="{{ $banner['alt'] ?? $banner['title'] ?? $storeName }}" loading="eager" width="900" height="760">
                                                         </picture>
                                                     @else
                                                         <span class="storefront-image-placeholder">{{ mb_substr($banner['title'] ?? 'DM', 0, 2) }}</span>
