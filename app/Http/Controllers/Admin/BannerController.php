@@ -20,8 +20,8 @@ class BannerController extends Controller
     private const PLACEMENT_IMAGE_SPECS = [
         'home_hero_main' => [
             'label' => 'Головна: великий банер',
-            'desktop' => [2400, 1200],
-            'mobile' => [1080, 1200],
+            'desktop' => [1440, 720],
+            'mobile' => [750, 960],
             'desktop_note' => 'Hero кропиться в діапазоні ≈2:1-2.25:1: ключовий товар тримати правіше центру, лівий край чистий під текст.',
             'mobile_note' => 'Mobile hero близький до 9:10 на телефонах: головний обʼєкт по центру, без тексту на фото.',
         ],
