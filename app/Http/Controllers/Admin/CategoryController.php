@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\StoreCategoryRequest;
 use App\Http\Requests\Admin\UpdateCategoryRequest;
 use App\Models\Category;
 use App\Models\ProductAttribute;
+use App\Services\Media\ProductImageOptimizer;
 use App\Support\DateTime\KyivDateTime;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -333,11 +334,16 @@ class CategoryController extends Controller
 
     private function storeImage(Category $category, UploadedFile $image): string
     {
-        $extension = strtolower($image->getClientOriginalExtension() ?: $image->extension() ?: 'jpg');
         $siteSlug = Str::slug(config('app.name', 'dommood')) ?: 'dommood';
-        $filename = "{$category->slug}-{$siteSlug}-".KyivDateTime::now()->format('Ymd-His').".{$extension}";
+        $filename = "{$category->slug}-{$siteSlug}-".KyivDateTime::now()->format('Ymd-His');
 
-        return $image->storeAs("categories/{$category->id}", $filename, 'public');
+        return app(ProductImageOptimizer::class)->storeAsWebp(
+            $image,
+            "categories/{$category->id}",
+            $filename,
+            900,
+            900,
+        );
     }
 
     private function deleteImage(?string $path): void

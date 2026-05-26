@@ -69,7 +69,7 @@
                     </div>
 
                     <a href="{{ route('home') }}" class="storefront-desktop-logo" aria-label="{{ $storeName }} - головна">
-                        <img src="{{ asset('brand/dom-mood-wordmark-black.png') }}" alt="{{ $storeName }}" width="290" height="48">
+                        <img src="{{ asset('brand/dom-mood-wordmark-black.webp') }}" alt="{{ $storeName }}" width="290" height="48">
                         <span class="storefront-logo-tagline">Тапочки та піжами</span>
                     </a>
 
@@ -118,7 +118,7 @@
                 <svg viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>
             </button>
             <a href="{{ route('home') }}" class="storefront-mobile-logo" aria-label="{{ $storeName }} - головна">
-                <img src="{{ asset('brand/dom-mood-wordmark-black.png') }}" alt="{{ $storeName }}" width="142" height="24">
+                <img src="{{ asset('brand/dom-mood-wordmark-black.webp') }}" alt="{{ $storeName }}" width="142" height="24">
                 <span class="storefront-logo-tagline">Тапочки та піжами</span>
             </a>
             <button type="button" class="storefront-mobile-icon" data-mobile-search-open aria-label="Відкрити пошук">
