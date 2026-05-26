@@ -491,7 +491,6 @@
                                 <section id="product-panel-description" @class(['product-details-tabs__panel', 'is-active' => $activeProductTab === 'description']) role="tabpanel" aria-labelledby="product-tab-description" data-product-tab-panel="description" @if ($activeProductTab !== 'description') hidden @endif>
                                     <div class="product-details-tabs__grid">
                                         <div class="product-details-tabs__copy">
-                                            <h2>{{ $product['name'] }}</h2>
                                             @if ($productDescriptionHtml !== '')
                                                 <div>{!! $productDescriptionHtml !!}</div>
                                             @else
