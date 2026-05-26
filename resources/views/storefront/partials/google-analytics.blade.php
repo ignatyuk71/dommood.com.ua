@@ -373,9 +373,22 @@
             trackTikTok(eventName, payload);
         };
 
-        initGoogle();
-        initMeta();
-        initTikTok();
-        window.dispatchEvent(new CustomEvent('storefront-analytics:ready'));
+        let analyticsInitialized = false;
+        const initAll = () => {
+            if (analyticsInitialized) return;
+            analyticsInitialized = true;
+            initGoogle();
+            initMeta();
+            initTikTok();
+            window.dispatchEvent(new CustomEvent('storefront-analytics:ready'));
+        };
+
+        const lazyEvents = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'wheel'];
+        const onFirstInteraction = () => {
+            lazyEvents.forEach(e => window.removeEventListener(e, onFirstInteraction, { passive: true }));
+            initAll();
+        };
+        lazyEvents.forEach(e => window.addEventListener(e, onFirstInteraction, { passive: true }));
+        setTimeout(initAll, 3000);
     })();
 </script>
