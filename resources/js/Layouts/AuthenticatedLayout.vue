@@ -151,6 +151,7 @@ const navItems = [
         children: [
             { label: 'Сторінки', routeName: 'admin.pages.index', icon: ChevronRight, permission: 'admin.site_structure.manage' },
             { label: 'Банери', routeName: 'admin.banners.index', icon: ChevronRight, permission: 'admin.site_structure.manage' },
+            { label: 'FAQ головної', routeName: 'admin.content.faq.index', icon: ChevronRight, permission: 'admin.content.faq.manage' },
             { label: 'Промокоди', icon: ChevronRight, permission: 'admin.site_structure.manage' },
         ],
     },

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\HomeFaqController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ContentPageController;
 use App\Http\Controllers\Admin\CustomerController;
@@ -210,6 +211,13 @@ Route::middleware(['auth', 'verified', 'admin.access'])
             Route::put('settings/tracking/{channel}', [TrackingSettingsController::class, 'update'])
                 ->whereIn('channel', ['google', 'tiktok', 'meta'])
                 ->name('settings.tracking.update');
+        });
+
+        Route::middleware('admin.permission:'.AdminPermissions::CONTENT_FAQ_MANAGE)->group(function (): void {
+            Route::get('content/faq', [HomeFaqController::class, 'index'])->name('content.faq.index');
+            Route::post('content/faq', [HomeFaqController::class, 'store'])->name('content.faq.store');
+            Route::put('content/faq/{faq}', [HomeFaqController::class, 'update'])->name('content.faq.update');
+            Route::delete('content/faq/{faq}', [HomeFaqController::class, 'destroy'])->name('content.faq.destroy');
         });
 
         Route::middleware('admin.permission:admin.site_structure.manage')->group(function (): void {

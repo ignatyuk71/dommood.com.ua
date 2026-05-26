@@ -119,37 +119,7 @@
                     'url' => url('/catalog').'?q='.rawurlencode('подарунок'),
                 ],
             ];
-            $homeFaqItems = collect([
-                [
-                    'question' => 'Які товари можна купити в '.$storeName.'?',
-                    'answer' => $storeName.' підбирає мʼякі домашні тапочки, вуличні моделі на гумовій підошві та піжами для щоденного комфорту вдома.',
-                ],
-                [
-                    'question' => 'Чи підходять пухнасті тапочки для вулиці?',
-                    'answer' => 'Так, моделі на гумовій підошві підходять для коротких виходів надвір, тераси, двору або поїздок. Для дощу, снігу чи довгих прогулянок краще обрати спеціалізоване взуття.',
-                ],
-                [
-                    'question' => 'Як підібрати правильний розмір?',
-                    'answer' => 'Орієнтуйтесь на довжину стопи й звичний розмір взуття. Якщо вагаєтесь між двома розмірами або плануєте носити зі шкарпетками, краще обрати більший або уточнити заміри у менеджера.',
-                ],
-                [
-                    'question' => 'Як доглядати за пухнастими тапочками?',
-                    'answer' => 'Очищуйте поверхню мʼякою щіткою або вологою серветкою, без агресивної хімії та сильного намокання. Сушіть природним способом, подалі від батарей і прямих джерел тепла.',
-                ],
-                [
-                    'question' => 'Чи можна обміняти або повернути товар?',
-                    'answer' => 'Так, обмін або повернення можливі згідно з умовами магазину, якщо товар не був у використанні, має збережений товарний вигляд і пакування.',
-                ],
-                [
-                    'question' => 'Від якої суми доставка безкоштовна?',
-                    'answer' => 'Безкоштовна доставка діє для замовлень від '.($freeShippingThresholdLabel ?? '1 200 грн').'. Остаточні умови доставки менеджер підтвердить під час оформлення замовлення.',
-                    'answer_html' => 'Безкоштовна доставка діє для замовлень від <span class="storefront-inline-price">'.e($freeShippingThresholdLabel ?? '1 200 грн').'</span>. Остаточні умови доставки менеджер підтвердить під час оформлення замовлення.',
-                ],
-                [
-                    'question' => 'Як швидко оформити замовлення?',
-                    'answer' => 'Оберіть товар у каталозі, залиште контактні дані в checkout, а менеджер підтвердить деталі, наявність, оплату та доставку.',
-                ],
-            ]);
+            $homeFaqItems = collect($homeFaqItems ?? []);
             $schemas = [
                 [
                     '@context' => 'https://schema.org',
@@ -722,59 +692,59 @@
                     </section>
                 @endif
 
-                <section class="storefront-benefits" aria-labelledby="storefront-benefits-title">
+                <section class="dm-why" aria-labelledby="dm-why-title">
                     <div class="container">
-                        <div class="storefront-benefits__panel">
-                            <div class="storefront-benefits__layout">
-                                <div class="storefront-benefits__message">
-                                    <h2 id="storefront-benefits-title">Купувати просто</h2>
-                                    <p>Швидке оформлення, актуальна наявність і безкоштовна доставка від <span class="storefront-inline-price">{{ $freeShippingThresholdLabel ?? '1 200 грн' }}</span>.</p>
-                                    <a href="{{ url('/catalog') }}" class="storefront-benefits__cta">
-                                        До каталогу
-                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
-                                    </a>
-                                </div>
 
-                                <div class="storefront-benefits__list">
-                                    <article class="storefront-benefit-card">
-                                        <span class="storefront-benefits__icon" aria-hidden="true">
-                                            <svg viewBox="0 0 48 48"><path d="M8.5 15.5h22v15h-22z"/><path d="M30.5 20h6.2l3.8 5.3v5.2h-10z"/><path d="M13.8 34.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M35.2 34.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M13 20h8"/><path d="M34 22.5h2.2"/></svg>
-                                        </span>
-                                        <div class="storefront-benefit-card__body">
-                                            <h3>Швидке оформлення</h3>
-                                            <p>Без зайвих полів: швидше до підтвердження замовлення.</p>
-                                        </div>
-                                    </article>
-                                    <article class="storefront-benefit-card">
-                                        <span class="storefront-benefits__icon" aria-hidden="true">
-                                            <svg viewBox="0 0 48 48"><path d="M10 15.5h28a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H10a3 3 0 0 1-3-3v-15a3 3 0 0 1 3-3z"/><path d="M7 22h34"/><path d="M13 30h8"/><path d="M29 30h6"/><path d="M35.5 18.5h1.5"/></svg>
-                                        </span>
-                                        <div class="storefront-benefit-card__body">
-                                            <h3>Безкоштовна доставка</h3>
-                                            <p>Доставка за наш рахунок для замовлень від <span class="storefront-inline-price">{{ $freeShippingThresholdLabel ?? '1 200 грн' }}</span>.</p>
-                                        </div>
-                                    </article>
-                                    <article class="storefront-benefit-card">
-                                        <span class="storefront-benefits__icon" aria-hidden="true">
-                                            <svg viewBox="0 0 48 48"><path d="M11 21h26v18H11z"/><path d="M9 15h30v6H9z"/><path d="M24 15v24"/><path d="M18.5 15c-2.8-2.4-3.6-5.6-1.8-7 2.2-1.7 5.5.8 7.3 7"/><path d="M29.5 15c2.8-2.4 3.6-5.6 1.8-7-2.2-1.7-5.5.8-7.3 7"/></svg>
-                                        </span>
-                                        <div class="storefront-benefit-card__body">
-                                            <h3>Актуальний каталог</h3>
-                                            <p>Показуємо лише активні товари з ціною та наявністю.</p>
-                                        </div>
-                                    </article>
-                                    <article class="storefront-benefit-card">
-                                        <span class="storefront-benefits__icon" aria-hidden="true">
-                                            <svg viewBox="0 0 48 48"><path d="M34.5 10.5c-11.8.8-20.5 8.2-20.5 18.2 0 5.2 3.5 8.8 8.4 8.8 9 0 14.6-9.2 12.1-27z"/><path d="M14.5 36.5c4.2-8 10.8-13.2 18.5-16"/><path d="M17.5 25.5c-2.7-1.8-4.8-4.4-6-7.7"/><path d="M21.5 31.5c-4 .1-7.4 1.2-10 3.2"/></svg>
-                                        </span>
-                                        <div class="storefront-benefit-card__body">
-                                            <h3>Швидкий сайт</h3>
-                                            <p>Легка сторінка швидко відкривається й веде до каталогу.</p>
-                                        </div>
-                                    </article>
-                                </div>
+                        <div class="dm-why__head">
+                            <div class="dm-why__intro">
+                                <h2 id="dm-why-title">Купувати просто</h2>
+                                <p>Швидке оформлення, актуальна наявність і безкоштовна доставка від <span class="storefront-inline-price">{{ $freeShippingThresholdLabel ?? '1 200 грн' }}</span>.</p>
                             </div>
+                            <a href="{{ url('/catalog') }}" class="dm-why__cta">
+                                До каталогу
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+                            </a>
                         </div>
+
+                        <div class="dm-why__grid">
+                            <article class="dm-why__card">
+                                <span class="dm-why__icon dm-why__icon--1" aria-hidden="true">
+                                    <svg viewBox="0 0 48 48"><path d="M8.5 15.5h22v15h-22z"/><path d="M30.5 20h6.2l3.8 5.3v5.2h-10z"/><path d="M13.8 34.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M35.2 34.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M13 20h8"/><path d="M34 22.5h2.2"/></svg>
+                                </span>
+                                <div class="dm-why__text">
+                                    <h3>Швидке оформлення</h3>
+                                    <p>Без зайвих полів — швидше до підтвердження замовлення.</p>
+                                </div>
+                            </article>
+                            <article class="dm-why__card">
+                                <span class="dm-why__icon dm-why__icon--2" aria-hidden="true">
+                                    <svg viewBox="0 0 48 48"><path d="M10 15.5h28a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H10a3 3 0 0 1-3-3v-15a3 3 0 0 1 3-3z"/><path d="M7 22h34"/><path d="M13 30h8"/><path d="M29 30h6"/><path d="M35.5 18.5h1.5"/></svg>
+                                </span>
+                                <div class="dm-why__text">
+                                    <h3>Безкоштовна доставка</h3>
+                                    <p>Доставка за наш рахунок для замовлень від <span class="storefront-inline-price">{{ $freeShippingThresholdLabel ?? '1 200 грн' }}</span>.</p>
+                                </div>
+                            </article>
+                            <article class="dm-why__card">
+                                <span class="dm-why__icon dm-why__icon--3" aria-hidden="true">
+                                    <svg viewBox="0 0 48 48"><path d="M11 21h26v18H11z"/><path d="M9 15h30v6H9z"/><path d="M24 15v24"/><path d="M18.5 15c-2.8-2.4-3.6-5.6-1.8-7 2.2-1.7 5.5.8 7.3 7"/><path d="M29.5 15c2.8-2.4 3.6-5.6 1.8-7-2.2-1.7-5.5.8-7.3 7"/></svg>
+                                </span>
+                                <div class="dm-why__text">
+                                    <h3>Актуальний каталог</h3>
+                                    <p>Показуємо лише активні товари з ціною та наявністю.</p>
+                                </div>
+                            </article>
+                            <article class="dm-why__card">
+                                <span class="dm-why__icon dm-why__icon--4" aria-hidden="true">
+                                    <svg viewBox="0 0 48 48"><path d="M34.5 10.5c-11.8.8-20.5 8.2-20.5 18.2 0 5.2 3.5 8.8 8.4 8.8 9 0 14.6-9.2 12.1-27z"/><path d="M14.5 36.5c4.2-8 10.8-13.2 18.5-16"/><path d="M17.5 25.5c-2.7-1.8-4.8-4.4-6-7.7"/><path d="M21.5 31.5c-4 .1-7.4 1.2-10 3.2"/></svg>
+                                </span>
+                                <div class="dm-why__text">
+                                    <h3>Швидкий сайт</h3>
+                                    <p>Легка сторінка швидко відкривається й веде до каталогу.</p>
+                                </div>
+                            </article>
+                        </div>
+
                     </div>
                 </section>
 
@@ -806,15 +776,26 @@
                     <div class="container">
                         <div class="storefront-seo-card">
                             <div>
-                                <h2>{{ $storeName }} - онлайн-магазин товарів для дому</h2>
+                                <h2>{{ $storeName }} — інтернет-магазин домашніх капців і піжам в Україні</h2>
                             </div>
                             <div>
                                 <p>
-                                    Обирайте мʼякі домашні тапочки, моделі для коротких виходів і піжами для спокійних вечорів.
-                                    На головній зібрані актуальні добірки, категорії та популярні товари з фото, цінами й наявністю.
+                                    {{ $storeName }} — це зручний онлайн-магазин домашнього взуття та одягу з доставкою по всій Україні.
+                                    В каталозі зібрані <a href="{{ url('/catalog/zhinochi-pukhnasti-kaptsi') }}">жіночі пухнасті капці</a>,
+                                    <a href="{{ url('/catalog/zhinochi-kaptsi-dlia-vulytsi') }}">капці для вулиці на гумовій підошві</a>,
+                                    <a href="{{ url('/catalog/zhinochi-pizhamy') }}">жіночі піжами</a>,
+                                    <a href="{{ url('/catalog/cholovichi-tapochky') }}">чоловічі тапочки</a>
+                                    та <a href="{{ url('/catalog/dytiachi-khatni-kaptsi') }}">дитячі хатні капці</a>.
+                                    Усі товари є в наявності — жодних позицій «під замовлення» без попередження.
                                 </p>
                                 <p>
-                                    Переходьте в каталог, порівнюйте моделі та швидко знаходьте речі для себе або подарунка.
+                                    Замовлення оформлюється за кілька хвилин: оберіть модель, розмір і залиште контакти.
+                                    Відправляємо Новою Поштою, доставка безкоштовна від <span class="storefront-inline-price">{{ $freeShippingThresholdLabel ?? '1 200 грн' }}</span>.
+                                    Повернення або обмін — протягом 14 днів, якщо товар не був у використанні.
+                                </p>
+                                <p>
+                                    Шукаєте подарунок або щось затишне для себе — порівнюйте моделі у <a href="{{ url('/catalog') }}">каталозі</a>,
+                                    дивіться фото, ціни й наявність у реальному часі.
                                 </p>
                             </div>
                         </div>

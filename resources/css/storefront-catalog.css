@@ -359,14 +359,45 @@
 }
 
 .storefront-catalog-grid .storefront-product-card__media {
-    aspect-ratio: 1 / 1;
-    background: #f5f5f5;
-    border-radius: 0;
+    aspect-ratio: 4 / 5;
+    background: #f5f2ef;
+    border-radius: 6px;
+    overflow: hidden;
 }
 
 .storefront-catalog-grid .storefront-product-card__media img {
     object-fit: cover;
     padding: 0;
+}
+
+.storefront-catalog-grid .storefront-product-card:hover img {
+    transform: scale(1.055);
+}
+
+.storefront-catalog-grid .storefront-product-card__media::after {
+    align-items: flex-end;
+    background: linear-gradient(to top, rgba(20, 18, 28, 0.58) 0%, transparent 55%);
+    border-radius: 0 0 6px 6px;
+    bottom: 0;
+    color: #fff;
+    content: 'Переглянути →';
+    display: flex;
+    font-size: 0.78rem;
+    font-weight: 700;
+    left: 0;
+    letter-spacing: 0.07em;
+    opacity: 0;
+    padding: 0 1rem 1rem;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    text-transform: uppercase;
+    top: 0;
+    transition: opacity 0.22s ease;
+}
+
+.storefront-catalog-grid .storefront-product-card:hover .storefront-product-card__media::after {
+    opacity: 1;
 }
 
 .storefront-catalog-grid .storefront-product-card.is-out-of-stock .storefront-product-badges .is-availability {
@@ -849,7 +880,9 @@
     }
 
     .storefront-catalog-grid .storefront-product-card__media {
-        aspect-ratio: 1 / 1;
+        aspect-ratio: 4 / 5;
+        background: #f5f2ef;
+        border-radius: 4px;
     }
 
     .storefront-catalog-grid .storefront-product-card__body {
@@ -857,12 +890,16 @@
         padding-top: 0.58rem;
     }
 
+    .storefront-catalog-grid .storefront-product-card__media::after {
+        display: none;
+    }
+
     .storefront-catalog-grid .storefront-product-card h3 {
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 400;
         line-height: 1.22;
-        min-height: 2.08em;
-        text-align: center;
+        min-height: 0;
+        text-align: left;
     }
 
     .storefront-catalog-grid .storefront-product-card__footer {

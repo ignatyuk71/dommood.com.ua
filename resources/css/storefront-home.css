@@ -452,18 +452,25 @@
 
 .storefront-image-placeholder {
     align-items: center;
-    background:
-        linear-gradient(135deg, rgba(41, 39, 127, 0.14), rgba(15, 118, 110, 0.14)),
-        #eef2f6;
-    color: var(--dm-color-brand);
+    background: linear-gradient(145deg, #f5f2ef 0%, #ede8e2 100%);
     display: flex;
-    font-size: clamp(1.4rem, 3vw, 2.4rem);
-    font-weight: 920;
+    font-size: 0;
     height: 100%;
     justify-content: center;
     min-height: inherit;
-    text-transform: uppercase;
+    position: relative;
     width: 100%;
+}
+
+.storefront-image-placeholder::after {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%237b1a25' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 30c0 0 0 8 18 8s20-8 20-8H6z'/%3E%3Cpath d='M24 20c0-6 12-6 12 0 0 4-2 7-4 10'/%3E%3Ccircle cx='13' cy='23' r='3'/%3E%3Cpath d='M6 30c2-4 6-8 10-8h8'/%3E%3C/svg%3E");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 56px 56px;
+    content: '';
+    inset: 0;
+    opacity: 0.2;
+    position: absolute;
 }
 
 .storefront-featured-carousel {
@@ -1205,6 +1212,519 @@
     max-width: 28ch;
 }
 
+/* ── Why us ── */
+
+.dm-why {
+    background: var(--dm-color-soft);
+    padding: clamp(2.5rem, 5vw, 5rem) 0;
+}
+
+.dm-why__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+}
+
+.dm-why__intro h2 {
+    color: #1a1a1a;
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    font-weight: 500;
+    line-height: 1.1;
+    margin: 0 0 0.5rem;
+}
+
+.dm-why__intro p {
+    color: #666;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.dm-why__cta {
+    align-items: center;
+    background: #802020;
+    border-radius: 6px;
+    color: #fff;
+    display: inline-flex;
+    flex-shrink: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    gap: 0.5rem;
+    padding: 0.7rem 1.25rem;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.2s;
+    white-space: nowrap;
+}
+
+.dm-why__cta:hover {
+    background: #6b1a1a;
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.dm-why__cta svg {
+    fill: none;
+    height: 16px;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+    width: 16px;
+}
+
+.dm-why__grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+
+.dm-why__card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.05);
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.5rem;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.dm-why__card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,.08), 0 12px 32px rgba(0,0,0,.07);
+    transform: translateY(-3px);
+}
+
+.dm-why__icon {
+    align-items: center;
+    border-radius: 12px;
+    display: inline-flex;
+    flex-shrink: 0;
+    height: 52px;
+    justify-content: center;
+    width: 52px;
+}
+
+.dm-why__icon svg {
+    fill: none;
+    height: 34px;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+    width: 34px;
+}
+
+.dm-why__icon--1 { background: #f7e4e4; color: #802020; }
+.dm-why__icon--2 { background: #e7eee6; color: #4f6548; }
+.dm-why__icon--3 { background: #e4edf1; color: #425f70; }
+.dm-why__icon--4 { background: #e9ebdc; color: #687342; }
+
+.dm-why__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.dm-why__card h3 {
+    color: #1a1a1a;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.25;
+    margin: 0;
+}
+
+.dm-why__card p {
+    color: #666;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+@media (max-width: 900px) {
+    .dm-why__head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .dm-why__grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .dm-why__grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .dm-why__card {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1.1rem;
+    }
+
+    .dm-why__icon {
+        flex-shrink: 0;
+        height: 48px;
+        width: 48px;
+        border-radius: 10px;
+    }
+
+    .dm-why__icon svg {
+        height: 28px;
+        width: 28px;
+    }
+}
+
+/* ── end Why us ── */
+
+/* ── Benefits v3 ── */
+
+.storefront-benefits--v3 {
+    padding: clamp(3rem, 5.5vw, 6rem) 0;
+}
+
+.storefront-benefits__layout--v3 {
+    display: grid;
+    grid-template-columns: minmax(14rem, 0.7fr) minmax(0, 1.3fr);
+    gap: clamp(1.8rem, 3vw, 3rem);
+    align-items: center;
+    padding: 0;
+}
+
+.storefront-benefits__message--v3 {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.storefront-benefits__message--v3 .storefront-benefits__cta {
+    align-self: flex-start;
+}
+
+.storefront-benefits__mark {
+    display: block;
+    width: 2rem;
+    height: 3px;
+    background: #802020;
+    border-radius: 2px;
+    margin-bottom: 1.2rem;
+}
+
+.storefront-benefits__message--v3 h2 {
+    color: #1a1a1a;
+    font-size: clamp(2.25rem, 3.5vw, 3rem);
+    font-weight: 500;
+    line-height: 1.05;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.storefront-benefits__message--v3 p {
+    color: #666666;
+    font-size: clamp(0.9375rem, 1.2vw, 1.0625rem);
+    line-height: 1.65;
+    margin: 1.1rem 0 0;
+    max-width: 30ch;
+}
+
+.storefront-benefits__list--v3 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(0.875rem, 1.5vw, 1.25rem);
+}
+
+.storefront-benefit-card--v3 {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: clamp(1.1rem, 1.6vw, 1.4rem);
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(23, 23, 31, 0.06), 0 1px 3px rgba(23, 23, 31, 0.04);
+    transition: box-shadow 0.22s ease, transform 0.22s ease;
+}
+
+.storefront-benefit-card--v3:hover {
+    box-shadow: 0 8px 28px rgba(128, 32, 32, 0.1), 0 2px 6px rgba(23, 23, 31, 0.05);
+    transform: translateY(-3px);
+}
+
+.storefront-benefits__icon--v3 {
+    align-items: center;
+    border-radius: 50%;
+    display: inline-flex;
+    flex: 0 0 auto;
+    height: 54px;
+    justify-content: center;
+    width: 54px;
+    background: #f5dede;
+    color: #802020;
+    flex-shrink: 0;
+}
+
+.storefront-benefit-card--v3:nth-child(2) .storefront-benefits__icon--v3 {
+    background: #d6eadd;
+    color: #2e6645;
+}
+
+.storefront-benefit-card--v3:nth-child(3) .storefront-benefits__icon--v3 {
+    background: #d4e4f2;
+    color: #2b5278;
+}
+
+.storefront-benefit-card--v3:nth-child(4) .storefront-benefits__icon--v3 {
+    background: #e8e0cc;
+    color: #6b5320;
+}
+
+.storefront-benefits__icon--v3 svg {
+    height: 30px;
+    width: 30px;
+}
+
+.storefront-benefit-card--v3 h3 {
+    color: #1a1a1a;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.25;
+    margin: 0;
+}
+
+.storefront-benefit-card--v3 p {
+    color: #777777;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+@media (max-width: 900px) {
+    .storefront-benefits--v3 {
+        padding: 2.5rem 0;
+    }
+
+    .storefront-benefits__layout--v3 {
+        grid-template-columns: 1fr;
+        gap: 1.75rem;
+    }
+
+    .storefront-benefits__message--v3 p {
+        max-width: none;
+    }
+
+    .storefront-benefits__message--v3 .storefront-benefits__cta {
+        align-self: flex-start;
+        width: auto;
+    }
+
+    .storefront-benefits__list--v3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 540px) {
+    .storefront-benefits--v3 {
+        padding: 2rem 0;
+    }
+
+    .storefront-benefits__list--v3 {
+        grid-template-columns: 1fr;
+        gap: 0.625rem;
+    }
+
+    .storefront-benefit-card--v3 {
+        padding: 0.875rem 1rem;
+        gap: 0.875rem;
+    }
+
+    .storefront-benefits__icon--v3 {
+        height: 42px;
+        width: 42px;
+        flex-shrink: 0;
+    }
+
+    .storefront-benefits__icon--v3 svg {
+        height: 20px;
+        width: 20px;
+    }
+
+    .storefront-benefit-card--v3 h3 {
+        font-size: 0.875rem;
+    }
+
+    .storefront-benefit-card--v3 p {
+        font-size: 0.8125rem;
+    }
+}
+
+/* ── end Benefits v3 ── */
+
+/* ── Benefits v2: split-panel redesign ── */
+
+.storefront-benefits--v2 {
+    padding: clamp(2.2rem, 4.2vw, 4.8rem) 0;
+}
+
+.storefront-benefits__panel--v2 {
+    overflow: hidden;
+    border-radius: 18px;
+    box-shadow: 0 24px 70px rgba(51, 51, 51, 0.1);
+    border: none;
+}
+
+.storefront-benefits__panel--v2::before {
+    display: none;
+}
+
+.storefront-benefits__layout--v2 {
+    display: grid;
+    grid-template-columns: minmax(16rem, 0.72fr) minmax(0, 1.28fr);
+    gap: 0;
+    align-items: stretch;
+    padding: 0;
+}
+
+.storefront-benefits__message--v2 {
+    background: #802020;
+    padding: clamp(2.2rem, 4vw, 3.8rem) clamp(2rem, 3.5vw, 3.2rem);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.storefront-benefits__message--v2::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 120% 110%, rgba(228, 108, 80, 0.22) 0%, transparent 60%),
+                radial-gradient(ellipse at -20% -10%, rgba(255, 255, 255, 0.06) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.storefront-benefits__eyebrow {
+    display: block;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 0.9rem;
+}
+
+.storefront-benefits__message--v2 h2 {
+    color: #ffffff;
+    font-size: clamp(2rem, 3.2vw, 2.75rem);
+    font-weight: 500;
+    line-height: 1.06;
+    margin: 0;
+}
+
+.storefront-benefits__message--v2 p {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: clamp(0.9rem, 1.15vw, 1.05rem);
+    line-height: 1.6;
+    margin: 1rem 0 0;
+    max-width: 28ch;
+}
+
+.storefront-inline-price--light {
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 600;
+}
+
+.storefront-benefits__cta--outline {
+    background: transparent;
+    border: 1.5px solid rgba(255, 255, 255, 0.45);
+    color: #ffffff;
+}
+
+.storefront-benefits__cta--outline:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.85);
+    box-shadow: none;
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.storefront-benefits__list--v2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+    background: #ffffff;
+    padding: clamp(1.6rem, 2.8vw, 2.4rem);
+    gap: clamp(1rem, 1.8vw, 1.5rem);
+}
+
+.storefront-benefit-card--v2 {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: clamp(1.1rem, 1.6vw, 1.5rem);
+    background: var(--dm-color-soft);
+    border: 1px solid rgba(128, 32, 32, 0.07);
+    border-radius: 12px;
+    transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    cursor: default;
+}
+
+.storefront-benefit-card--v2:hover {
+    background: #ffffff;
+    box-shadow: 0 6px 24px rgba(128, 32, 32, 0.09);
+    transform: translateY(-2px);
+}
+
+.storefront-benefit-card__num {
+    font-size: 1.875rem;
+    font-weight: 700;
+    line-height: 1;
+    color: rgba(128, 32, 32, 0.13);
+    letter-spacing: -0.03em;
+    font-family: "Avenir Next", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.storefront-benefit-card--v2 h3 {
+    color: #333333;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.25;
+    margin: 0;
+}
+
+.storefront-benefit-card--v2 p {
+    color: #666666;
+    font-size: 0.8125rem;
+    line-height: 1.58;
+    margin: 0;
+    max-width: none;
+}
+
+@media (max-width: 768px) {
+    .storefront-benefits__layout--v2 {
+        grid-template-columns: 1fr;
+    }
+
+    .storefront-benefits__message--v2 {
+        border-radius: 0;
+        padding: 2rem 1.5rem;
+    }
+
+    .storefront-benefits__list--v2 {
+        padding: 1.5rem;
+        gap: 1rem;
+    }
+}
+
+/* ── end Benefits v2 ── */
+
 .storefront-home-faq {
     background: var(--dm-color-soft);
     padding: clamp(3rem, 5vw, 4.5rem) 0;
@@ -1782,8 +2302,8 @@
     }
 
     .storefront-product-grid--new .storefront-product-card__media {
-        aspect-ratio: 1 / 1;
-        background: #f5f5f5;
+        aspect-ratio: 4 / 5;
+        background: #f5f2ef;
     }
 
     .storefront-product-grid--new .storefront-product-card__media img {

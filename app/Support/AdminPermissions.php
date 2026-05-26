@@ -48,6 +48,8 @@ final class AdminPermissions
 
     public const CUSTOMERS_VIEW = 'admin.customers.view';
 
+    public const CONTENT_FAQ_MANAGE = 'admin.content.faq.manage';
+
     public const SITE_STRUCTURE_MANAGE = 'admin.site_structure.manage';
 
     public const SEO_AUDIT_VIEW = 'admin.seo.audit.view';
@@ -156,6 +158,7 @@ final class AdminPermissions
                 'key' => 'site',
                 'label' => 'Сайт і налаштування',
                 'permissions' => [
+                    self::CONTENT_FAQ_MANAGE => 'FAQ головної сторінки',
                     self::SITE_STRUCTURE_MANAGE => 'Структура сайту',
                     self::SETTINGS_STORE_MANAGE => 'Налаштування магазину',
                     self::SETTINGS_CHECKOUT_MANAGE => 'Налаштування checkout',

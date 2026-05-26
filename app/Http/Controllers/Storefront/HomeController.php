@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use App\Models\Category;
 use App\Models\ContentPage;
+use App\Models\HomeFaqItem;
 use App\Models\Menu;
 use App\Models\MenuItem;
 use App\Models\Product;
@@ -67,6 +68,10 @@ class HomeController extends Controller
             'pajamasCategory' => $pajamasCategory ? $this->serializeCategory($pajamasCategory) : null,
             'pajamasPromoProducts' => $this->categoryProducts($pajamasCategory),
             'freeShippingThresholdLabel' => $this->deliveryPolicy->freeShippingThresholdLabel(),
+            'homeFaqItems' => HomeFaqItem::query()->active()->get()->map(fn (HomeFaqItem $item): array => [
+                'question' => $item->question,
+                'answer' => $item->answer,
+            ])->all(),
         ]);
     }
 
