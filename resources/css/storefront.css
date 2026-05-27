@@ -663,6 +663,10 @@ svg {
     top: -0.34rem;
 }
 
+.storefront-cart-badge[hidden] {
+    display: none;
+}
+
 .storefront-cart-link,
 .storefront-cart-link__title,
 .storefront-cart-link__summary,
