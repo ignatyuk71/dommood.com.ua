@@ -1,8 +1,10 @@
 @php
-    $footerPhone = $supportPhone ?: '+380679753512';
+    $footerPhone = ($supportPhone ?? null) ?: '+380679753512';
     $cleanFooterPhone = preg_replace('/[^0-9+]/', '', $footerPhone);
     $messengerFooterPhone = ltrim($cleanFooterPhone, '+');
-    $footerEmail = $supportEmail ?: 'dommood.com.ua@gmail.com';
+    $footerEmail = ($supportEmail ?? null) ?: 'dommood.com.ua@gmail.com';
+    $canLogin = $canLogin ?? true;
+    $storeName = $storeName ?? 'DomMood';
     $footerAddressLines = ['с.Постійне', 'вул. Б.Хмельницького, 5,', 'Рівненська область, Україна'];
     $footerAddress = implode(', ', $footerAddressLines);
     $footerSocialLinks = [

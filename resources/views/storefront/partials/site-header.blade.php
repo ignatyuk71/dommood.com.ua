@@ -2,9 +2,10 @@
     $utilityLinks = $utilityLinks ?? [];
     $menuItems = $menuItems ?? [];
     $mobileNavigationItems = count($mobileMenuItems ?? []) > 0 ? $mobileMenuItems : $menuItems;
-    $headerPhone = $supportPhone ?: '+380679753512';
+    $headerPhone = ($supportPhone ?? null) ?: '+380679753512';
     $cleanHeaderPhone = preg_replace('/[^0-9+]/', '', $headerPhone);
     $messengerPhone = ltrim($cleanHeaderPhone, '+');
+    $storeName = $storeName ?? 'DomMood';
 @endphp
 
 <header class="storefront-site-header">
