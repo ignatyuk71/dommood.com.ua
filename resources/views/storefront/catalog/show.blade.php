@@ -15,8 +15,8 @@
         <meta property="og:url" content="{{ $seo['canonical_url'] ?? url('/catalog/'.$category->slug.'/'.$product['slug']) }}">
         @if ($product['image_url'])
             <meta property="og:image" content="{{ $product['image_url'] }}">
-            <meta property="og:image:width" content="900">
-            <meta property="og:image:height" content="900">
+            <meta property="og:image:width" content="600">
+            <meta property="og:image:height" content="600">
             <meta property="og:image:alt" content="{{ $product['name'] }}">
         @endif
         <meta name="twitter:card" content="summary_large_image">

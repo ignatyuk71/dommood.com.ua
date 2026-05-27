@@ -23,8 +23,6 @@
         <meta property="og:url" content="{{ $seo['canonical_url'] ?? url()->current() }}">
         @if ($category?->image_path)
             <meta property="og:image" content="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($category->image_path) }}">
-            <meta property="og:image:width" content="900">
-            <meta property="og:image:height" content="760">
             <meta property="og:image:alt" content="{{ $category->name ?? $heading }}">
         @endif
         <meta name="twitter:card" content="summary_large_image">
