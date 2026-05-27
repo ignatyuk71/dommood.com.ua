@@ -81,6 +81,12 @@ class CatalogController extends Controller
             $seo['canonical_url'] = $category ? url('/catalog/'.$category->slug) : url('/catalog');
         }
 
+        $currentPage = (int) $request->query('page', 1);
+
+        if ($currentPage > 1 && ! empty($seo['canonical_url'])) {
+            $seo['canonical_url'] .= '?page='.$currentPage;
+        }
+
         $heading = $filterSeoPage?->h1 ?: $filterSeoPage?->title ?: ($category?->name ?: 'Каталог');
         $intro = $this->categoryIntro($category, $filterSeoPage, $request);
         $seoText = $filterSeoPage?->seo_text ?: $category?->seo_text;
