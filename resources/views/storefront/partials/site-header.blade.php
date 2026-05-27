@@ -6,6 +6,8 @@
     $cleanHeaderPhone = preg_replace('/[^0-9+]/', '', $headerPhone);
     $messengerPhone = ltrim($cleanHeaderPhone, '+');
     $storeName = $storeName ?? 'DomMood';
+    $canLogin = $canLogin ?? true;
+    $headerCartSummary = $headerCartSummary ?? ['is_empty' => true];
 @endphp
 
 <header class="storefront-site-header">
