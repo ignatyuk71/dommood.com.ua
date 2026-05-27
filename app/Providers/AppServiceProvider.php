@@ -23,7 +23,9 @@ use App\Models\User;
 use App\Observers\AdminActivityObserver;
 use App\Services\Marketing\StorefrontAnalyticsConfig;
 use App\Services\Shipping\NovaPoshtaApi;
+use App\Services\SiteSettingsService;
 use App\Services\Storefront\CartService;
+use App\Services\Storefront\MenuService;
 use App\Support\AdminPermissions;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
@@ -76,6 +78,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->registerAdminActivityObservers();
         $this->registerStorefrontViewData();
+        $this->registerErrorViewData();
 
         Gate::before(function (User $user, string $ability): ?bool {
             if (! str_starts_with($ability, 'admin.')) {
@@ -134,6 +137,61 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('storefrontAnalyticsConfig', $analyticsConfig);
             $view->with('storefrontGoogleAnalytics', $analyticsConfig['google'] ?? []);
+        });
+    }
+
+    private function registerErrorViewData(): void
+    {
+        View::composer('errors.404', function ($view): void {
+            $request = request();
+
+            try {
+                $storeSettings = app(SiteSettingsService::class)->get('store');
+            } catch (Throwable) {
+                $storeSettings = [];
+            }
+
+            try {
+                $menus = app(MenuService::class);
+            } catch (Throwable) {
+                $menus = null;
+            }
+
+            try {
+                $cartSummary = app(CartService::class)->summaryForRequest($request);
+            } catch (Throwable) {
+                $cartSummary = CartService::emptySummary();
+            }
+
+            try {
+                $analyticsConfig = app(StorefrontAnalyticsConfig::class)->storefront($request);
+            } catch (Throwable) {
+                $analyticsConfig = ['google' => []];
+            }
+
+            try {
+                $popularCategories = Category::query()
+                    ->where('is_active', true)
+                    ->whereNull('parent_id')
+                    ->orderBy('sort_order')
+                    ->orderBy('id')
+                    ->limit(6)
+                    ->get(['name', 'slug']);
+            } catch (Throwable) {
+                $popularCategories = collect();
+            }
+
+            $view->with('storeName', $storeSettings['store_name'] ?? 'DomMood');
+            $view->with('supportEmail', $storeSettings['support_email'] ?? null);
+            $view->with('supportPhone', $storeSettings['support_phone'] ?? null);
+            $view->with('menuItems', $menus ? $menus->forSlug('main', withFallback: true) : []);
+            $view->with('utilityLinks', $menus ? $menus->forSlug('utility') : []);
+            $view->with('mobileMenuItems', $menus ? $menus->forSlug('mobile') : []);
+            $view->with('footerMenuItems', $menus ? $menus->forSlug('footer') : []);
+            $view->with('headerCartSummary', $cartSummary);
+            $view->with('storefrontAnalyticsConfig', $analyticsConfig);
+            $view->with('storefrontGoogleAnalytics', $analyticsConfig['google'] ?? []);
+            $view->with('popularCategories', $popularCategories);
         });
     }
 
