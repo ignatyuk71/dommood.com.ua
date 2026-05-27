@@ -792,32 +792,49 @@
                     </div>
                 </section>
 
-                <section class="storefront-seo-section">
+                <section class="storefront-about">
                     <div class="container">
-                        <div class="storefront-seo-card">
-                            <div>
-                                <h2>{{ $storeName }} — інтернет-магазин домашніх капців і піжам в Україні</h2>
-                            </div>
-                            <div>
+                        <div class="storefront-about__grid">
+                            <div class="storefront-about__info">
+                                <h2>{{ $storeName }} — домашні капці та піжами з доставкою по Україні</h2>
                                 <p>
-                                    {{ $storeName }} — це зручний онлайн-магазин домашнього взуття та одягу з доставкою по всій Україні.
-                                    В каталозі зібрані <a href="{{ url('/catalog/zhinochi-pukhnasti-kaptsi') }}">жіночі пухнасті капці</a>,
+                                    Онлайн-магазин домашнього взуття та одягу: <a href="{{ url('/catalog/zhinochi-pukhnasti-kaptsi') }}">жіночі пухнасті капці</a>,
                                     <a href="{{ url('/catalog/zhinochi-kaptsi-dlia-vulytsi') }}">капці для вулиці на гумовій підошві</a>,
                                     <a href="{{ url('/catalog/zhinochi-pizhamy') }}">жіночі піжами</a>,
                                     <a href="{{ url('/catalog/cholovichi-tapochky') }}">чоловічі тапочки</a>
                                     та <a href="{{ url('/catalog/dytiachi-khatni-kaptsi') }}">дитячі хатні капці</a>.
-                                    Усі товари є в наявності — жодних позицій «під замовлення» без попередження.
-                                </p>
-                                <p>
-                                    Замовлення оформлюється за кілька хвилин: оберіть модель, розмір і залиште контакти.
-                                    Відправляємо Новою Поштою, доставка безкоштовна від <span class="storefront-inline-price">{{ $freeShippingThresholdLabel ?? '1 200 грн' }}</span>.
-                                    Повернення або обмін — протягом 14 днів, якщо товар не був у використанні.
-                                </p>
-                                <p>
-                                    Шукаєте подарунок або щось затишне для себе — порівнюйте моделі у <a href="{{ url('/catalog') }}">каталозі</a>,
-                                    дивіться фото, ціни й наявність у реальному часі.
+                                    Усі товари є в наявності — відправляємо в день замовлення.
                                 </p>
                             </div>
+                            <ul class="storefront-about__perks">
+                                <li>
+                                    <span class="storefront-about__perk-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 2 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                                    </span>
+                                    <div>
+                                        <strong>Є в наявності</strong>
+                                        <span>Жодних позицій «під замовлення»</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <span class="storefront-about__perk-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="1"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                                    </span>
+                                    <div>
+                                        <strong>Безкоштовна доставка</strong>
+                                        <span>Від {{ $freeShippingThresholdLabel ?? '1 200 грн' }} Новою Поштою</span>
+                                    </div>
+                                </li>
+                                <li>
+                                    <span class="storefront-about__perk-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+                                    </span>
+                                    <div>
+                                        <strong>Повернення 14 днів</strong>
+                                        <span>Якщо товар не був у використанні</span>
+                                    </div>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </section>

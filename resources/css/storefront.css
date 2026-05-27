@@ -1262,6 +1262,106 @@ svg {
     color: #b45309;
 }
 
+/* ── About / SEO section (homepage) ─────────────────── */
+.storefront-about {
+    background: var(--dm-color-soft);
+    padding: clamp(3rem, 6vw, 5rem) 0;
+}
+
+.storefront-about__grid {
+    align-items: start;
+    display: grid;
+    gap: 2.5rem 3.5rem;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+}
+
+.storefront-about__info h2 {
+    color: var(--dm-color-text);
+    font-size: clamp(1.45rem, 2.6vw, 2.1rem);
+    font-weight: 920;
+    letter-spacing: -0.01em;
+    line-height: 1.12;
+    margin: 0 0 1.1rem;
+}
+
+.storefront-about__info p {
+    color: #4d5765;
+    font-size: 0.97rem;
+    font-weight: 510;
+    line-height: 1.78;
+    margin: 0;
+}
+
+.storefront-about__info a {
+    color: var(--dm-color-wine);
+    text-decoration: underline;
+    text-decoration-color: rgba(123, 26, 37, 0.28);
+    text-underline-offset: 2px;
+    transition: text-decoration-color 0.15s;
+}
+
+.storefront-about__info a:hover {
+    text-decoration-color: var(--dm-color-wine);
+}
+
+.storefront-about__perks {
+    background: #fff;
+    border: 1px solid var(--dm-color-border);
+    border-radius: 8px;
+    list-style: none;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+}
+
+.storefront-about__perks li {
+    align-items: flex-start;
+    display: flex;
+    gap: 1rem;
+    padding: 1.15rem 1.4rem;
+}
+
+.storefront-about__perks li + li {
+    border-top: 1px solid var(--dm-color-border);
+}
+
+.storefront-about__perk-icon {
+    align-items: center;
+    background: var(--dm-color-peach);
+    border-radius: 50%;
+    display: flex;
+    flex-shrink: 0;
+    height: 2.4rem;
+    justify-content: center;
+    margin-top: 0.05rem;
+    width: 2.4rem;
+}
+
+.storefront-about__perk-icon svg {
+    fill: none;
+    height: 1.1rem;
+    stroke: var(--dm-color-wine);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+    width: 1.1rem;
+}
+
+.storefront-about__perks strong {
+    color: var(--dm-color-text);
+    display: block;
+    font-size: 0.92rem;
+    font-weight: 760;
+    margin-bottom: 0.18rem;
+}
+
+.storefront-about__perks span {
+    color: var(--dm-color-muted);
+    font-size: 0.86rem;
+    font-weight: 480;
+}
+
+/* ── SEO card (catalog pages) ────────────────────────── */
 .storefront-seo-section {
     background: var(--dm-color-soft);
     padding: 4.2rem 0;
@@ -2157,7 +2257,8 @@ svg {
 
     .storefront-product-grid,
     .storefront-seo-card,
-    .storefront-footer__grid {
+    .storefront-footer__grid,
+    .storefront-about__grid {
         grid-template-columns: minmax(0, 1fr);
     }
 
