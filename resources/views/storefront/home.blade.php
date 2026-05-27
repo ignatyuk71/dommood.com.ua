@@ -8,11 +8,16 @@
         <meta name="description" content="{{ $storeName }}: категорії, новинки, актуальні ціни та наявність для швидкої покупки онлайн.">
         <link rel="canonical" href="{{ url('/') }}">
         <meta property="og:type" content="website">
+        <meta property="og:site_name" content="{{ $storeName }}">
+        <meta property="og:locale" content="uk_UA">
         <meta property="og:title" content="{{ $storeName }} - товари для дому та щоденного затишку">
         <meta property="og:description" content="{{ $storeName }}: категорії, новинки, актуальні ціни та наявність для швидкої покупки онлайн.">
         <meta property="og:url" content="{{ url('/') }}">
         @if ($homeBanners['main']['image_url'] ?? null)
             <meta property="og:image" content="{{ $homeBanners['main']['image_url'] }}">
+            <meta property="og:image:width" content="1440">
+            <meta property="og:image:height" content="720">
+            <meta property="og:image:alt" content="{{ $storeName }} - товари для дому та щоденного затишку">
         @endif
         <meta name="twitter:card" content="summary_large_image">
         <link rel="icon" href="/favicon.ico" sizes="any">

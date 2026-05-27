@@ -15,12 +15,17 @@
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
         <link rel="manifest" href="/site.webmanifest">
         <meta name="theme-color" content="#29277f">
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="{{ $storeName }}">
+        <meta property="og:locale" content="uk_UA">
         <meta property="og:title" content="{{ $seo['title'] ?? $heading }}">
         <meta property="og:description" content="{{ $seo['meta_description'] ?? $intro }}">
         <meta property="og:url" content="{{ $seo['canonical_url'] ?? url()->current() }}">
-        <meta property="og:type" content="website">
         @if ($category?->image_path)
             <meta property="og:image" content="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($category->image_path) }}">
+            <meta property="og:image:width" content="900">
+            <meta property="og:image:height" content="760">
+            <meta property="og:image:alt" content="{{ $category->name ?? $heading }}">
         @endif
         <meta name="twitter:card" content="summary_large_image">
         @if (file_exists(public_path('hot')))

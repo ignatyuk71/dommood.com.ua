@@ -8,6 +8,8 @@
         <meta name="description" content="{{ $seo['meta_description'] ?? ($page->meta_description ?: $page->title) }}">
         <link rel="canonical" href="{{ $seo['canonical_url'] ?? url('/'.$page->slug) }}">
         <meta property="og:type" content="article">
+        <meta property="og:site_name" content="{{ $storeName }}">
+        <meta property="og:locale" content="uk_UA">
         <meta property="og:title" content="{{ $seo['title'] ?? $page->title }}">
         <meta property="og:description" content="{{ $seo['meta_description'] ?? ($page->meta_description ?: $page->title) }}">
         <meta property="og:url" content="{{ $seo['canonical_url'] ?? url('/'.$page->slug) }}">

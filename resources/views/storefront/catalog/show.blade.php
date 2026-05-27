@@ -8,11 +8,16 @@
         <meta name="description" content="{{ $seo['meta_description'] ?? ($product['short_description'] ?: trim(strip_tags((string) ($product['description'] ?? ''))) ?: $product['name']) }}">
         <link rel="canonical" href="{{ $seo['canonical_url'] ?? url('/catalog/'.$category->slug.'/'.$product['slug']) }}">
         <meta property="og:type" content="product">
+        <meta property="og:site_name" content="{{ $storeName }}">
+        <meta property="og:locale" content="uk_UA">
         <meta property="og:title" content="{{ $seo['title'] ?? $product['name'] }}">
         <meta property="og:description" content="{{ $seo['meta_description'] ?? ($product['short_description'] ?: trim(strip_tags((string) ($product['description'] ?? ''))) ?: $product['name']) }}">
         <meta property="og:url" content="{{ $seo['canonical_url'] ?? url('/catalog/'.$category->slug.'/'.$product['slug']) }}">
         @if ($product['image_url'])
             <meta property="og:image" content="{{ $product['image_url'] }}">
+            <meta property="og:image:width" content="900">
+            <meta property="og:image:height" content="900">
+            <meta property="og:image:alt" content="{{ $product['name'] }}">
         @endif
         <meta name="twitter:card" content="summary_large_image">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
