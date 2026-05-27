@@ -1292,6 +1292,10 @@ svg {
     margin: 0;
 }
 
+.storefront-about__info p + p {
+    margin-top: 0.9rem;
+}
+
 .storefront-about__info a {
     color: var(--dm-color-wine);
     text-decoration: underline;
