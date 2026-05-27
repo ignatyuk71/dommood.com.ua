@@ -31,6 +31,7 @@
             @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront.css')])
             @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront-home.css')])
         @endif
+        @include('storefront.partials.preconnect')
         @include('storefront.partials.google-analytics')
         @php
             $heroPreloadDesktop = $homeBanners['main']['image_url'] ?? null;

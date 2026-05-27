@@ -30,6 +30,7 @@
             @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront.css')])
             @include('storefront.partials.preload-stylesheet', ['href' => Vite::asset('resources/css/storefront-product.css')])
         @endif
+        @include('storefront.partials.preconnect')
         @include('storefront.partials.google-analytics')
     </head>
     <body>
