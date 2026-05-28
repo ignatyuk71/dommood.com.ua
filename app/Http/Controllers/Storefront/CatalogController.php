@@ -919,7 +919,7 @@ class CatalogController extends Controller
                     ],
                     'name' => $review['title'] ?: null,
                     'reviewBody' => $review['body'] ?? null,
-                    'datePublished' => $review['published_at'] ?? null,
+                    'datePublished' => $review['published_at_iso'] ?? null,
                 ], fn ($v) => $v !== null && $v !== ''))
                 ->values()
                 ->all();
@@ -1166,6 +1166,7 @@ class CatalogController extends Controller
                 'body' => $review->body,
                 'is_verified_buyer' => (bool) $review->is_verified_buyer,
                 'published_at' => KyivDateTime::date($review->published_at),
+                'published_at_iso' => $review->published_at?->toDateString(),
             ])
             ->values()
             ->all();
