@@ -899,7 +899,34 @@ class CatalogController extends Controller
                 '@type' => 'AggregateRating',
                 'ratingValue' => round((float) $product['rating_average'], 1),
                 'reviewCount' => (int) $product['reviews_count'],
+                'bestRating' => 5,
+                'worstRating' => 1,
             ];
+
+            $reviewItems = collect($product['reviews'] ?? [])
+                ->take(10)
+                ->map(fn (array $review): array => array_filter([
+                    '@type' => 'Review',
+                    'author' => [
+                        '@type' => 'Person',
+                        'name' => $review['author_name'] ?? 'Покупець',
+                    ],
+                    'reviewRating' => [
+                        '@type' => 'Rating',
+                        'ratingValue' => (int) ($review['rating'] ?? 0),
+                        'bestRating' => 5,
+                        'worstRating' => 1,
+                    ],
+                    'name' => $review['title'] ?: null,
+                    'reviewBody' => $review['body'] ?? null,
+                    'datePublished' => $review['published_at'] ?? null,
+                ], fn ($v) => $v !== null && $v !== ''))
+                ->values()
+                ->all();
+
+            if ($reviewItems !== []) {
+                $productSchema['review'] = $reviewItems;
+            }
         }
 
         return [
