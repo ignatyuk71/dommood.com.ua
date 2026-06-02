@@ -4,15 +4,15 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         @include('partials.site-noindex')
-        <title>{{ $storeName }} - товари для дому та щоденного затишку</title>
-        <meta name="description" content="{{ $storeName }}: категорії, новинки, актуальні ціни та наявність для швидкої покупки онлайн.">
+        <title>Жіночі капці, піжами та домашні тапочки | {{ $storeName }}</title>
+        <meta name="description" content="{{ $storeName }} — пухнасті жіночі капці, домашні тапочки, піжами та дитяче взуття. Власне виробництво в Україні, доставка Новою Поштою від 1 дня.">
         <link rel="canonical" href="{{ url('/') }}">
         @include('partials.site-hreflang')
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="{{ $storeName }}">
         <meta property="og:locale" content="uk_UA">
-        <meta property="og:title" content="{{ $storeName }} - товари для дому та щоденного затишку">
-        <meta property="og:description" content="{{ $storeName }}: категорії, новинки, актуальні ціни та наявність для швидкої покупки онлайн.">
+        <meta property="og:title" content="Жіночі капці, піжами та домашні тапочки | {{ $storeName }}">
+        <meta property="og:description" content="{{ $storeName }} — пухнасті жіночі капці, домашні тапочки, піжами та дитяче взуття. Власне виробництво в Україні, доставка Новою Поштою від 1 дня.">
         <meta property="og:url" content="{{ url('/') }}">
         @if ($homeBanners['main']['image_url'] ?? null)
             <meta property="og:image" content="{{ $homeBanners['main']['image_url'] }}">
