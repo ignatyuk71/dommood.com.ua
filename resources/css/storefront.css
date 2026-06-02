@@ -1565,6 +1565,24 @@ svg {
     margin: 1.45rem 0 0;
 }
 
+.storefront-footer__legal {
+    border-top: 1px solid rgba(34, 34, 34, 0.1);
+    color: #5f6876;
+    font-size: 0.78rem;
+    font-weight: 400;
+    line-height: 1.5;
+    margin-top: 0.9rem;
+    padding-top: 0.8rem;
+}
+
+.storefront-footer__legal p {
+    margin: 0 0 0.18rem;
+}
+
+.storefront-footer__legal p:last-child {
+    margin-bottom: 0;
+}
+
 .storefront-footer__menu,
 .storefront-footer__contacts {
     display: flex;

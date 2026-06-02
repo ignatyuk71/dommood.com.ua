@@ -32,6 +32,11 @@
                     <img src="{{ asset('brand/dom-mood-stacked.png') }}" alt="{{ $storeName }}" width="230" height="120">
                 </a>
                 <p class="storefront-footer__copyright">{{ $storeName }}© {{ now()->year }}</p>
+                <div class="storefront-footer__legal">
+                    <p>ФОП Ігнатюк Людмила Володимирівна</p>
+                    <p>РНОКПП: 2417411841</p>
+                    <p>Дата реєстрації: 30.01.2026</p>
+                </div>
             </div>
 
             <nav class="storefront-footer__menu" aria-label="Footer меню">
