@@ -7,6 +7,7 @@
         <title>{{ $seo['title'] ?? ($product['name'].' - '.$storeName) }}</title>
         <meta name="description" content="{{ $seo['meta_description'] ?? ($product['short_description'] ?: trim(strip_tags((string) ($product['description'] ?? ''))) ?: $product['name']) }}">
         <link rel="canonical" href="{{ $seo['canonical_url'] ?? url('/catalog/'.$category->slug.'/'.$product['slug']) }}">
+        @include('partials.site-hreflang')
         <meta property="og:type" content="product">
         <meta property="og:site_name" content="{{ $storeName }}">
         <meta property="og:locale" content="uk_UA">

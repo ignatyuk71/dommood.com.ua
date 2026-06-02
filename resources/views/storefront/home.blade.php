@@ -7,6 +7,7 @@
         <title>{{ $storeName }} - товари для дому та щоденного затишку</title>
         <meta name="description" content="{{ $storeName }}: категорії, новинки, актуальні ціни та наявність для швидкої покупки онлайн.">
         <link rel="canonical" href="{{ url('/') }}">
+        @include('partials.site-hreflang')
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="{{ $storeName }}">
         <meta property="og:locale" content="uk_UA">

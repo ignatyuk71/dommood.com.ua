@@ -10,6 +10,7 @@
             <meta name="robots" content="{{ $metaRobots }}">
         @endif
         <link rel="canonical" href="{{ $seo['canonical_url'] ?? url('/catalog'.($category?->slug ? '/'.$category->slug : '')) }}">
+        @include('partials.site-hreflang')
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
