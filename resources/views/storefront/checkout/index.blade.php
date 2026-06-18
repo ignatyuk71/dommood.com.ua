@@ -366,20 +366,16 @@
                                     </div>
                                 </div>
 
-                                <label class="storefront-checkout-terms">
-                                    <input type="checkbox" name="terms_accepted" value="1" form="checkout-form" @checked(old('terms_accepted')) required>
-                                    <span>
-                                        Погоджуюсь з умовами покупки та політикою конфіденційності.
-                                        @if ($checkoutSettings['terms_url'] ?? null)
-                                            <a href="{{ url($checkoutSettings['terms_url']) }}" target="_blank" rel="noopener">Умови</a>
-                                        @endif
-                                    </span>
-                                </label>
-                                @error('terms_accepted')<small class="storefront-field-error">{{ $message }}</small>@enderror
-
                                 <button type="submit" form="checkout-form" class="storefront-checkout-btn storefront-checkout-btn--primary">
                                     Підтвердити замовлення
                                 </button>
+
+                                <p class="storefront-checkout-terms-note">
+                                    Оформлюючи замовлення, ви погоджуєтесь з умовами покупки та політикою конфіденційності.
+                                    @if ($checkoutSettings['terms_url'] ?? null)
+                                        <a href="{{ url($checkoutSettings['terms_url']) }}" target="_blank" rel="noopener">Умови</a>
+                                    @endif
+                                </p>
 
                                 <p>Після оформлення менеджер перевірить наявність, доставку й напише у месенджер або зателефонує.</p>
                             </div>

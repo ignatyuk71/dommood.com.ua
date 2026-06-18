@@ -32,7 +32,6 @@ class StoreCheckoutRequest extends FormRequest
             'delivery_address' => ['nullable', 'string', 'max:220'],
             'payment_method' => ['required', 'string', 'max:80'],
             'comment' => ['nullable', 'string', 'max:1000'],
-            'terms_accepted' => ['accepted'],
         ];
     }
 
@@ -46,7 +45,6 @@ class StoreCheckoutRequest extends FormRequest
             'delivery_method.required' => 'Оберіть спосіб доставки.',
             'delivery_city.required' => 'Вкажіть місто доставки.',
             'payment_method.required' => 'Оберіть спосіб оплати.',
-            'terms_accepted.accepted' => 'Підтвердьте згоду з умовами покупки.',
         ];
     }
 }

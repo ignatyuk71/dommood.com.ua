@@ -276,6 +276,21 @@
     font-weight: 500;
 }
 
+.storefront-checkout-terms-note {
+    color: #8a8f9a;
+    font-size: 0.8rem;
+    font-weight: 400;
+    line-height: 1.5;
+    margin: 0.85rem 0 0;
+    text-align: center;
+}
+
+.storefront-checkout-terms-note a {
+    color: var(--dm-color-brand);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
 .storefront-checkout-summary {
     align-self: start;
     position: sticky;
