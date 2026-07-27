@@ -8,7 +8,7 @@
         <div class="storefront-catalog-filter-box__head">
             <strong>Фільтри</strong>
             @if (count($activeFilterLabels) > 0)
-                <a href="{{ $clearFiltersUrl }}">Очистити</a>
+                <a href="{{ $clearFiltersUrl }}" rel="nofollow">Очистити</a>
             @endif
         </div>
     @endunless
@@ -24,6 +24,7 @@
                         @foreach ($categoryFilters as $categoryFilter)
                             <a
                                 href="{{ $categoryFilter['url'] }}"
+                                rel="nofollow"
                                 @class([
                                     'storefront-catalog-filter-value',
                                     'is-active' => $categoryFilter['is_active'],
@@ -51,6 +52,7 @@
                         @foreach ($group['values'] as $value)
                             <a
                                 href="{{ $value['url'] }}"
+                                rel="nofollow"
                                 @class([
                                     'storefront-catalog-filter-value',
                                     'is-active' => $value['is_active'],
@@ -129,6 +131,7 @@
                     @foreach ($categoryFilters as $categoryFilter)
                         <a
                             href="{{ $categoryFilter['url'] }}"
+                            rel="nofollow"
                             @class([
                                 'storefront-catalog-filter-value',
                                 'is-active' => $categoryFilter['is_active'],
@@ -155,6 +158,7 @@
                     @foreach ($group['values'] as $value)
                         <a
                             href="{{ $value['url'] }}"
+                            rel="nofollow"
                             @class([
                                 'storefront-catalog-filter-value',
                                 'is-active' => $value['is_active'],

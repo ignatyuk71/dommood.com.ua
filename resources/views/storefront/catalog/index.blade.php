@@ -91,7 +91,7 @@
                                 @endif
 
                                 @if (count($activeFilterLabels) > 0)
-                                    <a href="{{ $clearFiltersUrl }}" class="storefront-catalog-clear-mobile">Очистити</a>
+                                    <a href="{{ $clearFiltersUrl }}" class="storefront-catalog-clear-mobile" rel="nofollow">Очистити</a>
                                 @endif
                             </div>
                         @endif
@@ -116,12 +116,12 @@
                                 @if (count($activeFilterLabels) > 0)
                                     <div class="storefront-catalog-active-filters" aria-label="Активні фільтри">
                                         @foreach ($activeFilterLabels as $filter)
-                                            <a href="{{ $filter['url'] }}">
+                                            <a href="{{ $filter['url'] }}" rel="nofollow">
                                                 {{ $filter['label'] }}
                                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12"/><path d="M18 6 6 18"/></svg>
                                             </a>
                                         @endforeach
-                                        <a href="{{ $clearFiltersUrl }}" class="is-clear">Очистити все</a>
+                                        <a href="{{ $clearFiltersUrl }}" class="is-clear" rel="nofollow">Очистити все</a>
                                     </div>
                                 @endif
 

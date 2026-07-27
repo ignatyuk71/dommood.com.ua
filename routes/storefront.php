@@ -26,6 +26,9 @@ Route::get('/robots.txt', function () {
             'Disallow: /register',
             'Disallow: /cart',
             'Disallow: /checkout',
+            'Disallow: /catalog/*/filter/',
+            'Disallow: /*?*categories%5B',
+            'Disallow: /*?*categories[',
             'Sitemap: '.url('/sitemap.xml'),
         ];
 
