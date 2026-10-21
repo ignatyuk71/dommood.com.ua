@@ -1,4 +1,5 @@
 <script setup>
+import AnalyticsEventChart from '@/components/Admin/AnalyticsEventChart.vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import {
@@ -81,9 +82,6 @@ const statusClass = computed(() => {
 });
 
 const chartSeries = computed(() => props.analytics.chart?.series ?? []);
-const chartLabels = computed(() => props.analytics.chart?.labels ?? []);
-const chartMax = computed(() => Math.max(1, ...chartSeries.value.flatMap((series) => series.values ?? [0])));
-const purchaseSeries = computed(() => chartSeries.value.find((series) => series.key === 'purchase'));
 const eventLog = computed(() => props.analytics.eventLog ?? []);
 const selectedStart = ref(props.analytics.period.start);
 const selectedEnd = ref(props.analytics.period.end);
@@ -183,42 +181,6 @@ const selectedRangeLabel = computed(() => {
 
     return `${formatShortDate(selectedStart.value)} — ${formatShortDate(selectedEnd.value)}`;
 });
-const chartAxisLabels = computed(() => {
-    const labels = chartLabels.value;
-    const step = Math.max(1, Math.ceil(labels.length / 6));
-
-    return labels
-        .map((label, index) => ({
-            label,
-            x: labels.length > 1 ? (index / (labels.length - 1)) * 700 : 0,
-            visible: index % step === 0 || index === labels.length - 1,
-        }))
-        .filter((label) => label.visible);
-});
-
-const chartPoints = (values = []) => {
-    if (!values.length) {
-        return '';
-    }
-
-    const width = 700;
-    const height = 220;
-    const step = values.length > 1 ? width / (values.length - 1) : width;
-
-    return values
-        .map((value, index) => {
-            const x = index * step;
-            const y = height - ((Number(value) || 0) / chartMax.value) * height;
-
-            return `${x},${y}`;
-        })
-        .join(' ');
-};
-const chartAreaPoints = (values = []) => {
-    const points = chartPoints(values);
-
-    return points ? `0,220 ${points} 700,220` : '';
-};
 const isCalendarSelected = (iso) => iso === selectedStart.value || iso === selectedEnd.value;
 const isCalendarBetween = (iso) => selectedStart.value
     && selectedEnd.value
@@ -489,47 +451,7 @@ watch(() => props.analytics.period, (period) => {
                         </div>
                     </div>
 
-                    <div class="mt-5 overflow-hidden rounded-xl border border-slate-100 bg-gradient-to-b from-slate-50 to-white p-4">
-                        <svg viewBox="0 0 700 260" class="h-72 w-full">
-                            <defs>
-                                <linearGradient id="purchaseGradient" x1="0" x2="0" y1="0" y2="1">
-                                    <stop offset="0%" stop-color="#16a34a" stop-opacity="0.20" />
-                                    <stop offset="100%" stop-color="#16a34a" stop-opacity="0" />
-                                </linearGradient>
-                            </defs>
-                            <g class="text-slate-200">
-                                <line v-for="line in [0, 1, 2, 3]" :key="line" x1="0" x2="700" :y1="line * 73 + 20" :y2="line * 73 + 20" stroke="currentColor" stroke-dasharray="6 8" />
-                            </g>
-                            <g transform="translate(0 20)">
-                                <polygon
-                                    v-if="purchaseSeries"
-                                    :points="chartAreaPoints(purchaseSeries.values)"
-                                    fill="url(#purchaseGradient)"
-                                />
-                                <polyline
-                                    v-for="series in chartSeries"
-                                    :key="series.key"
-                                    :points="chartPoints(series.values)"
-                                    fill="none"
-                                    :stroke="series.color"
-                                    stroke-width="4"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                />
-                            </g>
-                            <g class="text-[11px] font-bold text-slate-400">
-                                <text
-                                    v-for="label in chartAxisLabels"
-                                    :key="`${label.label}-${label.x}`"
-                                    :x="Math.min(675, label.x)"
-                                    y="255"
-                                    fill="currentColor"
-                                >
-                                    {{ label.label }}
-                                </text>
-                            </g>
-                        </svg>
-                    </div>
+                    <AnalyticsEventChart :chart="analytics.chart" :period="analytics.period" />
                 </section>
 
                 <div class="grid gap-5 lg:grid-cols-2">
