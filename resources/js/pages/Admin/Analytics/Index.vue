@@ -471,7 +471,10 @@ watch(() => props.analytics.period, (period) => {
                             <LineChart class="h-5 w-5 text-[#7561f7]" />
                             <div>
                                 <h2 class="text-lg font-black text-[#343241]">Динаміка подій</h2>
-                                <p class="text-xs font-bold text-slate-500">{{ analytics.period.label }} · {{ analytics.period.start }} — {{ analytics.period.end }}</p>
+                                <p class="text-xs font-bold text-slate-500">
+                                    {{ analytics.period.label }} · {{ analytics.period.start }} — {{ analytics.period.end }}
+                                    · {{ analytics.chart?.interval === 'hour' ? 'По годинах' : 'По днях' }}
+                                </p>
                             </div>
                         </div>
                         <div class="flex flex-wrap gap-2">

@@ -121,21 +121,24 @@ class AnalyticsController extends Controller
         ]);
 
         $chartKeys = ['view_item', 'add_to_cart', 'begin_checkout', 'purchase'];
+        $hourly = $start->isSameDay($end);
+        // Зсув розрізняє повторну годину під час переходу на зимовий час.
+        $bucketFormat = $hourly ? 'Y-m-d H P' : 'Y-m-d';
         $chartLabels = [];
         $chartBuckets = [];
         $cursor = $start;
 
         while ($cursor->lessThanOrEqualTo($end)) {
-            $day = $cursor->toDateString();
-            $chartLabels[] = $cursor->format('d.m');
-            $chartBuckets[$day] = array_fill_keys($chartKeys, 0);
-            $cursor = $cursor->addDay();
+            $bucket = $cursor->format($bucketFormat);
+            $chartLabels[] = $cursor->format($hourly ? 'H:00' : 'd.m');
+            $chartBuckets[$bucket] = array_fill_keys($chartKeys, 0);
+            $cursor = $hourly ? $cursor->addHour() : $cursor->addDay();
         }
 
         foreach ($normalizedEvents as $event) {
-            $day = KyivDateTime::isoDate($event['occurred_at']);
-            if ($day && isset($chartBuckets[$day][$event['event']])) {
-                $chartBuckets[$day][$event['event']]++;
+            $bucket = KyivDateTime::format($event['occurred_at'], $bucketFormat);
+            if ($bucket && isset($chartBuckets[$bucket][$event['event']])) {
+                $chartBuckets[$bucket][$event['event']]++;
             }
         }
 
@@ -182,6 +185,7 @@ class AnalyticsController extends Controller
                 'today' => KyivDateTime::today()->toDateString(),
             ],
             'chart' => [
+                'interval' => $hourly ? 'hour' : 'day',
                 'labels' => $chartLabels,
                 'series' => collect($chartKeys)->map(fn (string $key): array => [
                     'key' => $key,

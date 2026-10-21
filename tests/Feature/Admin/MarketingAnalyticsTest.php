@@ -12,6 +12,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class MarketingAnalyticsTest extends TestCase
@@ -172,6 +173,7 @@ class MarketingAnalyticsTest extends TestCase
         ]);
 
         $now = CarbonImmutable::create(2026, 5, 26, 8, 18, 6, 'UTC');
+        $this->travelTo($now);
 
         AnalyticsEvent::query()->create([
             'event_name' => 'ViewContent',
@@ -222,6 +224,14 @@ class MarketingAnalyticsTest extends TestCase
                 ->where('analytics.funnel.1.count', 1)
                 ->where('analytics.funnel.3.count', 1)
                 ->where('analytics.eventLog.0.date', '2026-05-26 11:18:06')
+                ->where('analytics.chart.interval', 'day')
+                ->has('analytics.chart.labels', 30)
+                ->where('analytics.chart.labels.27', '24.05')
+                ->where('analytics.chart.labels.28', '25.05')
+                ->where('analytics.chart.labels.29', '26.05')
+                ->where('analytics.chart.series.0.values.27', 1)
+                ->where('analytics.chart.series.1.values.28', 1)
+                ->where('analytics.chart.series.3.values.29', 1)
                 ->has('analytics.chart.series', 4)
                 ->has('analytics.eventLog', 4)
             );
@@ -238,7 +248,136 @@ class MarketingAnalyticsTest extends TestCase
                 ->where('analytics.metrics.0.value', 1)
                 ->where('analytics.metrics.1.value', 1)
                 ->where('analytics.metrics.2.value', 129900)
+                ->where('analytics.chart.interval', 'hour')
+                ->has('analytics.chart.labels', 24)
+                ->where('analytics.chart.series.3.values.11', 1)
                 ->has('analytics.eventLog', 2)
             );
+    }
+
+    #[DataProvider('analyticsChannels')]
+    public function test_single_day_chart_groups_events_by_local_hour(string $channel): void
+    {
+        app(SyncAdminRolesAndPermissions::class)(force: true);
+
+        $admin = User::factory()->create(['role' => 'admin']);
+        $admin->assignRole('admin');
+
+        $this->travelTo(CarbonImmutable::parse('2026-10-21 09:00:00', 'UTC'));
+
+        // UTC-час перевіряє межі київської доби та потрапляння в потрібну годину.
+        foreach ([
+            ['ViewContent', '2026-10-20 20:59:59'],
+            ['ViewContent', '2026-10-20 21:00:00'],
+            ['view_item', '2026-10-20 21:59:59'],
+            ['AddToCart', '2026-10-20 22:00:00'],
+            ['InitiateCheckout', '2026-10-21 08:15:00'],
+            ['Purchase', '2026-10-21 20:59:59'],
+            ['Purchase', '2026-10-21 21:00:00'],
+        ] as $index => [$eventName, $occurredAt]) {
+            AnalyticsEvent::query()->create([
+                'event_name' => $eventName,
+                'event_id' => 'hourly-'.$index,
+                'source' => $channel,
+                'occurred_at' => $occurredAt,
+            ]);
+        }
+
+        $zeroes = array_fill(0, 24, 0);
+
+        $this->actingAs($admin)
+            ->get(route('admin.analytics.show', [
+                'channel' => $channel,
+                'start_date' => '2026-10-21',
+                'end_date' => '2026-10-21',
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('analytics.chart.interval', 'hour')
+                ->where('analytics.chart.labels', array_map(fn (int $hour): string => sprintf('%02d:00', $hour), range(0, 23)))
+                ->where('analytics.chart.series.0.values', array_replace($zeroes, [0 => 2]))
+                ->where('analytics.chart.series.1.values', array_replace($zeroes, [1 => 1]))
+                ->where('analytics.chart.series.2.values', array_replace($zeroes, [11 => 1]))
+                ->where('analytics.chart.series.3.values', array_replace($zeroes, [23 => 1]))
+                ->has('analytics.eventLog', 5)
+            );
+    }
+
+    public static function analyticsChannels(): array
+    {
+        return [
+            'Google' => ['google'],
+            'TikTok' => ['tiktok'],
+            'Meta' => ['meta'],
+        ];
+    }
+
+    public function test_single_day_without_events_keeps_all_hourly_buckets(): void
+    {
+        app(SyncAdminRolesAndPermissions::class)(force: true);
+
+        $admin = User::factory()->create(['role' => 'admin']);
+        $admin->assignRole('admin');
+
+        $this->actingAs($admin)
+            ->get(route('admin.analytics.show', [
+                'channel' => 'meta',
+                'start_date' => '2026-10-20',
+                'end_date' => '2026-10-20',
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('analytics.chart.interval', 'hour')
+                ->has('analytics.chart.labels', 24)
+                ->where('analytics.chart.labels.0', '00:00')
+                ->where('analytics.chart.labels.23', '23:00')
+                ->has('analytics.chart.series', 4)
+                ->where('analytics.chart.series.0.values', array_fill(0, 24, 0))
+                ->where('analytics.chart.series.1.values', array_fill(0, 24, 0))
+                ->where('analytics.chart.series.2.values', array_fill(0, 24, 0))
+                ->where('analytics.chart.series.3.values', array_fill(0, 24, 0))
+            );
+    }
+
+    #[DataProvider('clockChangeDays')]
+    public function test_hourly_chart_handles_clock_changes(string $day, int $hours, string $firstEvent, string $secondEvent): void
+    {
+        app(SyncAdminRolesAndPermissions::class)(force: true);
+
+        $admin = User::factory()->create(['role' => 'admin']);
+        $admin->assignRole('admin');
+
+        foreach ([$firstEvent, $secondEvent] as $index => $occurredAt) {
+            AnalyticsEvent::query()->create([
+                'event_name' => 'ViewContent',
+                'event_id' => 'clock-change-'.$index,
+                'source' => 'meta',
+                'occurred_at' => $occurredAt,
+            ]);
+        }
+
+        $this->actingAs($admin)
+            ->get(route('admin.analytics.show', [
+                'channel' => 'meta',
+                'start_date' => $day,
+                'end_date' => $day,
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('analytics.chart.interval', 'hour')
+                ->has('analytics.chart.labels', $hours)
+                ->has('analytics.chart.series.0.values', $hours)
+                ->where('analytics.chart.series.0.values.3', 1)
+                ->where('analytics.chart.series.0.values.4', 1)
+                ->where('analytics.chart.series.0.values', fn ($values): bool => $values->sum() === 2)
+            );
+    }
+
+    public static function clockChangeDays(): array
+    {
+        return [
+            'Літній час' => ['2026-03-29', 23, '2026-03-29 01:15:00', '2026-03-29 02:15:00'],
+            'Зимовий час' => ['2026-10-25', 25, '2026-10-25 00:15:00', '2026-10-25 01:15:00'],
+        ];
     }
 }
